@@ -10,7 +10,6 @@ import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
-import '../templates/tun2socks_service_macos_template.dart';
 
 class VpnNode {
   String name;
@@ -397,49 +396,5 @@ class VpnConfig {
     );
     logMessage('✅ vpn_nodes.json 内容生成完成，总节点数: ${currentNodes.length}');
     return vpnNodesJsonContent;
-  }
-}
-
-class Tun2socksService {
-  static Future<String> initScripts(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        final content = renderTun2socksPlist(scriptDir: '/opt/homebrew/bin');
-        await NativeBridge.installTun2socksScripts(password);
-        return await NativeBridge.installTun2socksPlist(content, password);
-      default:
-        return '当前平台暂不支持';
-    }
-  }
-
-  static Future<String> start(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        return await NativeBridge.startTun2socks(password);
-      case 'linux':
-      case 'windows':
-      case 'android':
-      case 'ios':
-        return '暂未实现';
-      default:
-        return '当前平台暂不支持';
-    }
-  }
-
-  static Future<String> stop(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        return await NativeBridge.stopTun2socks(password);
-      case 'linux':
-      case 'windows':
-      case 'android':
-      case 'ios':
-        return '暂未实现';
-      default:
-        return '当前平台暂不支持';
-    }
   }
 }

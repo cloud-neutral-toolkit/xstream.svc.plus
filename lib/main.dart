@@ -10,7 +10,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart' show GlobalState, DnsConfig;
+import 'utils/global_config.dart'
+    show GlobalState, DnsConfig, TunDnsConfig;
 import 'services/experimental/experimental_features.dart';
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
@@ -18,14 +19,17 @@ import 'services/vpn_config_service.dart';
 import 'services/global_proxy_service.dart';
 import 'services/permission_guide_service.dart';
 import 'services/sync/desktop_sync_service.dart';
+import 'services/tun_settings_service.dart';
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await TelemetryService.init();
   await DnsConfig.init();
+  await TunDnsConfig.init();
   await GlobalProxyService.init();
   await PermissionGuideService.init();
   await ExperimentalFeatures.init();
+  await TunSettingsService.init();
   await DesktopSyncService.instance.init();
   final debug = args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
@@ -221,18 +225,15 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   Future<void> _onConnectionModeChanged() async {
     if (!GlobalState.isUnlocked.value) return;
-    final password = GlobalState.sudoPassword.value;
-    if (password.isEmpty) return;
-
     final mode = GlobalState.connectionMode.value;
     addAppLog('切换模式为 $mode');
     String msg;
     if (mode == 'VPN') {
-      msg = await Tun2socksService.start(password);
+      msg = await NativeBridge.startPacketTunnel();
     } else {
-      msg = await Tun2socksService.stop(password);
+      msg = await NativeBridge.stopPacketTunnel();
     }
-    addAppLog('[tun2socks] $msg');
+    addAppLog('[packet tunnel] $msg');
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }

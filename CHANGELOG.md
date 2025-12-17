@@ -1,3 +1,9 @@
+# Unreleased
+
+## ✅ Changes
+- Removed tun2socks-based system-wide path; Packet Tunnel is now the only TUN/VPN entry on macOS
+- Cleaned tun2socks scripts/resources/docs and related native/Dart APIs
+
 # XStream v0.2.0 - Windows Release
 
 _Release Date: 2025-06-10_

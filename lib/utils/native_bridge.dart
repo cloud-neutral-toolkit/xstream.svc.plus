@@ -17,6 +17,11 @@ class NativeBridge {
   static bool get _isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
+  static const _tunStatusFallback = PacketTunnelStatus(
+    status: 'unsupported',
+    utunInterfaces: [],
+  );
+
   static BridgeBindings get _ffi {
     _bindings ??= _useFfi
         ? BridgeBindings(_openLib())
@@ -289,35 +294,6 @@ class NativeBridge {
     }
   }
 
-  /// Start tun2socks-based system proxy on macOS
-  static Future<String> startTun2socks(String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
-    try {
-      final result = await _channel.invokeMethod<String>('startTun2socks', {
-        'password': password,
-      });
-      return result ?? '启动成功';
-    } on MissingPluginException {
-      return '插件未实现';
-    } catch (e) {
-      return '启动失败: $e';
-    }
-  }
-
-  /// Stop tun2socks-based system proxy on macOS
-  static Future<String> stopTun2socks(String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
-    try {
-      final result = await _channel.invokeMethod<String>('stopTun2socks', {
-        'password': password,
-      });
-      return result ?? '已停止';
-    } on MissingPluginException {
-      return '插件未实现';
-    } catch (e) {
-      return '停止失败: $e';
-    }
-  }
 
   /// Enable or disable system SOCKS proxy on macOS
   static Future<String> setSystemProxy(bool enable, String password) async {
@@ -335,38 +311,52 @@ class NativeBridge {
     }
   }
 
-  /// Install tun2socks helper scripts to /opt/homebrew/bin
-  static Future<String> installTun2socksScripts(String password) async {
+  /// Start Packet Tunnel on macOS
+  static Future<String> startPacketTunnel() async {
     if (!Platform.isMacOS) return '当前平台暂不支持';
     try {
       final result =
-          await _channel.invokeMethod<String>('installTun2socksScripts', {
-        'password': password,
-      });
-      return result ?? '安装完成';
+          await _channel.invokeMethod<String>('startPacketTunnel');
+      return result ?? '启动请求已发送';
     } on MissingPluginException {
       return '插件未实现';
     } catch (e) {
-      return '安装失败: $e';
+      return '启动失败: $e';
     }
   }
 
-  static Future<String> installTun2socksPlist(
-      String content, String password) async {
+  /// Stop Packet Tunnel on macOS
+  static Future<String> stopPacketTunnel() async {
     if (!Platform.isMacOS) return '当前平台暂不支持';
     try {
       final result =
-          await _channel.invokeMethod<String>('installTun2socksPlist', {
-        'content': content,
-        'password': password,
-      });
-      return result ?? '安装完成';
+          await _channel.invokeMethod<String>('stopPacketTunnel');
+      return result ?? '停止请求已发送';
     } on MissingPluginException {
       return '插件未实现';
     } catch (e) {
-      return '安装失败: $e';
+      return '停止失败: $e';
     }
   }
+
+  /// Get Packet Tunnel status on macOS
+  static Future<PacketTunnelStatus> getPacketTunnelStatus() async {
+    if (!Platform.isMacOS) return _tunStatusFallback;
+    try {
+      final result =
+          await _channel.invokeMethod<Map<Object?, Object?>>(
+              'getPacketTunnelStatus');
+      if (result == null) {
+        return _tunStatusFallback;
+      }
+      return PacketTunnelStatus.fromMap(result);
+    } on MissingPluginException {
+      return _tunStatusFallback;
+    } catch (_) {
+      return _tunStatusFallback;
+    }
+  }
+
 
   /// Start embedded xray-core via FFI on iOS
   static String startXray(String configJson) {
@@ -390,5 +380,24 @@ class NativeBridge {
     final result = resPtr.cast<Utf8>().toDartString();
     _ffi.freeCString(resPtr);
     return result;
+  }
+}
+
+class PacketTunnelStatus {
+  final String status;
+  final List<String> utunInterfaces;
+
+  const PacketTunnelStatus({
+    required this.status,
+    required this.utunInterfaces,
+  });
+
+  factory PacketTunnelStatus.fromMap(Map<Object?, Object?> map) {
+    final status = map['status'] as String? ?? 'unknown';
+    final utunRaw = map['utun'];
+    final utunList = utunRaw is List
+        ? utunRaw.whereType<String>().toList()
+        : <String>[];
+    return PacketTunnelStatus(status: status, utunInterfaces: utunList);
   }
 }

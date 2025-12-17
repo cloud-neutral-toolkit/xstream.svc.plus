@@ -58,6 +58,10 @@ class GlobalState {
   static final ValueNotifier<bool> tunnelProxyEnabled =
       ValueNotifier<bool>(false);
 
+  /// TUN 设置开关
+  static final ValueNotifier<bool> tunSettingsEnabled =
+      ValueNotifier<bool>(false);
+
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
 
@@ -91,6 +95,39 @@ class DnsConfig {
 
     dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
     dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
+  }
+}
+
+/// Packet Tunnel DNS settings (DoT optional, always through tunnel)
+class TunDnsConfig {
+  static const _dns1Key = 'tunDnsServer1';
+  static const _dns2Key = 'tunDnsServer2';
+  static const _tlsNameKey = 'tunDnsTlsServerName';
+  static const _dotEnabledKey = 'tunDnsOverTls';
+
+  static final ValueNotifier<String> dns1 =
+      ValueNotifier<String>('1.1.1.1');
+  static final ValueNotifier<String> dns2 =
+      ValueNotifier<String>('8.8.8.8');
+  static final ValueNotifier<String> tlsServerName =
+      ValueNotifier<String>('cloudflare-dns.com');
+  static final ValueNotifier<bool> dotEnabled =
+      ValueNotifier<bool>(true);
+
+  static Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    dns1.value = prefs.getString(_dns1Key) ?? dns1.value;
+    dns2.value = prefs.getString(_dns2Key) ?? dns2.value;
+    tlsServerName.value =
+        prefs.getString(_tlsNameKey) ?? tlsServerName.value;
+    dotEnabled.value = prefs.getBool(_dotEnabledKey) ?? dotEnabled.value;
+
+    dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
+    dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
+    tlsServerName
+        .addListener(() => prefs.setString(_tlsNameKey, tlsServerName.value));
+    dotEnabled
+        .addListener(() => prefs.setBool(_dotEnabledKey, dotEnabled.value));
   }
 }
 

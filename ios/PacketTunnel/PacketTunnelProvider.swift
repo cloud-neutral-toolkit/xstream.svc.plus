@@ -9,12 +9,6 @@ func StopXray() -> UnsafeMutablePointer<CChar>?
 @_silgen_name("FreeCString")
 func FreeCString(_ str: UnsafeMutablePointer<CChar>)
 
-@_silgen_name("tun2socks_start")
-func tun2socks_start(_ ifname: UnsafePointer<CChar>, _ proxy: UnsafePointer<CChar>, _ dns: UnsafePointer<CChar>)
-
-@_silgen_name("tun2socks_stop")
-func tun2socks_stop()
-
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
     private var activeSettings: NEPacketTunnelNetworkSettings?
@@ -31,35 +25,19 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         settings.dnsSettings = NEDNSSettings(servers: ["8.8.8.8"])
 
-        let proxy = NEProxySettings()
-        proxy.socksServer = NEProxyServer(address: "127.0.0.1", port: 1080)
-        proxy.excludeSimpleHostnames = false
-        proxy.matchDomains = [""]
-        settings.proxySettings = proxy
-
         setTunnelNetworkSettings(settings) { [weak self] error in
             if let err = error {
                 completionHandler(err)
                 return
             }
             self?.activeSettings = settings
-
-            DispatchQueue.global().async {
-                "utun233".withCString { ifPtr in
-                    "127.0.0.1:1080".withCString { proxyPtr in
-                        "8.8.8.8".withCString { dnsPtr in
-                            tun2socks_start(ifPtr, proxyPtr, dnsPtr)
-                        }
-                    }
-                }
-            }
+            self?.readAndDropPackets()
 
             completionHandler(nil)
         }
     }
 
     override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping () -> Void) {
-        tun2socks_stop()
         stopLocalProxy()
         completionHandler()
     }
@@ -79,6 +57,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     private func stopLocalProxy() {
         if let res = StopXray() {
             FreeCString(res)
+        }
+    }
+
+    private func readAndDropPackets() {
+        packetFlow.readPackets { [weak self] _, _ in
+            self?.readAndDropPackets()
         }
     }
 }

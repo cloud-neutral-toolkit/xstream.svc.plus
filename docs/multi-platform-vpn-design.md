@@ -7,9 +7,9 @@
 | 平台   | 推荐模式                             | 主要原因 |
 |--------|-------------------------------------|---------|
 | iOS    | PacketTunnelProvider + `libxray.a`  | 使用官方 NE 框架，可安全上架 |
-| macOS  | PacketTunnelProvider + `libxray.dylib` 或 CLI | 支持 GUI 与系统级代理 |
-| Android| VpnService + `libxray.so` + tun2socks | 官方接口，无需 root |
-| Windows| WinTun + `libxray.dll` + tun2socks   | 用户态驱动，无需管理员权限 |
+| macOS  | PacketTunnelProvider + `libxray.dylib` | 系统级入口统一为 Packet Tunnel |
+| Android| VpnService + `libxray.so`           | 官方接口，无需 root |
+| Windows| WinTun + `libxray.dll`              | 用户态驱动，无需管理员权限 |
 | Linux  | 用户态 TUN + xray-core/`libxray.so`  | 结合 systemd 或用户态运行 |
 
 ## 桥接方式建议
@@ -18,7 +18,7 @@
 |--------|---------------------------------------|-------|
 | iOS    | Swift ⟶ `libxray.a` (C 导出)         | `gomobile bind` 生成 `.framework` |
 | macOS  | Swift/ObjC ⟶ `.dylib`                | `dlopen` 或 XPC 调用 CLI |
-| Android| Dart FFI ⟶ `libxray.so`              | 与 `tun2socks.so` 结合 |
+| Android| Dart FFI ⟶ `libxray.so`              | 与 VpnService 协作 |
 | Windows| Dart FFI ⟶ `libxray.dll`             | Win32 FFI 结构映射 |
 | Linux  | Dart FFI ⟶ `.so` / 管理 CLI          | 可结合 D-Bus 或 systemd |
 
@@ -45,8 +45,7 @@
 ```mermaid
 flowchart TD
     subgraph User Space
-        A[VPN/TUN Adapter] --> B[tun2socks]
-        B --> C[xray-core (lib)]
+        A[VPN/TUN Adapter] --> C[xray-core (lib)]
         C --> D[Reality / VLESS / Trojan Outbound]
         C --> E[内置 DNS 分流器]
     end
@@ -75,4 +74,3 @@ app/     - Flutter UI 与 VPN 控制器
 - 通过虚拟网卡（NE/VpnService/WinTun/用户态 TUN）接管流量。
 - Flutter + Dart FFI 封装各平台桥接，保证 UI 一致性。
 - 避免修改系统代理和需要 root，提升可上架与易用性。
-
