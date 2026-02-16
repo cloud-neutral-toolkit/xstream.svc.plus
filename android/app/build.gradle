@@ -44,6 +44,12 @@ android {
         versionName = (flutterExt?.metaClass?.respondsTo(flutterExt, "getVersionName") ? flutterExt.getVersionName() : versionNameDefault)
     }
 
+    externalNativeBuild {
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

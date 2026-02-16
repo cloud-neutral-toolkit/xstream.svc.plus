@@ -7,6 +7,11 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let api = DarwinHostApiImpl(binaryMessenger: controller.binaryMessenger)
+      DarwinHostApiSetup.setUp(binaryMessenger: controller.binaryMessenger, api: api)
+    }
+
     GeneratedPluginRegistrant.register(with: self)
     if let controller = window?.rootViewController as? FlutterViewController {
       let channel = FlutterMethodChannel(name: "com.xstream/native", binaryMessenger: controller.binaryMessenger)

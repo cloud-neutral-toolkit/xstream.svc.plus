@@ -26,7 +26,7 @@ DMG_NAME := $(shell \
 		echo "xstream-dev-$(BUILD_ID).dmg"; \
 	fi)
 
-.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64 clean
+.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -134,10 +134,14 @@ linux-arm64:
 android-arm64:
 	@if [ "$(UNAME_S)" = "Linux" ] || [ "$(UNAME_S)" = "Darwin" ]; then \
 		echo "Building for Android arm64..."; \
+		./build_scripts/build_android_xray.sh; \
 		$(FLUTTER) build apk --release; \
 	else \
 		echo "Android build not supported on this platform"; \
 	fi
+
+android-libxray:
+	./build_scripts/build_android_xray.sh
 
 ios-arm64:
 	@if [ "$(UNAME_S)" = "Darwin" ]; then \

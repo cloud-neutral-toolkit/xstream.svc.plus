@@ -23,8 +23,6 @@ class AppDelegate: FlutterAppDelegate {
           self.handleServiceControl(call: call, bundleId: bundleId, result: result)
         case "setSystemProxy":
           self.handleSystemProxy(call: call, result: result)
-        case "startPacketTunnel", "stopPacketTunnel", "getPacketTunnelStatus":
-          self.handlePacketTunnel(call: call, result: result)
 
         case "performAction":
           self.handlePerformAction(call: call, bundleId: bundleId, result: result)

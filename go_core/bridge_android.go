@@ -1,4 +1,4 @@
-//go:build ios
+//go:build android
 
 package main
 
@@ -11,25 +11,27 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/xtls/xray-core/common/platform"
 	"github.com/xtls/xray-core/core"
 )
 
-var procMap sync.Map
-var singleInstance *xrayInstance
-var instMu sync.Mutex
-var tunnelSeq atomic.Int64
-var tunnelSession sync.Map
+var androidProcMap sync.Map
+var androidSingleInstance *xrayInstance
+var androidInstMu sync.Mutex
+var androidTunnelSeq atomic.Int64
+var androidTunnelSession sync.Map
 
 type xrayInstance struct {
 	server core.Server
 }
 
-func startXrayInternal(cfgData []byte) error {
-	if singleInstance != nil {
+func androidStartXrayInternal(cfgData []byte) error {
+	if androidSingleInstance != nil {
 		return errors.New("already running")
 	}
 	cfg, err := core.LoadConfig("json", bytes.NewReader(cfgData))
@@ -43,36 +45,47 @@ func startXrayInternal(cfgData []byte) error {
 	if err := srv.Start(); err != nil {
 		return err
 	}
-	singleInstance = &xrayInstance{server: srv}
+	androidSingleInstance = &xrayInstance{server: srv}
 	return nil
 }
 
-func stopXrayInternal() error {
-	if singleInstance == nil {
+func androidStopXrayInternal() error {
+	if androidSingleInstance == nil {
 		return errors.New("not running")
 	}
-	if err := singleInstance.server.Close(); err != nil {
+	if err := androidSingleInstance.server.Close(); err != nil {
 		return err
 	}
-	singleInstance = nil
+	androidSingleInstance = nil
 	return nil
 }
 
 //export WriteConfigFiles
 func WriteConfigFiles(xrayPathC, xrayContentC, servicePathC, serviceContentC, vpnPathC, vpnContentC, passwordC *C.char) *C.char {
+	_ = passwordC
 	xrayPath := C.GoString(xrayPathC)
 	xrayContent := C.GoString(xrayContentC)
 	servicePath := C.GoString(servicePathC)
 	serviceContent := C.GoString(serviceContentC)
 	vpnPath := C.GoString(vpnPathC)
 	vpnContent := C.GoString(vpnContentC)
-	if err := os.WriteFile(xrayPath, []byte(xrayContent), 0644); err != nil {
+
+	if err := os.MkdirAll(filepath.Dir(xrayPath), 0o755); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	if err := os.WriteFile(servicePath, []byte(serviceContent), 0644); err != nil {
+	if err := os.WriteFile(xrayPath, []byte(xrayContent), 0o644); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	if err := os.WriteFile(vpnPath, []byte(vpnContent), 0644); err != nil {
+	if err := os.MkdirAll(filepath.Dir(servicePath), 0o755); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	if err := os.WriteFile(servicePath, []byte(serviceContent), 0o644); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	if err := os.MkdirAll(filepath.Dir(vpnPath), 0o755); err != nil {
+		return C.CString("error:" + err.Error())
+	}
+	if err := os.WriteFile(vpnPath, []byte(vpnContent), 0o644); err != nil {
 		return C.CString("error:" + err.Error())
 	}
 	return C.CString("success")
@@ -97,19 +110,19 @@ func StartNodeService(name *C.char) *C.char {
 	if err := srv.Start(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	procMap.Store(node, &xrayInstance{server: srv})
+	androidProcMap.Store(node, &xrayInstance{server: srv})
 	return C.CString("success")
 }
 
 //export StopNodeService
 func StopNodeService(name *C.char) *C.char {
 	node := C.GoString(name)
-	if v, ok := procMap.Load(node); ok {
+	if v, ok := androidProcMap.Load(node); ok {
 		inst := v.(*xrayInstance)
 		if err := inst.server.Close(); err != nil {
 			return C.CString("error:" + err.Error())
 		}
-		procMap.Delete(node)
+		androidProcMap.Delete(node)
 	}
 	return C.CString("success")
 }
@@ -117,7 +130,7 @@ func StopNodeService(name *C.char) *C.char {
 //export CheckNodeStatus
 func CheckNodeStatus(name *C.char) C.int {
 	node := C.GoString(name)
-	if _, ok := procMap.Load(node); ok {
+	if _, ok := androidProcMap.Load(node); ok {
 		return 1
 	}
 	return 0
@@ -125,10 +138,10 @@ func CheckNodeStatus(name *C.char) C.int {
 
 //export StartXray
 func StartXray(configC *C.char) *C.char {
-	instMu.Lock()
-	defer instMu.Unlock()
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
 
-	if singleInstance != nil {
+	if androidSingleInstance != nil {
 		return C.CString("error:already running")
 	}
 	cfgData := []byte(C.GoString(configC))
@@ -143,43 +156,72 @@ func StartXray(configC *C.char) *C.char {
 	if err := srv.Start(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	singleInstance = &xrayInstance{server: srv}
+	androidSingleInstance = &xrayInstance{server: srv}
 
 	return C.CString("success")
 }
 
 //export StopXray
 func StopXray() *C.char {
-	instMu.Lock()
-	defer instMu.Unlock()
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
 
-	if singleInstance == nil {
+	if androidSingleInstance == nil {
 		return C.CString("error:not running")
 	}
-	if err := singleInstance.server.Close(); err != nil {
+	if err := androidSingleInstance.server.Close(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	singleInstance = nil
+	androidSingleInstance = nil
 
 	return C.CString("success")
 }
 
 //export StartXrayTunnel
 func StartXrayTunnel(configC *C.char) C.longlong {
-	instMu.Lock()
-	defer instMu.Unlock()
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
 
-	if singleInstance != nil {
+	if androidSingleInstance != nil {
 		return C.longlong(-1)
 	}
 
 	cfgData := []byte(C.GoString(configC))
-	if err := startXrayInternal(cfgData); err != nil {
+	if err := androidStartXrayInternal(cfgData); err != nil {
 		return C.longlong(-1)
 	}
 
-	handle := tunnelSeq.Add(1)
-	tunnelSession.Store(handle, true)
+	handle := androidTunnelSeq.Add(1)
+	androidTunnelSession.Store(handle, true)
+	return C.longlong(handle)
+}
+
+//export StartXrayTunnelWithFd
+func StartXrayTunnelWithFd(configC *C.char, tunFd C.int32_t) C.longlong {
+	fd := int(tunFd)
+	if fd <= 0 {
+		return C.longlong(-1)
+	}
+
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
+
+	if androidSingleInstance != nil {
+		return C.longlong(-1)
+	}
+
+	_ = os.Setenv(platform.TunFdKey, strconv.Itoa(fd))
+	_ = os.Setenv(platform.NormalizeEnvName(platform.TunFdKey), strconv.Itoa(fd))
+
+	cfgData := []byte(C.GoString(configC))
+	if err := androidStartXrayInternal(cfgData); err != nil {
+		_ = os.Unsetenv(platform.TunFdKey)
+		_ = os.Unsetenv(platform.NormalizeEnvName(platform.TunFdKey))
+		return C.longlong(-1)
+	}
+
+	handle := androidTunnelSeq.Add(1)
+	androidTunnelSession.Store(handle, fd)
 	return C.longlong(handle)
 }
 
@@ -193,31 +235,33 @@ func SubmitInboundPacket(handle C.longlong, data *C.uint8_t, length C.int32_t, p
 	if id <= 0 {
 		return C.int32_t(-1)
 	}
-	if _, ok := tunnelSession.Load(id); !ok {
+	if _, ok := androidTunnelSession.Load(id); !ok {
 		return C.int32_t(-1)
 	}
 
-	// Integration point: forward packet bytes into xray-core Tun session.
+	// Android Packet Tunnel entry point: packet forwarding to xray-core Tun session.
 	return C.int32_t(0)
 }
 
 //export StopXrayTunnel
 func StopXrayTunnel(handle C.longlong) *C.char {
-	instMu.Lock()
-	defer instMu.Unlock()
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
 
 	id := int64(handle)
 	if id <= 0 {
 		return C.CString("error:invalid handle")
 	}
-	if _, ok := tunnelSession.Load(id); !ok {
+	if _, ok := androidTunnelSession.Load(id); !ok {
 		return C.CString("error:session not found")
 	}
-	tunnelSession.Delete(id)
+	androidTunnelSession.Delete(id)
 
-	if err := stopXrayInternal(); err != nil {
+	if err := androidStopXrayInternal(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
+	_ = os.Unsetenv(platform.TunFdKey)
+	_ = os.Unsetenv(platform.NormalizeEnvName(platform.TunFdKey))
 
 	return C.CString("success")
 }
@@ -228,17 +272,21 @@ func FreeXrayTunnel(handle C.longlong) *C.char {
 	if id <= 0 {
 		return C.CString("error:invalid handle")
 	}
-	tunnelSession.Delete(id)
+	androidTunnelSession.Delete(id)
 	return C.CString("success")
 }
 
 //export CreateWindowsService
 func CreateWindowsService(name, execPath, configPath *C.char) *C.char {
+	_ = name
+	_ = execPath
+	_ = configPath
 	return C.CString("error:not supported")
 }
 
 //export PerformAction
 func PerformAction(action, password *C.char) *C.char {
+	_ = password
 	act := C.GoString(action)
 	if act == "isXrayDownloading" {
 		return C.CString("0")

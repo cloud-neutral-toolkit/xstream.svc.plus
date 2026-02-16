@@ -23,6 +23,14 @@ class AppLocalizations {
       'noNodes': 'No nodes, please add.',
       'generateSave': 'Generate & Save',
       'addNodeConfig': 'Add Node Config',
+      'vlessUri': 'VLESS URI (Optional)',
+      'parseVlessUri': 'Parse Link',
+      'vlessUriEmpty': 'Please paste a VLESS URI first',
+      'vlessUriInvalid': 'Invalid VLESS URI',
+      'vlessUriParsed': 'Parsed',
+      'requiredFieldsMissing': 'Please fill in all required fields',
+      'sudoMissing': 'Unable to read password',
+      'bundleIdMissing': 'Bundle ID is not ready',
       'nodeName': 'Node Name (e.g., US-Node)',
       'serverDomain': 'Server Domain',
       'port': 'Port',
@@ -117,6 +125,14 @@ class AppLocalizations {
       'noNodes': '暂无加速节点，请先添加。',
       'generateSave': '生成配置并保存',
       'addNodeConfig': '添加加速节点配置',
+      'vlessUri': 'VLESS 链接（可选）',
+      'parseVlessUri': '解析链接',
+      'vlessUriEmpty': '请先粘贴 VLESS 链接',
+      'vlessUriInvalid': 'VLESS 链接无效',
+      'vlessUriParsed': '解析成功',
+      'requiredFieldsMissing': '请填写所有必填项',
+      'sudoMissing': '无法读取密码',
+      'bundleIdMissing': 'Bundle ID 尚未初始化',
       'nodeName': '节点名（如 US-Node）',
       'serverDomain': '服务器域名',
       'port': '端口号',
@@ -216,7 +232,8 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) => false;
+  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) =>
+      false;
 }
 
 extension LocalizationExtension on BuildContext {

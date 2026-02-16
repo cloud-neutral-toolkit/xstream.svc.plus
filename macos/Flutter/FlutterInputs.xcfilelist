@@ -1,0 +1,3 @@
+${SRCROOT}/Flutter/generated/Flutter-Generated.xcconfig
+${SRCROOT}/Flutter/generated/.app_filename
+${SRCROOT}/Flutter/generated/.tripwire
