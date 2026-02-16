@@ -12,6 +12,16 @@ class MainActivity : FlutterActivity() {
             "com.xstream/native"
         ).setMethodCallHandler { call, result ->
             when (call.method) {
+                "savePacketTunnelProfile" -> {
+                    val args = call.arguments as? Map<*, *> ?: emptyMap<String, Any?>()
+                    result.success(PacketTunnelController.saveProfile(this, args))
+                }
+                "startPacketTunnel" -> {
+                    val args = call.arguments as? Map<*, *>
+                    result.success(PacketTunnelController.start(this, args))
+                }
+                "stopPacketTunnel" -> result.success(PacketTunnelController.stop(this))
+                "getPacketTunnelStatus" -> result.success(PacketTunnelController.status(this))
                 "startNodeService", "stopNodeService", "performAction" -> result.success("Android not supported")
                 "checkNodeStatus" -> result.success(false)
                 else -> result.notImplemented()

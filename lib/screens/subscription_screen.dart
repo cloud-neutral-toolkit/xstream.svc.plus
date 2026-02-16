@@ -13,6 +13,7 @@ class SubscriptionScreen extends StatefulWidget {
 }
 
 class _SubscriptionScreenState extends State<SubscriptionScreen> {
+  final _vlessUriController = TextEditingController();
   final _nodeNameController = TextEditingController();
   final _domainController = TextEditingController();
   final _portController = TextEditingController(text: '443');
@@ -35,51 +36,129 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     });
   }
 
-  void _onCreateConfig() {
+  @override
+  void dispose() {
+    _vlessUriController.dispose();
+    _nodeNameController.dispose();
+    _domainController.dispose();
+    _portController.dispose();
+    _uuidController.dispose();
+    super.dispose();
+  }
+
+  void _onParseVlessUri() {
+    final rawUri = _vlessUriController.text.trim();
+    if (rawUri.isEmpty) {
+      setState(() {
+        _message = context.l10n.get('vlessUriEmpty');
+      });
+      return;
+    }
+
+    try {
+      final parsed = VpnConfig.parseVlessUri(
+        rawUri,
+        fallbackNodeName: _nodeNameController.text.trim(),
+      );
+      setState(() {
+        _nodeNameController.text = parsed.name;
+        _domainController.text = parsed.domain;
+        _portController.text = parsed.port;
+        _uuidController.text = parsed.uuid;
+        _message =
+            '${context.l10n.get('vlessUriParsed')}: ${parsed.protocol}/${parsed.network}/${parsed.security}';
+      });
+      addAppLog(
+        '已解析 VLESS 链接: ${parsed.name}, ${parsed.protocol}/${parsed.network}/${parsed.security}',
+      );
+    } catch (e) {
+      setState(() {
+        _message = '${context.l10n.get('vlessUriInvalid')}: $e';
+      });
+      addAppLog('VLESS 链接解析失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _onCreateConfig() async {
     final unlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
+    final rawUri = _vlessUriController.text.trim();
 
-    // Perform null/empty checks for required fields
-    if (_nodeNameController.text.trim().isEmpty ||
-        _domainController.text.trim().isEmpty ||
-        _uuidController.text.trim().isEmpty ||
-        _bundleId == null || _bundleId!.isEmpty) {
+    if (_bundleId == null || _bundleId!.isEmpty) {
       setState(() {
-        _message = '⚠️ 请填写所有必填项！';
+        _message = context.l10n.get('bundleIdMissing');
       });
-      addAppLog('缺少必填项或 Bundle ID', level: LogLevel.error); // Log missing fields or bundleId
+      addAppLog('缺少 Bundle ID', level: LogLevel.error);
       return;
     }
 
     if (!unlocked) {
       setState(() {
-        _message = '🔒 请先点击右上角的解锁按钮。';
+        _message = context.l10n.get('unlockFirst');
       });
-      addAppLog('请先解锁后再创建配置', level: LogLevel.warning); // Log warning
-    } else if (password.isNotEmpty) {
-      // Call VpnConfigService to generate content
-      VpnConfig.generateContent(
-        nodeName: _nodeNameController.text.trim(),
-        domain: _domainController.text.trim(),
-        port: _portController.text.trim(),
-        uuid: _uuidController.text.trim(),
-        password: password,
-        bundleId: _bundleId!,
-        setMessage: (msg) {
-          setState(() {
-            _message = msg;
-          });
-        },
-        logMessage: (msg) {
-          addAppLog(msg);
-        },
-      );
-    } else {
-      setState(() {
-        _message = '⚠️ 无法获取 sudo 密码。';
-      });
-      addAppLog('无法获取 sudo 密码', level: LogLevel.error); // Log error
+      addAppLog('请先解锁后再创建配置', level: LogLevel.warning);
+      return;
     }
+
+    if (password.isEmpty) {
+      setState(() {
+        _message = context.l10n.get('sudoMissing');
+      });
+      addAppLog('无法获取 sudo 密码', level: LogLevel.error);
+      return;
+    }
+
+    if (rawUri.isNotEmpty) {
+      try {
+        await VpnConfig.generateFromVlessUri(
+          vlessUri: rawUri,
+          fallbackNodeName: _nodeNameController.text.trim(),
+          password: password,
+          bundleId: _bundleId!,
+          setMessage: (msg) {
+            setState(() {
+              _message = msg;
+            });
+          },
+          logMessage: (msg) {
+            addAppLog(msg);
+          },
+        );
+      } catch (e) {
+        setState(() {
+          _message = '${context.l10n.get('vlessUriInvalid')}: $e';
+        });
+        addAppLog('VLESS 链接创建失败: $e', level: LogLevel.error);
+      }
+      return;
+    }
+
+    if (_nodeNameController.text.trim().isEmpty ||
+        _domainController.text.trim().isEmpty ||
+        _uuidController.text.trim().isEmpty) {
+      setState(() {
+        _message = context.l10n.get('requiredFieldsMissing');
+      });
+      addAppLog('缺少必填项', level: LogLevel.error);
+      return;
+    }
+
+    await VpnConfig.generateContent(
+      nodeName: _nodeNameController.text.trim(),
+      domain: _domainController.text.trim(),
+      port: _portController.text.trim(),
+      uuid: _uuidController.text.trim(),
+      password: password,
+      bundleId: _bundleId!,
+      setMessage: (msg) {
+        setState(() {
+          _message = msg;
+        });
+      },
+      logMessage: (msg) {
+        addAppLog(msg);
+      },
+    );
   }
 
   @override
@@ -94,13 +173,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
+              controller: _vlessUriController,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('vlessUri')),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton(
+                onPressed: _onParseVlessUri,
+                child: Text(context.l10n.get('parseVlessUri')),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
               controller: _nodeNameController,
-              decoration: InputDecoration(labelText: context.l10n.get('nodeName')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('nodeName'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _domainController,
-              decoration: InputDecoration(labelText: context.l10n.get('serverDomain')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('serverDomain'),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
