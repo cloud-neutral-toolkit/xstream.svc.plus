@@ -43,7 +43,7 @@ class AppDelegate: FlutterAppDelegate {
         case "writeConfigFiles":
           self.writeConfigFiles(call: call, result: result)
 
-        case "startNodeService", "stopNodeService", "checkNodeStatus":
+        case "startNodeService", "stopNodeService", "checkNodeStatus", "verifySocks5Proxy":
           self.handleServiceControl(call: call, bundleId: bundleId, result: result)
         case "setSystemProxy":
           self.handleSystemProxy(call: call, result: result)

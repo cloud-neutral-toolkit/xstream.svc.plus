@@ -80,6 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _activeNode = nodeName);
       GlobalState.activeNodeName.value = nodeName;
       _showMessage(msg);
+
+      final verifyMsg = await NativeBridge.verifySocks5Proxy();
+      addAppLog('[socks5] $verifyMsg',
+          level: verifyMsg.startsWith('success:')
+              ? LogLevel.info
+              : LogLevel.error);
+      _showMessage(verifyMsg);
     }
   }
 
@@ -154,7 +161,9 @@ class _HomeScreenState extends State<HomeScreen> {
           title: Text(context.l10n.get('importConfig')),
           content: TextField(
             controller: controller,
-            decoration: const InputDecoration(hintText: '/path/to/backup.zip'),
+            decoration: const InputDecoration(
+              hintText: '/path/to/backup.zip 或 vless://...',
+            ),
           ),
           actions: [
             TextButton(
@@ -170,9 +179,39 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
     if (path == null || path.trim().isEmpty) return;
+    final input = path.trim();
     addAppLog('开始导入配置...');
     try {
-      final file = File(path.trim());
+      if (input.startsWith('vless://')) {
+        final isUnlocked = GlobalState.isUnlocked.value;
+        final password = GlobalState.sudoPassword.value;
+        if (!isUnlocked) {
+          addAppLog('请先解锁再导入 VLESS 配置', level: LogLevel.warning);
+          return;
+        }
+        if (password.isEmpty) {
+          addAppLog('无法获取 sudo 密码', level: LogLevel.error);
+          return;
+        }
+        final bundleId = await GlobalApplicationConfig.getBundleId();
+        await VpnConfig.generateFromVlessUri(
+          vlessUri: input,
+          password: password,
+          bundleId: bundleId,
+          setMessage: (msg) => addAppLog(msg),
+          logMessage: (msg) => addAppLog(msg),
+        );
+        await VpnConfig.load();
+        if (!mounted) return;
+        setState(() {
+          vpnNodes = VpnConfig.nodes;
+          _selectedNodeNames.clear();
+        });
+        addAppLog('✅ 已从 VLESS 链接导入配置');
+        return;
+      }
+
+      final file = File(input);
       if (!await file.exists()) {
         addAppLog('备份文件不存在', level: LogLevel.error);
         return;

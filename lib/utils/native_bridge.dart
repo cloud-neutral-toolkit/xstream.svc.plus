@@ -172,7 +172,11 @@ class NativeBridge {
       try {
         final result = await _channel.invokeMethod<String>(
           'startNodeService',
-          {'serviceName': node.serviceName},
+          {
+            'serviceName': node.serviceName,
+            'nodeName': node.name,
+            'configPath': node.configPath,
+          },
         );
         return result ?? '启动成功';
       } on MissingPluginException {
@@ -246,7 +250,10 @@ class NativeBridge {
       try {
         final result = await _channel.invokeMethod<bool>(
           'checkNodeStatus',
-          {'serviceName': node.serviceName}, // 直接传递服务名称
+          {
+            'serviceName': node.serviceName,
+            'configPath': node.configPath,
+          },
         );
         return result ?? false;
       } on MissingPluginException {
@@ -428,6 +435,18 @@ class NativeBridge {
       return '插件未实现';
     } catch (e) {
       return '操作失败: $e';
+    }
+  }
+
+  static Future<String> verifySocks5Proxy() async {
+    if (!Platform.isMacOS) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('verifySocks5Proxy');
+      return result ?? '验证失败: 无返回';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return '验证失败: $e';
     }
   }
 

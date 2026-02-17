@@ -3,39 +3,31 @@ import FlutterMacOS
 
 extension AppDelegate {
   func handleServiceControl(call: FlutterMethodCall, bundleId: String, result: @escaping FlutterResult) {
-    guard let args = call.arguments as? [String: Any],
-          let serviceNameArg = args["serviceName"] as? String else {
-      result(FlutterError(code: "INVALID_ARGS", message: "Missing serviceName", details: nil))
-      return
-    }
-
-    let userName = NSUserName()
-    let uid = getuid()
-    let servicePath = "/Users/\(userName)/Library/LaunchAgents/\(serviceNameArg)"
-    let serviceName = serviceNameArg.replacingOccurrences(of: ".plist", with: "")
-
-    // 检查 macOS 是否为现代版本（>= 10.15）
-    let os = ProcessInfo.processInfo.operatingSystemVersion
-    let useModernLaunchctl = os.majorVersion >= 11 || (os.majorVersion == 10 && os.minorVersion >= 15)
+    let args = call.arguments as? [String: Any] ?? [:]
+    let serviceNameArg = args["serviceName"] as? String
+    let configPath = args["configPath"] as? String
+    let nodeName = (args["nodeName"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let serviceName = serviceNameArg?.replacingOccurrences(of: ".plist", with: "")
 
     switch call.method {
     case "startNodeService":
-      let command = useModernLaunchctl
-        ? "launchctl bootstrap gui/\(uid) \"\(servicePath)\""
-        : "launchctl load \"\(servicePath)\""
-      runShellScript(command: command, returnsBool: false, result: result)
+      startNodeServiceWithDirectXray(
+        configPath: configPath,
+        nodeName: nodeName,
+        result: result
+      )
 
     case "stopNodeService":
-      let command = useModernLaunchctl
-        ? "launchctl bootout gui/\(uid) \"\(servicePath)\""
-        : "launchctl unload \"\(servicePath)\""
-      runShellScript(command: command, returnsBool: false, result: result)
+      stopNodeServiceWithDirectXray(result: result)
 
     case "checkNodeStatus":
-      let command = useModernLaunchctl
-        ? "launchctl print gui/\(uid)/\(serviceName)"
-        : "launchctl list | grep \"\(serviceName)\""
-      runShellScript(command: command, returnsBool: true, result: result)
+      // serviceName is optional now; keep it for future fallback compatibility
+      _ = serviceName
+      let running = isDirectXrayRunning()
+      result(running)
+
+    case "verifySocks5Proxy":
+      verifySocks5Proxy(result: result)
 
     default:
       result(FlutterMethodNotImplemented)
@@ -106,5 +98,101 @@ extension AppDelegate {
       return regex.stringByReplacingMatches(in: command, options: [], range: range, withTemplate: "echo \"****\" | sudo -S")
     }
     return command
+  }
+
+  private func startNodeServiceWithDirectXray(
+    configPath: String?,
+    nodeName: String?,
+    result: @escaping FlutterResult
+  ) {
+    if isDirectXrayRunning() {
+      result("服务已在运行")
+      return
+    }
+
+    guard let sourceConfig = configPath?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !sourceConfig.isEmpty else {
+      result(FlutterError(code: "INVALID_ARGS", message: "Missing configPath", details: nil))
+      return
+    }
+
+    let prepareCommand = """
+mkdir -p /opt/homebrew/etc/xray
+cp -f "\(sourceConfig)" /opt/homebrew/etc/xray/config.json
+"""
+    let (prepareOK, prepareOutput) = runCommandAndCapture(command: prepareCommand)
+    if !prepareOK {
+      result(FlutterError(code: "PREPARE_FAILED", message: "prepare config failed", details: prepareOutput))
+      return
+    }
+
+    let startCommand = """
+nohup /opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json >/tmp/xstream-xray-runtime.log 2>&1 &
+sleep 1
+"""
+    let (startOK, startOutput) = runCommandAndCapture(command: startCommand)
+    if !startOK {
+      result(FlutterError(code: "EXEC_FAILED", message: "start xray failed", details: startOutput))
+      return
+    }
+
+    if isDirectXrayRunning() {
+      let suffix = (nodeName == nil || nodeName!.isEmpty) ? "" : " (\(nodeName!))"
+      result("success: xray started\(suffix)")
+      return
+    }
+
+    result(FlutterError(code: "EXEC_FAILED", message: "xray not running after start", details: startOutput))
+  }
+
+  private func stopNodeServiceWithDirectXray(result: @escaping FlutterResult) {
+    let stopCommand = """
+pkill -f "/opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json" || true
+sleep 1
+"""
+    _ = runCommandAndCapture(command: stopCommand)
+    result(isDirectXrayRunning() ? "停止失败: 进程仍在运行" : "success")
+  }
+
+  private func isDirectXrayRunning() -> Bool {
+    let checkCommand = "pgrep -f \"/opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json\" >/dev/null"
+    let (ok, _) = runCommandAndCapture(command: checkCommand)
+    return ok
+  }
+
+  private func verifySocks5Proxy(result: @escaping FlutterResult) {
+    guard isDirectXrayRunning() else {
+      result("验证失败: xray 未运行")
+      return
+    }
+
+    let curlCommand = "/usr/bin/curl --silent --show-error --max-time 12 --socks5-hostname 127.0.0.1:1080 https://api.ipify.org"
+    let (ok, output) = runCommandAndCapture(command: curlCommand)
+    let normalized = output.trimmingCharacters(in: .whitespacesAndNewlines)
+    if ok && !normalized.isEmpty {
+      result("success: socks5 可用，出口 IP=\(normalized)")
+      return
+    }
+    result("验证失败: \(normalized.isEmpty ? "socks5 请求无响应" : normalized)")
+  }
+
+  private func runCommandAndCapture(command: String) -> (Bool, String) {
+    let task = Process()
+    task.launchPath = "/bin/zsh"
+    task.arguments = ["-c", command]
+
+    let pipe = Pipe()
+    task.standardOutput = pipe
+    task.standardError = pipe
+
+    do {
+      try task.run()
+      task.waitUntilExit()
+      let data = pipe.fileHandleForReading.readDataToEndOfFile()
+      let output = String(data: data, encoding: .utf8) ?? ""
+      return (task.terminationStatus == 0, output)
+    } catch {
+      return (false, error.localizedDescription)
+    }
   }
 }
