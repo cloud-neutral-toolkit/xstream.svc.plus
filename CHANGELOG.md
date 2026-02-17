@@ -1,3 +1,20 @@
+# Unreleased
+
+## ✅ Changes
+- Removed tun2socks-based system-wide path; Packet Tunnel is now the only TUN/VPN entry on macOS
+- Cleaned tun2socks scripts/resources/docs and related native/Dart APIs
+- Added iOS/macOS `PacketTunnel` app extension targets with embedded `.appex` wiring in both Xcode projects
+- Added Darwin Pigeon channel (`pigeons/darwin.dart`) and generated bridge code for Flutter and Swift
+- Added `DarwinHostApiImpl` native implementation and startup registration in iOS/macOS app entry points
+- Migrated Packet Tunnel provider implementation pattern to options-driven network settings on iOS/macOS
+- Unified Darwin Packet Tunnel control to Pigeon single entry and removed Runner `NativeBridge+PacketTunnel` legacy channel wiring
+- Added xray tunnel bridge symbols (`StartXrayTunnel`, `SubmitInboundPacket`, `StopXrayTunnel`, `FreeXrayTunnel`) in Go/C bridge layer
+- Added Android Packet Tunnel native bridge (`StartXrayTunnelWithFd`) and connected `VpnService` TUN fd to xray-core tun inbound session
+- Added Android JNI tunnel adapter (`packet_tunnel_jni`) and wired Packet Tunnel lifecycle to native xray tunnel start/stop
+- Upgraded `go_core` xray dependency to xray-core `v1.260206.0` for native tun inbound support on mobile Packet Tunnel path
+- Added Packet Tunnel startup rollback path in iOS/macOS providers and documented startup/failure sequence in `docs/system-vpn-packet-tunnel-xray26.md`
+- Added client-side `vless://` URI support for node import and outbound generation, including `tcp` and `xhttp` transport parameters
+
 # XStream v0.2.0 - Windows Release
 
 _Release Date: 2025-06-10_

@@ -45,5 +45,7 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>PacketTunnelProviderBundleId</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER).PacketTunnel</string>
 </dict>
 </plist>

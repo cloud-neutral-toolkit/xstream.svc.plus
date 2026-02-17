@@ -1,13 +1,203 @@
-# XStream Repository Guidelines
+# Agents Guidelines
 
 本文件为整个仓库的协作说明，适用于 `Xstream/` 下的所有文件与子目录。请在修改代码或文档前阅读并遵循以下约定。
+
+## Global Semantics & Usage Constraints (Mandatory)
+
+All analysis, design, implementation, documentation, UI copy, and code comments **must** comply with the following non‑negotiable constraints.
+
+### Platform & Architecture
+
+* Xstream **must** use Apple’s official **Network Extension** framework.
+* System‑wide networking **must** be implemented **only** via **NEPacketTunnelProvider (Packet Tunnel)**.
+* No alternative system networking paths are allowed.
+
+### Product Semantics
+
+* Xstream is a **legal system VPN / Secure Network Tunnel**.
+* Acceptable purposes: **network security, privacy protection, connection stability, and network acceleration**.
+* All features and descriptions must align with the **normal technical definition** of a system‑level VPN / secure tunnel.
+
+### Prohibited Meanings & References
+
+* Do **not** reference or imply any country, region, or specific network environment.
+* Do **not** reference or imply censorship, blocking, bypassing, restrictions, or similar concepts.
+* Do **not** use language such as “bypass”, “circumvent”, “break through”, or any equivalent.
+
+### Approved Vocabulary (Use Only)
+
+* Secure Tunnel
+* System VPN
+* Encrypted Network
+* Packet Tunnel
+* Network Acceleration
+* Network Reliability
+* Privacy Protection
+* System‑level Networking
+
+### Disallowed Vocabulary
+
+* Any country/region names
+* Censorship‑related terms
+* Restriction/bypass terminology
+* Political or regulatory insinuations
+
+### Implementation Constraints
+
+* Do **not** use or depend on:
+
+* user-space TUN + SOCKS forwarding helpers
+  * user‑space TUN hacks
+  * sudo‑based route manipulation
+  * non‑standard networking workarounds
+* DNS handling (including DNS over TLS) must be described as **part of the secure tunnel**, never as a bypass or workaround.
+
+### App Store Objective
+
+* Target release: **December 2025**.
+* Xstream is intended for **macOS App Store distribution**.
+* All design decisions must prioritize **long‑term compliance, auditability, and maintainability**.
+
+### Scope Discipline
+
+* Keep all discussions within the scope of a compliant **system VPN / secure network tunnel**.
+* Avoid introducing features, narratives, or terminology that could shift the product’s meaning outside this scope.
+
+> These constraints
+
+---
+
+## 6. Global Semantics & Compliance (AI-Critical)
+
+> This section defines **non-negotiable semantic and architectural constraints**.
+> All human contributors and **all AI agents** must follow these rules.
+
+### 6.1 English Version (Authoritative)
+
+**Platform & Architecture**
+
+* Xstream **must** use Apple’s official **Network Extension** framework.
+* System-wide networking **must be implemented only** via **NEPacketTunnelProvider (Packet Tunnel)**.
+* Packet Tunnel is the **sole system-level network entry point**.
+* No alternative mechanisms (user-space TUN hacks, user-space TUN + SOCKS forwarding, sudo routing, proxy environment variables) are permitted.
+
+**Product Semantics**
+
+* Xstream is a **legal System VPN / Secure Network Tunnel**.
+* Acceptable purposes are limited to:
+
+  * Network security
+  * Privacy protection
+  * Connection stability
+  * Network acceleration
+* All features, APIs, UI copy, documentation, and code comments **must align with the standard technical definition** of a system-level VPN / secure tunnel.
+
+**Language & Meaning Constraints**
+
+* Do **not** reference or imply any specific country, region, or network environment.
+* Do **not** reference censorship, blocking, restrictions, or bypassing mechanisms.
+* Do **not** use wording such as “bypass”, “circumvent”, “break through”, or equivalent expressions.
+
+**Approved Vocabulary (Use Only)**
+
+* Secure Tunnel
+* System VPN
+* Packet Tunnel
+* Encrypted Network
+* Network Acceleration
+* Network Reliability
+* Privacy Protection
+* System-level Networking
+
+**Disallowed Vocabulary**
+
+* Any country or region names
+* Censorship-related terms
+* Restriction / bypass terminology
+* Political or regulatory insinuations
+
+**DNS Semantics**
+
+* DNS (including DNS over TLS) is treated as **part of the secure tunnel**, never as a workaround or bypass.
+* DNS configuration exists solely for **security, integrity, and reliability**.
+
+**App Store Objective**
+
+* Xstream is designed for **macOS App Store distribution**.
+* Target release: **December 2025**.
+* All design decisions must prioritize **long-term compliance, auditability, and maintainability**.
+
+---
+
+### 6.2 中文版本（权威约束）
+
+**平台与架构**
+
+* Xstream **必须**使用 Apple 官方 **Network Extension** 框架。
+* 系统级网络接管 **仅允许**通过 **NEPacketTunnelProvider（Packet Tunnel）** 实现。
+* Packet Tunnel 是 **唯一的系统级网络入口**。
+* 禁止使用任何替代方案，包括但不限于：
+
+  * 用户态 TUN hack
+* user-space TUN + SOCKS forwarding helpers
+  * sudo 路由修改
+  * 代理环境变量方式
+
+**产品语义**
+
+* Xstream 被定义为 **合法的系统级 VPN / Secure Network Tunnel**。
+* 合法用途仅包括：
+
+  * 网络安全
+  * 隐私保护
+  * 连接稳定性
+  * 网络加速
+* 所有功能、API、UI 文案、文档与代码注释，**必须符合系统级 VPN / 安全隧道的常规技术定义**。
+
+**语言与语义约束**
+
+* 不得出现或暗示任何国家、地区或特定网络环境。
+* 不得提及或影射审查、封锁、限制或绕过行为。
+* 禁止使用“绕过”“突破”“翻越”等非中性表述。
+
+**允许使用的术语（仅限以下）**
+
+* Secure Tunnel
+* System VPN
+* Packet Tunnel
+* Encrypted Network
+* Network Acceleration
+* Network Reliability
+* Privacy Protection
+* System-level Networking
+
+**禁止使用的术语**
+
+* 国家 / 地区名称
+* 与审查相关的词汇
+* 绕过 / 规避类表述
+* 政治或监管暗示
+
+**DNS 语义说明**
+
+* DNS（包括 DNS over TLS）被视为 **安全隧道的一部分**，而非旁路或变通方案。
+* DNS 配置仅用于 **安全性、完整性与可靠性提升**。
+
+**App Store 目标**
+
+* Xstream 以 **macOS App Store 上架** 为明确目标。
+* 计划在 **2025 年 12 月前完成上架**。
+* 所有设计决策需优先满足 **长期合规、可审计、可维护** 的要求。
+
+> **Note:** Any AI-generated output that violates this section must be treated as invalid and rejected.
+
 
 ---
 
 ## 1. 项目概览
 - **前端/客户端：** Flutter 应用位于 `lib/`，通过多屏幕（`screens/`）、服务层（`services/`）、工具库（`utils/`）以及组件库（`widgets/`）组织代码。
 - **原生桥接：** `lib/utils/native_bridge.dart` 与 `lib/bindings/` 负责动态库调用，`go_core/` 提供 Go 编写的跨平台桥接逻辑，通过 FFI 暴露到 Flutter。
-- **模板与配置：** `lib/templates/` 保存生成 Xray/tun2socks 配置的文本模板；`assets/` 存放静态资源与默认配置；`docs/` 内含平台构建与使用文档。
+- **模板与配置：** `lib/templates/` 保存生成 Xray 配置的文本模板；`assets/` 存放静态资源与默认配置；`docs/` 内含平台构建与使用文档。
 - **构建脚本：** `Makefile` 和 `build_scripts/` 提供多平台打包流程，需根据目标平台执行不同命令。
 
 ---

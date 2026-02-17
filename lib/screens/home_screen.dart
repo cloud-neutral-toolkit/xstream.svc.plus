@@ -255,7 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     title: Text(
                       '${node.countryCode.toUpperCase()} | ${node.name}',
                     ),
-                    subtitle: const Text('VLESS | tcp'),
+                    subtitle: Text(
+                      '${node.protocol.toUpperCase()} | ${node.transport} | ${node.security}',
+                    ),
                     leading: isUnlocked
                         ? Checkbox(
                             value: isSelected,

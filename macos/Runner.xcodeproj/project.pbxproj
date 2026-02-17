@@ -21,14 +21,17 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		0736814354AC0287B614AD43 /* MacosHostApi.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A9C009950723FABDE37CCAA /* MacosHostApi.swift */; };
 		1D0592B26381545C7FFA3FA4 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F5E2DC69227D14C4E9F911 /* Pods_Runner.framework */; };
 		28A7B9C4233F7B16A39CA547 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */; };
+		2B6560FD8E55317755350A16 /* Messages.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586152D4F7605B4D79850566 /* Messages.g.swift */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
 		33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F22044A3C60003C045 /* Assets.xcassets */; };
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
+		58E72ADC47724EE381E3CA64 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
 		972D45842DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
 		972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
 		972D45862DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
@@ -39,15 +42,15 @@
 		979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
 		979170312DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
 		979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
-                979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
-                979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
-                427575FE6A38263A6A11281E /* NativeBridge+Tun2socks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */; };
-                A1DF6B5120C9CDC54B313AE2 /* NativeBridge+Tun2socks.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */; };
-                AD1CF25792A845398FD69EA1 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
-                58E72ADC47724EE381E3CA64 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
-                97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
-               97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
-               2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */ = {isa = PBXBuildFile; fileRef = 3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */; };
+		979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
+		979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
+		97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
+		97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
+		AD1CF25792A845398FD69EA1 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
+		D7829F33E18BCECD82DF1FFB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F66B15F1AD2859BCFD535D63 /* Cocoa.framework */; };
+		DE5B2DE92396BD04D5D98629 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA8AC8FD9AE59650C0B1B284 /* NetworkExtension.framework */; };
+		DE714BB7A3AFD866F9DAECD2 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */; };
+		FBFB14460FA45E3F9E64A22F /* PacketTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +68,13 @@
 			remoteGlobalIDString = 33CC111A2044C6BA0003C045;
 			remoteInfo = FLX;
 		};
+		FE1C041957C14B0687CC0C3D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 33CC10E52044A3C60003C045 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C96C6D04CB8FBA943A97CE6;
+			remoteInfo = PacketTunnel;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -78,9 +88,22 @@
 			name = "Bundle Framework";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C42253198E8392395A773531 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				FBFB14460FA45E3F9E64A22F /* PacketTunnel.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0A9C009950723FABDE37CCAA /* MacosHostApi.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = MacosHostApi.swift; path = ../darwin/MacosHostApi.swift; sourceTree = SOURCE_ROOT; };
+		12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+SystemProxy.swift"; sourceTree = "<group>"; };
 		188CD8F4E55DB4BD4AE17AA3 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -94,29 +117,33 @@
 		33CC11122044BFA00003C045 /* MainFlutterWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainFlutterWindow.swift; sourceTree = "<group>"; };
 		33CEB47222A05771004F2AC0 /* Flutter-Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Debug.xcconfig"; sourceTree = "<group>"; };
 		33CEB47422A05771004F2AC0 /* Flutter-Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Flutter-Release.xcconfig"; sourceTree = "<group>"; };
-		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "ephemeral/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
+		33CEB47722A0578A004F2AC0 /* Flutter-Generated.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Flutter-Generated.xcconfig"; path = "generated/Flutter-Generated.xcconfig"; sourceTree = "<group>"; };
 		33E51913231747F40026EE4D /* DebugProfile.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = DebugProfile.entitlements; sourceTree = "<group>"; };
 		33E51914231749380026EE4D /* Release.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = Release.entitlements; sourceTree = "<group>"; };
 		33E5194F232828860026EE4D /* AppInfo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = AppInfo.xcconfig; sourceTree = "<group>"; };
 		343DECCED6999D8B328FAAA1 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
 		34F5E2DC69227D14C4E9F911 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D23B71DA8553E6DC79A9F7B /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
+		586152D4F7605B4D79850566 /* Messages.g.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Messages.g.swift; path = ../darwin/Messages.g.swift; sourceTree = SOURCE_ROOT; };
 		6DDE21BA3EA037B91A78212A /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		73850DB7DC3E1B1EE4AF1620 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
 		77EAD4060A9CA64878A8A272 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PacketTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
 		972D45822DF2D0D700A356CC /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = xray; path = Resources/xray/xray; sourceTree = SOURCE_ROOT; };
 		972D45832DF2D0D700A356CC /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "xray-x86_64"; path = "Resources/xray/xray-x86_64"; sourceTree = SOURCE_ROOT; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ConfigWriter.swift"; sourceTree = "<group>"; };
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
 		9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ServiceControl.swift"; sourceTree = "<group>"; };
-                9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
-                EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Tun2socks.swift"; sourceTree = "<group>"; };
-                12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+SystemProxy.swift"; sourceTree = "<group>"; };
-                97AB92F72DF3F9FA00393014 /* reset_xray.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = reset_xray.sh; path = Resources/xray/reset_xray.sh; sourceTree = SOURCE_ROOT; };
-               3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = tun2socks_service.sh; path = Resources/tun2socks/tun2socks_service.sh; sourceTree = SOURCE_ROOT; };
-               E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
+		97AB92F72DF3F9FA00393014 /* reset_xray.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = reset_xray.sh; path = Resources/xray/reset_xray.sh; sourceTree = SOURCE_ROOT; };
+		C85134DAB1776B901C2A061E /* PacketTunnel.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = PacketTunnel.entitlements; sourceTree = "<group>"; };
+		DA9EFDBF6919722EFB583897 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		F66B15F1AD2859BCFD535D63 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		FA8AC8FD9AE59650C0B1B284 /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -136,9 +163,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		E8C4044A130EED63FECB10BF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D7829F33E18BCECD82DF1FFB /* Cocoa.framework in Frameworks */,
+				DE5B2DE92396BD04D5D98629 /* NetworkExtension.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		2E5B48E766B0F30A505979D4 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				F66B15F1AD2859BCFD535D63 /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
 		331C80D6294CF71000263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
@@ -167,6 +211,7 @@
 				33CC10EE2044A3C60003C045 /* Products */,
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				DDFF3152D6018BF6CB9C5CA8 /* Pods */,
+				E7F8D97C87C34F9A8731511D /* PacketTunnel */,
 			);
 			sourceTree = "<group>";
 		};
@@ -175,6 +220,7 @@
 			children = (
 				33CC10ED2044A3C60003C045 /* xstream.app */,
 				331C80D5294CF71000263BE5 /* RunnerTests.xctest */,
+				7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -182,11 +228,10 @@
 		33CC11242044D66E0003C045 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-                                97A1D2B92DEC03E200278BA5 /* xray */,
-                                03C9FB329FA32ACD0E329818 /* tun2socks */,
-                                33CC10F22044A3C60003C045 /* Assets.xcassets */,
-                                33CC10F42044A3C60003C045 /* MainMenu.xib */,
-                                33CC10F72044A3C60003C045 /* Info.plist */,
+				97A1D2B92DEC03E200278BA5 /* xray */,
+				33CC10F22044A3C60003C045 /* Assets.xcassets */,
+				33CC10F42044A3C60003C045 /* MainMenu.xib */,
+				33CC10F72044A3C60003C045 /* Info.plist */,
 			);
 			name = Resources;
 			path = ..;
@@ -208,43 +253,38 @@
 			children = (
 				979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */,
 				9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */,
-                                9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */,
-                                9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */,
-                               EE895F364E181E629A2F776F /* NativeBridge+Tun2socks.swift */,
-                                12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */,
-                                33CC10F02044A3C60003C045 /* AppDelegate.swift */,
+				9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */,
+				9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */,
+				12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */,
+				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
 				33E51914231749380026EE4D /* Release.entitlements */,
 				33CC11242044D66E0003C045 /* Resources */,
 				33BA886A226E78AF003329D5 /* Configs */,
+				0A9C009950723FABDE37CCAA /* MacosHostApi.swift */,
+				586152D4F7605B4D79850566 /* Messages.g.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
 		};
-                97A1D2B92DEC03E200278BA5 /* xray */ = {
-                        isa = PBXGroup;
-                        children = (
-                                97AB92F72DF3F9FA00393014 /* reset_xray.sh */,
-                                972D45822DF2D0D700A356CC /* xray */,
-                                972D45832DF2D0D700A356CC /* xray-x86_64 */,
-                        );
-                        path = xray;
-                        sourceTree = "<group>";
-                };
-               03C9FB329FA32ACD0E329818 /* tun2socks */ = {
-                        isa = PBXGroup;
-                        children = (
-                               3818EC4C8DE941E0B0A2A88D /* tun2socks_service.sh */,
-                       );
-                       path = tun2socks;
-                       sourceTree = "<group>";
-               };
-                D73912EC22F37F3D000D13A0 /* Frameworks */ = {
+		97A1D2B92DEC03E200278BA5 /* xray */ = {
+			isa = PBXGroup;
+			children = (
+				97AB92F72DF3F9FA00393014 /* reset_xray.sh */,
+				972D45822DF2D0D700A356CC /* xray */,
+				972D45832DF2D0D700A356CC /* xray-x86_64 */,
+			);
+			path = xray;
+			sourceTree = "<group>";
+		};
+		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				34F5E2DC69227D14C4E9F911 /* Pods_Runner.framework */,
 				E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */,
+				2E5B48E766B0F30A505979D4 /* OS X */,
+				FA8AC8FD9AE59650C0B1B284 /* NetworkExtension.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -260,6 +300,17 @@
 				188CD8F4E55DB4BD4AE17AA3 /* Pods-RunnerTests.profile.xcconfig */,
 			);
 			path = Pods;
+			sourceTree = "<group>";
+		};
+		E7F8D97C87C34F9A8731511D /* PacketTunnel */ = {
+			isa = PBXGroup;
+			children = (
+				DA9EFDBF6919722EFB583897 /* Info.plist */,
+				C85134DAB1776B901C2A061E /* PacketTunnel.entitlements */,
+				8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */,
+			);
+			name = PacketTunnel;
+			path = PacketTunnel;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -295,16 +346,35 @@
 				33CC110E2044A8840003C045 /* Bundle Framework */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 				9822DC8BAA96C131C3769F63 /* [CP] Embed Pods Frameworks */,
+				C42253198E8392395A773531 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
+				8124963A51E971330FCDBAB6 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* xstream.app */;
 			productType = "com.apple.product-type.application";
+		};
+		4C96C6D04CB8FBA943A97CE6 /* PacketTunnel */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3A5B4457665F1C30307E7A5C /* Build configuration list for PBXNativeTarget "PacketTunnel" */;
+			buildPhases = (
+				EF04854776A8BC5765BBED62 /* Sources */,
+				E8C4044A130EED63FECB10BF /* Frameworks */,
+				1728418EB957CB4B3A68F260 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PacketTunnel;
+			productName = PacketTunnel;
+			productReference = 7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -354,33 +424,39 @@
 				33CC10EC2044A3C60003C045 /* Runner */,
 				331C80D4294CF70F00263BE5 /* RunnerTests */,
 				33CC111A2044C6BA0003C045 /* Flutter Assemble */,
+				4C96C6D04CB8FBA943A97CE6 /* PacketTunnel */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1728418EB957CB4B3A68F260 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		331C80D3294CF70F00263BE5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                               97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
-                              2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
-                               972D45842DF2D0D700A356CC /* xray in Resources */,
-                               972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
-                       );
+				97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
+				972D45842DF2D0D700A356CC /* xray in Resources */,
+				972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		33CC10EB2044A3C60003C045 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-                                972D45862DF2D0D700A356CC /* xray in Resources */,
-                                972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
-                                33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
-                               33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
-                               97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,
-                               2AD6DCD366C24CBCB25B5458 /* tun2socks_service.sh in Resources */,
-                       );
+				972D45862DF2D0D700A356CC /* xray in Resources */,
+				972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
+				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
+				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
+				97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
@@ -402,7 +478,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "echo \"$PRODUCT_NAME.app\" > \"$PROJECT_DIR\"/Flutter/ephemeral/.app_filename && \"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh embed\n";
+				shellScript = "mkdir -p \"$PROJECT_DIR\"/Flutter/generated && echo \"$PRODUCT_NAME.app\" > \"$PROJECT_DIR\"/Flutter/generated/.app_filename && FLUTTER_SOURCE_ROOT=\"${FLUTTER_SOURCE_ROOT_OVERRIDE:-$SOURCE_ROOT}\" && SOURCE_ROOT=\"$FLUTTER_SOURCE_ROOT\" \"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh embed\n";
 		};
 		33CC111E2044C6BF0003C045 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -410,19 +486,19 @@
 			files = (
 			);
 			inputFileListPaths = (
-				Flutter/ephemeral/FlutterInputs.xcfilelist,
+					Flutter/FlutterInputs.xcfilelist,
 			);
 			inputPaths = (
-				Flutter/ephemeral/tripwire,
+					Flutter/generated/.tripwire,
 			);
 			outputFileListPaths = (
-				Flutter/ephemeral/FlutterOutputs.xcfilelist,
+					Flutter/FlutterOutputs.xcfilelist,
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/ephemeral/tripwire";
+				shellScript = "mkdir -p \"$PROJECT_DIR\"/Flutter/generated && FLUTTER_SOURCE_ROOT=\"${FLUTTER_SOURCE_ROOT_OVERRIDE:-$SOURCE_ROOT}\" && SOURCE_ROOT=\"$FLUTTER_SOURCE_ROOT\" \"$FLUTTER_ROOT\"/packages/flutter_tools/bin/macos_assemble.sh && touch Flutter/generated/.tripwire";
 		};
 		9822DC8BAA96C131C3769F63 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -496,10 +572,9 @@
 				979170312DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */,
 				979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */,
 				979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */,
-                               979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
-                               427575FE6A38263A6A11281E /* NativeBridge+Tun2socks.swift in Sources */,
-                                58E72ADC47724EE381E3CA64 /* NativeBridge+SystemProxy.swift in Sources */,
-                        );
+				979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
+				58E72ADC47724EE381E3CA64 /* NativeBridge+SystemProxy.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		33CC10E92044A3C60003C045 /* Sources */ = {
@@ -512,10 +587,19 @@
 				9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */,
 				9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */,
 				9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */,
-                               979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
-                               A1DF6B5120C9CDC54B313AE2 /* NativeBridge+Tun2socks.swift in Sources */,
-                                AD1CF25792A845398FD69EA1 /* NativeBridge+SystemProxy.swift in Sources */,
-                        );
+				979170302DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */,
+				AD1CF25792A845398FD69EA1 /* NativeBridge+SystemProxy.swift in Sources */,
+				0736814354AC0287B614AD43 /* MacosHostApi.swift in Sources */,
+				2B6560FD8E55317755350A16 /* Messages.g.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EF04854776A8BC5765BBED62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE714BB7A3AFD866F9DAECD2 /* PacketTunnelProvider.swift in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -530,6 +614,12 @@
 			isa = PBXTargetDependency;
 			target = 33CC111A2044C6BA0003C045 /* Flutter Assemble */;
 			targetProxy = 33CC111F2044C79F0003C045 /* PBXContainerItemProxy */;
+		};
+		8124963A51E971330FCDBAB6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = PacketTunnel;
+			target = 4C96C6D04CB8FBA943A97CE6 /* PacketTunnel */;
+			targetProxy = FE1C041957C14B0687CC0C3D /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -632,7 +722,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-                                MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -646,6 +736,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -716,7 +808,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-                                MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -766,7 +858,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-                                MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -780,6 +872,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -800,6 +894,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
 				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -813,26 +909,109 @@
 			};
 			name = Release;
 		};
-		33CC111C2044C6BA0003C045 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Manual;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 6.0;
+			33CC111C2044C6BA0003C045 /* Debug */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					CLANG_ENABLE_MODULES = YES;
+					CODE_SIGN_STYLE = Manual;
+					FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
+					PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+					SWIFT_VERSION = 6.0;
 			};
 			name = Debug;
 		};
-		33CC111D2044C6BA0003C045 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 6.0;
+			33CC111D2044C6BA0003C045 /* Release */ = {
+				isa = XCBuildConfiguration;
+				buildSettings = {
+					CLANG_ENABLE_MODULES = YES;
+					CODE_SIGN_STYLE = Automatic;
+					FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
+					PRODUCT_NAME = "$(TARGET_NAME)";
+					SWIFT_VERSION = 6.0;
 			};
 			name = Release;
+		};
+		386E43FBC4EEE509ACFBA802 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				FRAMEWORK_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)";
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = PacketTunnel/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				OTHER_MODULE_VERIFIER_FLAGS = "";
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Profile;
+		};
+		EB4693C35AF14E9F43BC9C2A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				FRAMEWORK_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)";
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = PacketTunnel/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				OTHER_MODULE_VERIFIER_FLAGS = "";
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		F2BB10675B764DD9A3F4BDE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				FRAMEWORK_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)";
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = PacketTunnel/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				OTHER_LDFLAGS = "";
+				OTHER_MODULE_VERIFIER_FLAGS = "";
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
@@ -873,6 +1052,16 @@
 				33CC111C2044C6BA0003C045 /* Debug */,
 				33CC111D2044C6BA0003C045 /* Release */,
 				338D0CEB231458BD00FA5F75 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3A5B4457665F1C30307E7A5C /* Build configuration list for PBXNativeTarget "PacketTunnel" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				EB4693C35AF14E9F43BC9C2A /* Release */,
+				F2BB10675B764DD9A3F4BDE2 /* Debug */,
+				386E43FBC4EEE509ACFBA802 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -4,18 +4,37 @@ import 'package:flutter/services.dart';
 import 'package:ffi/ffi.dart';
 import '../../services/vpn_config_service.dart'; // 引入新的 VpnConfig 类
 import '../bindings/bridge_bindings.dart';
+import '../app/darwin_host_api.g.dart' as darwin_host;
+import '../widgets/log_console.dart' show LogLevel;
+import 'app_logger.dart';
+import 'global_config.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
   static const MethodChannel _loggerChannel =
       MethodChannel('com.xstream/logger');
+  static final darwin_host.DarwinHostApi _darwinHostApi =
+      darwin_host.DarwinHostApi();
+  static bool _darwinFlutterApiReady = false;
+  static String? _mobileActiveNodeName;
 
-  static final bool _useFfi =
-      Platform.isWindows || Platform.isLinux || Platform.isIOS;
+  static final bool _useFfi = Platform.isWindows ||
+      Platform.isLinux ||
+      Platform.isIOS ||
+      Platform.isAndroid;
   static BridgeBindings? _bindings;
 
   static bool get _isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+
+  static bool get _isDarwin => Platform.isMacOS || Platform.isIOS;
+
+  static bool get _isMobile => Platform.isIOS || Platform.isAndroid;
+
+  static const _tunStatusFallback = PacketTunnelStatus(
+    status: 'unsupported',
+    utunInterfaces: [],
+  );
 
   static BridgeBindings get _ffi {
     _bindings ??= _useFfi
@@ -28,6 +47,8 @@ class NativeBridge {
     if (Platform.isWindows) {
       return ffi.DynamicLibrary.open('libgo_native_bridge.dll');
     } else if (Platform.isLinux) {
+      return ffi.DynamicLibrary.open('libgo_native_bridge.so');
+    } else if (Platform.isAndroid) {
       return ffi.DynamicLibrary.open('libgo_native_bridge.so');
     } else if (Platform.isIOS) {
       return ffi.DynamicLibrary.process();
@@ -44,6 +65,20 @@ class NativeBridge {
     required String vpnNodesConfigContent,
     required String password,
   }) async {
+    if (_isMobile) {
+      try {
+        await File(xrayConfigPath).parent.create(recursive: true);
+        await File(servicePath).parent.create(recursive: true);
+        await File(vpnNodesConfigPath).parent.create(recursive: true);
+        await File(xrayConfigPath).writeAsString(xrayConfigContent);
+        await File(servicePath).writeAsString(serviceContent);
+        await File(vpnNodesConfigPath).writeAsString(vpnNodesConfigContent);
+        return 'success';
+      } catch (e) {
+        return '写入失败: $e';
+      }
+    }
+
     if (!_isDesktop) return '当前平台暂不支持';
 
     if (_useFfi) {
@@ -91,6 +126,33 @@ class NativeBridge {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
 
+    if (_isMobile) {
+      if (Platform.isAndroid) {
+        final tunStatus = await getPacketTunnelStatus();
+        if (tunStatus.status == 'connected' ||
+            tunStatus.status == 'connecting') {
+          return 'Packet Tunnel 已在运行，请先停止';
+        }
+      }
+      if (await checkNodeStatus(nodeName)) return '服务已在运行';
+      try {
+        if (_mobileActiveNodeName != null &&
+            _mobileActiveNodeName != nodeName) {
+          stopXray();
+          _mobileActiveNodeName = null;
+        }
+
+        final configJson = await File(node.configPath).readAsString();
+        final result = startXray(configJson);
+        if (result.toLowerCase().startsWith('success')) {
+          _mobileActiveNodeName = nodeName;
+        }
+        return result;
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
     if (!_isDesktop) return '当前平台暂不支持';
 
     // ✅ 新增：避免重复启动
@@ -124,6 +186,21 @@ class NativeBridge {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
 
+    if (_isMobile) {
+      if (_mobileActiveNodeName != nodeName) {
+        return 'success';
+      }
+      try {
+        final result = stopXray();
+        if (result.toLowerCase().startsWith('success')) {
+          _mobileActiveNodeName = null;
+        }
+        return result;
+      } catch (e) {
+        return '停止失败: $e';
+      }
+    }
+
     if (!_isDesktop) return '当前平台暂不支持';
 
     if (_useFfi) {
@@ -152,6 +229,10 @@ class NativeBridge {
   static Future<bool> checkNodeStatus(String nodeName) async {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return false;
+
+    if (_isMobile) {
+      return _mobileActiveNodeName == nodeName;
+    }
 
     if (!_isDesktop) return false;
     if (_useFfi) {
@@ -289,36 +370,6 @@ class NativeBridge {
     }
   }
 
-  /// Start tun2socks-based system proxy on macOS
-  static Future<String> startTun2socks(String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
-    try {
-      final result = await _channel.invokeMethod<String>('startTun2socks', {
-        'password': password,
-      });
-      return result ?? '启动成功';
-    } on MissingPluginException {
-      return '插件未实现';
-    } catch (e) {
-      return '启动失败: $e';
-    }
-  }
-
-  /// Stop tun2socks-based system proxy on macOS
-  static Future<String> stopTun2socks(String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
-    try {
-      final result = await _channel.invokeMethod<String>('stopTun2socks', {
-        'password': password,
-      });
-      return result ?? '已停止';
-    } on MissingPluginException {
-      return '插件未实现';
-    } catch (e) {
-      return '停止失败: $e';
-    }
-  }
-
   /// Enable or disable system SOCKS proxy on macOS
   static Future<String> setSystemProxy(bool enable, String password) async {
     if (!Platform.isMacOS) return '当前平台暂不支持';
@@ -335,36 +386,220 @@ class NativeBridge {
     }
   }
 
-  /// Install tun2socks helper scripts to /opt/homebrew/bin
-  static Future<String> installTun2socksScripts(String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
+  static Future<darwin_host.TunnelProfile> _buildDefaultTunnelProfile() async {
+    final appGroupPath = await _darwinHostApi.appGroupPath();
+    final dns4 = <String>[
+      TunDnsConfig.dns1.value.trim(),
+      TunDnsConfig.dns2.value.trim(),
+    ].where((s) => s.isNotEmpty).toList();
+
+    return darwin_host.TunnelProfile(
+      mtu: 1500,
+      tun46Setting: 2,
+      defaultNicSupport6: true,
+      dnsServers4: dns4.isEmpty ? <String>['1.1.1.1', '8.8.8.8'] : dns4,
+      dnsServers6: <String>['2606:4700:4700::1111', '2001:4860:4860::8888'],
+      ipv4Addresses: <String>['10.0.0.2'],
+      ipv4SubnetMasks: <String>['255.255.255.0'],
+      ipv4IncludedRoutes: <darwin_host.TunnelRouteV4>[
+        darwin_host.TunnelRouteV4(
+          destinationAddress: '0.0.0.0',
+          subnetMask: '0.0.0.0',
+        ),
+      ],
+      ipv4ExcludedRoutes: <darwin_host.TunnelRouteV4>[],
+      ipv6Addresses: <String>['fd00::2'],
+      ipv6NetworkPrefixLengths: <int>[120],
+      ipv6IncludedRoutes: <darwin_host.TunnelRouteV6>[
+        darwin_host.TunnelRouteV6(
+          destinationAddress: '::',
+          networkPrefixLength: 0,
+        ),
+      ],
+      ipv6ExcludedRoutes: <darwin_host.TunnelRouteV6>[],
+      configPath: '$appGroupPath/xray_config.json',
+    );
+  }
+
+  static Future<Map<String, Object?>> _buildDefaultTunnelProfileMap({
+    String? configPath,
+  }) async {
+    final dns4 = <String>[
+      TunDnsConfig.dns1.value.trim(),
+      TunDnsConfig.dns2.value.trim(),
+    ].where((s) => s.isNotEmpty).toList();
+
+    return <String, Object?>{
+      'mtu': 1500,
+      'tun46Setting': 2,
+      'defaultNicSupport6': true,
+      'dnsServers4': dns4.isEmpty ? <String>['1.1.1.1', '8.8.8.8'] : dns4,
+      'dnsServers6': <String>['2606:4700:4700::1111', '2001:4860:4860::8888'],
+      'ipv4Addresses': <String>['10.0.0.2'],
+      'ipv4SubnetMasks': <String>['255.255.255.0'],
+      'ipv4IncludedRoutes': <Map<String, String>>[
+        const <String, String>{
+          'destinationAddress': '0.0.0.0',
+          'subnetMask': '0.0.0.0',
+        },
+      ],
+      'ipv4ExcludedRoutes': <Map<String, String>>[],
+      'ipv6Addresses': <String>['fd00::2'],
+      'ipv6NetworkPrefixLengths': <int>[120],
+      'ipv6IncludedRoutes': <Map<String, Object?>>[
+        const <String, Object?>{
+          'destinationAddress': '::',
+          'networkPrefixLength': 0,
+        },
+      ],
+      'ipv6ExcludedRoutes': <Map<String, Object?>>[],
+      'configPath': configPath ?? '',
+    };
+  }
+
+  static Future<String?> _resolveMobileTunnelConfigPath() async {
     try {
-      final result =
-          await _channel.invokeMethod<String>('installTun2socksScripts', {
-        'password': password,
-      });
-      return result ?? '安装完成';
+      await VpnConfig.load();
+    } catch (_) {}
+
+    final active = _mobileActiveNodeName;
+    if (active != null && active.trim().isNotEmpty) {
+      final node = VpnConfig.getNodeByName(active);
+      final path = node?.configPath.trim();
+      if (path != null && path.isNotEmpty) {
+        return path;
+      }
+    }
+
+    for (final node in VpnConfig.nodes) {
+      final path = node.configPath.trim();
+      if (node.enabled && path.isNotEmpty) {
+        return path;
+      }
+    }
+
+    for (final node in VpnConfig.nodes) {
+      final path = node.configPath.trim();
+      if (path.isNotEmpty) {
+        return path;
+      }
+    }
+    return null;
+  }
+
+  static void _ensureDarwinFlutterApiReady() {
+    if (!_isDarwin || _darwinFlutterApiReady) return;
+    darwin_host.DarwinFlutterApi.setUp(_DarwinFlutterApiImpl());
+    _darwinFlutterApiReady = true;
+  }
+
+  /// Start Packet Tunnel on Darwin platforms.
+  static Future<String> startPacketTunnel() async {
+    if (Platform.isAndroid) {
+      try {
+        final configPath = await _resolveMobileTunnelConfigPath();
+        if (configPath == null) {
+          return '未找到可用的节点配置';
+        }
+        stopXray();
+        _mobileActiveNodeName = null;
+        final profile = await _buildDefaultTunnelProfileMap(
+          configPath: configPath,
+        );
+        await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
+        final result =
+            await _channel.invokeMethod<String>('startPacketTunnel', profile);
+        return result ?? 'Packet Tunnel start request submitted';
+      } on MissingPluginException {
+        return '插件未实现';
+      } on PlatformException catch (e) {
+        return '启动失败: ${e.message ?? e.code}';
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    if (!_isDarwin) return '当前平台暂不支持';
+    _ensureDarwinFlutterApiReady();
+    try {
+      final profile = await _buildDefaultTunnelProfile();
+      final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
+      await _darwinHostApi.startPacketTunnel();
+      return saveResult == 'profile_saved'
+          ? 'Packet Tunnel start request submitted'
+          : saveResult;
     } on MissingPluginException {
       return '插件未实现';
+    } on PlatformException catch (e) {
+      return '启动失败: ${e.message ?? e.code}';
     } catch (e) {
-      return '安装失败: $e';
+      return '启动失败: $e';
     }
   }
 
-  static Future<String> installTun2socksPlist(
-      String content, String password) async {
-    if (!Platform.isMacOS) return '当前平台暂不支持';
+  /// Stop Packet Tunnel on Darwin platforms.
+  static Future<String> stopPacketTunnel() async {
+    if (Platform.isAndroid) {
+      try {
+        final result = await _channel.invokeMethod<String>('stopPacketTunnel');
+        return result ?? 'Packet Tunnel stop request submitted';
+      } on MissingPluginException {
+        return '插件未实现';
+      } on PlatformException catch (e) {
+        return '停止失败: ${e.message ?? e.code}';
+      } catch (e) {
+        return '停止失败: $e';
+      }
+    }
+
+    if (!_isDarwin) return '当前平台暂不支持';
+    _ensureDarwinFlutterApiReady();
     try {
-      final result =
-          await _channel.invokeMethod<String>('installTun2socksPlist', {
-        'content': content,
-        'password': password,
-      });
-      return result ?? '安装完成';
+      await _darwinHostApi.stopPacketTunnel();
+      return 'Packet Tunnel stop request submitted';
     } on MissingPluginException {
       return '插件未实现';
+    } on PlatformException catch (e) {
+      return '停止失败: ${e.message ?? e.code}';
     } catch (e) {
-      return '安装失败: $e';
+      return '停止失败: $e';
+    }
+  }
+
+  /// Get Packet Tunnel status on Darwin platforms.
+  static Future<PacketTunnelStatus> getPacketTunnelStatus() async {
+    if (Platform.isAndroid) {
+      try {
+        final raw = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+          'getPacketTunnelStatus',
+        );
+        if (raw == null) return _tunStatusFallback;
+        final map = <Object?, Object?>{};
+        raw.forEach((key, value) {
+          map[key] = value;
+        });
+        return PacketTunnelStatus.fromMap(map);
+      } on MissingPluginException {
+        return _tunStatusFallback;
+      } catch (_) {
+        return _tunStatusFallback;
+      }
+    }
+
+    if (!_isDarwin) return _tunStatusFallback;
+    _ensureDarwinFlutterApiReady();
+    try {
+      final status = await _darwinHostApi.getPacketTunnelStatus();
+      return PacketTunnelStatus(
+        status: status.state,
+        utunInterfaces: status.utunInterfaces,
+        lastError: status.lastError,
+        startedAt: status.startedAt,
+      );
+    } on MissingPluginException {
+      return _tunStatusFallback;
+    } catch (_) {
+      return _tunStatusFallback;
     }
   }
 
@@ -390,5 +625,62 @@ class NativeBridge {
     final result = resPtr.cast<Utf8>().toDartString();
     _ffi.freeCString(resPtr);
     return result;
+  }
+}
+
+class _DarwinFlutterApiImpl extends darwin_host.DarwinFlutterApi {
+  @override
+  void onPacketTunnelError(String code, String message) {
+    addAppLog(
+      'Packet Tunnel error ($code): $message',
+      level: LogLevel.error,
+    );
+  }
+
+  @override
+  void onPacketTunnelStateChanged(darwin_host.TunnelStatus status) {
+    addAppLog(
+      'Packet Tunnel state changed: ${status.state}',
+      level: LogLevel.info,
+    );
+  }
+
+  @override
+  void onSystemWillRestart() {}
+
+  @override
+  void onSystemWillShutdown() {}
+
+  @override
+  void onSystemWillSleep() {}
+}
+
+class PacketTunnelStatus {
+  final String status;
+  final List<String> utunInterfaces;
+  final String? lastError;
+  final int? startedAt;
+
+  const PacketTunnelStatus({
+    required this.status,
+    required this.utunInterfaces,
+    this.lastError,
+    this.startedAt,
+  });
+
+  factory PacketTunnelStatus.fromMap(Map<Object?, Object?> map) {
+    final status = map['status'] as String? ?? 'unknown';
+    final utunRaw = map['utun'];
+    final utunList =
+        utunRaw is List ? utunRaw.whereType<String>().toList() : <String>[];
+    final lastError = map['lastError'] as String?;
+    final startedAtRaw = map['startedAt'];
+    final startedAt = startedAtRaw is int ? startedAtRaw : null;
+    return PacketTunnelStatus(
+      status: status,
+      utunInterfaces: utunList,
+      lastError: lastError,
+      startedAt: startedAt,
+    );
   }
 }

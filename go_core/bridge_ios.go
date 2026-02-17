@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 
 	"github.com/xtls/xray-core/core"
@@ -20,6 +21,8 @@ import (
 var procMap sync.Map
 var singleInstance *xrayInstance
 var instMu sync.Mutex
+var tunnelSeq atomic.Int64
+var tunnelSession sync.Map
 
 type xrayInstance struct {
 	server core.Server
@@ -158,10 +161,74 @@ func StopXray() *C.char {
 	}
 	singleInstance = nil
 
+	return C.CString("success")
+}
+
+//export StartXrayTunnel
+func StartXrayTunnel(configC *C.char) C.longlong {
+	instMu.Lock()
+	defer instMu.Unlock()
+
+	if singleInstance != nil {
+		return C.longlong(-1)
+	}
+
+	cfgData := []byte(C.GoString(configC))
+	if err := startXrayInternal(cfgData); err != nil {
+		return C.longlong(-1)
+	}
+
+	handle := tunnelSeq.Add(1)
+	tunnelSession.Store(handle, true)
+	return C.longlong(handle)
+}
+
+//export SubmitInboundPacket
+func SubmitInboundPacket(handle C.longlong, data *C.uint8_t, length C.int32_t, protocol C.int32_t) C.int32_t {
+	_ = data
+	_ = length
+	_ = protocol
+
+	id := int64(handle)
+	if id <= 0 {
+		return C.int32_t(-1)
+	}
+	if _, ok := tunnelSession.Load(id); !ok {
+		return C.int32_t(-1)
+	}
+
+	// Integration point: forward packet bytes into xray-core Tun session.
+	return C.int32_t(0)
+}
+
+//export StopXrayTunnel
+func StopXrayTunnel(handle C.longlong) *C.char {
+	instMu.Lock()
+	defer instMu.Unlock()
+
+	id := int64(handle)
+	if id <= 0 {
+		return C.CString("error:invalid handle")
+	}
+	if _, ok := tunnelSession.Load(id); !ok {
+		return C.CString("error:session not found")
+	}
+	tunnelSession.Delete(id)
+
 	if err := stopXrayInternal(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
 
+	return C.CString("success")
+}
+
+//export FreeXrayTunnel
+func FreeXrayTunnel(handle C.longlong) *C.char {
+	id := int64(handle)
+	if id <= 0 {
+		return C.CString("error:invalid handle")
+	}
+	tunnelSession.Delete(id)
 	return C.CString("success")
 }
 

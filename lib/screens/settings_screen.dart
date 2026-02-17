@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart'
-    show GlobalState, buildVersion, DnsConfig;
+    show GlobalState, buildVersion, DnsConfig, TunDnsConfig;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -25,6 +25,9 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Timer? _xrayMonitorTimer;
+  bool _tunBusy = false;
+  PacketTunnelStatus _tunStatus =
+      const PacketTunnelStatus(status: 'unknown', utunInterfaces: []);
 
   final SessionManager _sessionManager = SessionManager.instance;
   final DesktopSyncService _syncService = DesktopSyncService.instance;
@@ -45,6 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _usernameController.text = _sessionManager.currentUser.value ?? '';
     _sessionManager.baseUrl.addListener(_syncBaseUrlFromSession);
     _sessionManager.currentUser.addListener(_syncUsernameFromSession);
+    _refreshTunStatus();
   }
 
   Widget _buildButton({
@@ -100,6 +104,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final local = dt.toLocal();
     return '${local.year}-${twoDigits(local.month)}-${twoDigits(local.day)} '
         '${twoDigits(local.hour)}:${twoDigits(local.minute)}';
+  }
+
+  String _formatTunStatusText(
+      BuildContext context, PacketTunnelStatus status) {
+    final label = switch (status.status) {
+      'connected' => context.l10n.get('tunStatusConnected'),
+      'connecting' => context.l10n.get('tunStatusConnecting'),
+      'disconnected' => context.l10n.get('tunStatusDisconnected'),
+      'disconnecting' => context.l10n.get('tunStatusDisconnecting'),
+      'invalid' => context.l10n.get('tunStatusInvalid'),
+      'reasserting' => context.l10n.get('tunStatusReasserting'),
+      'not_configured' => context.l10n.get('tunStatusNotConfigured'),
+      'unsupported' => context.l10n.get('tunStatusUnsupported'),
+      _ => context.l10n.get('tunStatusUnknown'),
+    };
+    final utun = status.utunInterfaces.isNotEmpty
+        ? ' (${status.utunInterfaces.join(', ')})'
+        : '';
+    return '${context.l10n.get('tunStatus')}: $label$utun';
   }
 
   Future<void> _handleLogin() async {
@@ -342,11 +365,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       setMessage: (msg) => addAppLog(msg),
       logMessage: (msg) => addAppLog(msg),
     );
-
-    // 初始化并重启 tun2socks 服务
-    await Tun2socksService.initScripts(password);
-    await Tun2socksService.stop(password);
-    await Tun2socksService.start(password);
   }
 
   void _onInitXray() async {
@@ -427,6 +445,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final msg = await NativeBridge.setSystemProxy(enabled, password);
     addAppLog('全局代理: ${enabled ? "开启" : "关闭"}');
     addAppLog('[system proxy] $msg');
+  }
+
+  void _onToggleTunSettings(bool enabled) {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    if (!isUnlocked) {
+      addAppLog('请先解锁以切换 TUN 设置', level: LogLevel.warning);
+      return;
+    }
+    _togglePacketTunnel(enabled);
+  }
+
+  void _onToggleDnsOverTls(bool enabled) {
+    setState(() => TunDnsConfig.dotEnabled.value = enabled);
+    addAppLog('DNS over TLS: ${enabled ? "开启" : "关闭"}');
+  }
+
+  Future<void> _togglePacketTunnel(bool enabled) async {
+    setState(() => _tunBusy = true);
+    final msg = enabled
+        ? await NativeBridge.startPacketTunnel()
+        : await NativeBridge.stopPacketTunnel();
+    addAppLog('[packet tunnel] $msg');
+    await _refreshTunStatus();
+    if (!mounted) return;
+    setState(() => _tunBusy = false);
+  }
+
+  Future<void> _refreshTunStatus() async {
+    final status = await NativeBridge.getPacketTunnelStatus();
+    if (!mounted) return;
+    final connected =
+        status.status == 'connected' || status.status == 'connecting';
+    setState(() {
+      _tunStatus = status;
+      GlobalState.tunSettingsEnabled.value = connected;
+    });
   }
 
   void _onCheckUpdate() {
@@ -523,6 +577,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             context.l10n.get('globalProxy'),
                             style: _menuTextStyle,
                           ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SwitchListTile(
+                          value: GlobalState.tunSettingsEnabled.value,
+                          onChanged: _tunBusy ? null : _onToggleTunSettings,
+                          title: Text(
+                            context.l10n.get('tunSettings'),
+                            style: _menuTextStyle,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: SwitchListTile(
+                          value: TunDnsConfig.dotEnabled.value,
+                          onChanged: _onToggleDnsOverTls,
+                          title: Text(
+                            context.l10n.get('dnsOverTls'),
+                            style: _menuTextStyle,
+                          ),
+                          subtitle: Text(
+                            context.l10n.get('dnsOverTlsHint'),
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      _buildButton(
+                        icon: Icons.dns_outlined,
+                        label: context.l10n.get('tunDnsConfig'),
+                        onPressed: _showTunDnsDialog,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16.0, top: 4),
+                        child: Text(
+                          _formatTunStatusText(context, _tunStatus),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ),
                     ]),
@@ -633,6 +725,58 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () {
               DnsConfig.dns1.value = dns1Controller.text.trim();
               DnsConfig.dns2.value = dns2Controller.text.trim();
+              Navigator.pop(context);
+            },
+            child: Text(context.l10n.get('confirm')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTunDnsDialog() {
+    final dns1Controller = TextEditingController(text: TunDnsConfig.dns1.value);
+    final dns2Controller = TextEditingController(text: TunDnsConfig.dns2.value);
+    final tlsNameController =
+        TextEditingController(text: TunDnsConfig.tlsServerName.value);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.get('tunDnsConfig')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: dns1Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('primaryDns')),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: dns2Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: tlsNameController,
+              decoration: InputDecoration(
+                labelText: context.l10n.get('dnsTlsServerName'),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.get('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              TunDnsConfig.dns1.value = dns1Controller.text.trim();
+              TunDnsConfig.dns2.value = dns2Controller.text.trim();
+              TunDnsConfig.tlsServerName.value =
+                  tlsNameController.text.trim();
               Navigator.pop(context);
             },
             child: Text(context.l10n.get('confirm')),

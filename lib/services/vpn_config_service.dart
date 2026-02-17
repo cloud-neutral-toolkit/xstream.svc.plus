@@ -10,7 +10,40 @@ import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
-import '../templates/tun2socks_service_macos_template.dart';
+
+class VlessUriProfile {
+  final String name;
+  final String domain;
+  final String port;
+  final String uuid;
+  final String protocol;
+  final String network;
+  final String security;
+  final String? sni;
+  final String? fingerprint;
+  final String? flow;
+  final String? host;
+  final String? path;
+  final String? mode;
+  final List<String> alpn;
+
+  const VlessUriProfile({
+    required this.name,
+    required this.domain,
+    required this.port,
+    required this.uuid,
+    this.protocol = 'vless',
+    this.network = 'tcp',
+    this.security = 'tls',
+    this.sni,
+    this.fingerprint,
+    this.flow,
+    this.host,
+    this.path,
+    this.mode,
+    this.alpn = const [],
+  });
+}
 
 class VpnNode {
   String name;
@@ -23,6 +56,9 @@ class VpnNode {
   /// - Linux: systemd service name
   /// - Windows: SC service name
   String serviceName;
+  String protocol;
+  String transport;
+  String security;
   bool enabled;
 
   VpnNode({
@@ -30,6 +66,9 @@ class VpnNode {
     required this.countryCode,
     required this.configPath,
     required this.serviceName,
+    this.protocol = 'vless',
+    this.transport = 'tcp',
+    this.security = 'tls',
     this.enabled = true,
   }) {
     checkNotEmpty(name, 'name');
@@ -43,6 +82,9 @@ class VpnNode {
     final countryCode = json['countryCode'] ?? '';
     final configPath = json['configPath'] ?? '';
     final serviceName = json['serviceName'] ?? json['plistName'] ?? '';
+    final protocol = json['protocol'] ?? 'vless';
+    final transport = json['transport'] ?? 'tcp';
+    final security = json['security'] ?? 'tls';
 
     checkNotEmpty(name, 'name');
     checkNotEmpty(countryCode, 'countryCode');
@@ -54,6 +96,9 @@ class VpnNode {
       countryCode: countryCode,
       configPath: configPath,
       serviceName: serviceName,
+      protocol: protocol,
+      transport: transport,
+      security: security,
       enabled: json['enabled'] ?? true,
     );
   }
@@ -64,6 +109,9 @@ class VpnNode {
       'countryCode': countryCode,
       'configPath': configPath,
       'serviceName': serviceName,
+      'protocol': protocol,
+      'transport': transport,
+      'security': security,
       'enabled': enabled,
     };
   }
@@ -209,6 +257,16 @@ class VpnConfig {
     required String bundleId,
     required Function(String) setMessage,
     required Function(String) logMessage,
+    String protocol = 'vless',
+    String network = 'tcp',
+    String security = 'tls',
+    String? sni,
+    String? fingerprint = 'chrome',
+    String? flow = 'xtls-rprx-vision',
+    String? host,
+    String? path,
+    String? mode,
+    List<String> alpn = const [],
   }) async {
     checkNotEmpty(nodeName, 'nodeName');
     checkNotEmpty(domain, 'domain');
@@ -218,6 +276,12 @@ class VpnConfig {
     checkNotEmpty(bundleId, 'bundleId');
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
+    checkNotEmpty(protocol, 'protocol');
+    checkNotEmpty(network, 'network');
+    checkNotEmpty(security, 'security');
+    final normalizedProtocol = protocol.trim().toLowerCase();
+    final normalizedNetwork = network.trim().toLowerCase();
+    final normalizedSecurity = security.trim().toLowerCase();
     final code = nodeName.split('-').first.toLowerCase();
     final prefix = await GlobalApplicationConfig.getXrayConfigPath();
     final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
@@ -228,6 +292,16 @@ class VpnConfig {
       uuid,
       setMessage,
       logMessage,
+      protocol: normalizedProtocol,
+      network: normalizedNetwork,
+      security: normalizedSecurity,
+      sni: sni,
+      fingerprint: fingerprint,
+      flow: flow,
+      host: host,
+      path: path,
+      mode: mode,
+      alpn: alpn,
     );
     if (xrayConfigContent.isEmpty) return;
 
@@ -255,6 +329,9 @@ class VpnConfig {
       xrayConfigPath,
       setMessage,
       logMessage,
+      protocol: normalizedProtocol,
+      transport: normalizedNetwork,
+      security: normalizedSecurity,
     );
 
     try {
@@ -280,13 +357,106 @@ class VpnConfig {
     }
   }
 
+  static VlessUriProfile parseVlessUri(
+    String rawUri, {
+    String? fallbackNodeName,
+  }) {
+    checkNotEmpty(rawUri, 'rawUri');
+    final trimmed = rawUri.trim();
+    final uri = Uri.parse(trimmed);
+    if (uri.scheme.toLowerCase() != 'vless') {
+      throw const FormatException('Only vless:// links are supported');
+    }
+
+    final uuid = uri.userInfo.trim();
+    final domain = uri.host.trim();
+    if (uuid.isEmpty || domain.isEmpty) {
+      throw const FormatException('Invalid vless:// link');
+    }
+
+    final query = <String, String>{};
+    uri.queryParameters.forEach((key, value) {
+      query[key.toLowerCase()] = value.trim();
+    });
+
+    final uriName = Uri.decodeComponent(uri.fragment).trim();
+    final nameCandidate = _firstNonEmpty(uriName, fallbackNodeName, domain);
+    final network = _firstNonEmpty(query['type'], 'tcp').toLowerCase();
+    final security = _firstNonEmpty(query['security'], 'tls').toLowerCase();
+    final alpn = (query['alpn'] ?? '')
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    return VlessUriProfile(
+      name: nameCandidate,
+      domain: domain,
+      port: uri.hasPort ? uri.port.toString() : '443',
+      uuid: uuid,
+      network: network,
+      security: security,
+      sni: _nullableValue(query['sni']),
+      fingerprint: _nullableValue(query['fp'] ?? query['fingerprint']),
+      flow: _nullableValue(query['flow']),
+      host: _nullableValue(query['host']),
+      path: _normalizePath(_nullableValue(query['path'])),
+      mode: _nullableValue(query['mode']),
+      alpn: alpn,
+    );
+  }
+
+  static Future<void> generateFromVlessUri({
+    required String vlessUri,
+    String? fallbackNodeName,
+    required String password,
+    required String bundleId,
+    required Function(String) setMessage,
+    required Function(String) logMessage,
+  }) async {
+    final profile = parseVlessUri(
+      vlessUri,
+      fallbackNodeName: fallbackNodeName,
+    );
+    await generateContent(
+      nodeName: profile.name,
+      domain: profile.domain,
+      port: profile.port,
+      uuid: profile.uuid,
+      password: password,
+      bundleId: bundleId,
+      setMessage: setMessage,
+      logMessage: logMessage,
+      protocol: profile.protocol,
+      network: profile.network,
+      security: profile.security,
+      sni: profile.sni,
+      fingerprint: profile.fingerprint,
+      flow: profile.flow,
+      host: profile.host,
+      path: profile.path,
+      mode: profile.mode,
+      alpn: profile.alpn,
+    );
+  }
+
   static Future<String> _generateXrayJsonConfig(
     String domain,
     String port,
     String uuid,
     Function(String) setMessage,
-    Function(String) logMessage,
-  ) async {
+    Function(String) logMessage, {
+    String protocol = 'vless',
+    String network = 'tcp',
+    String security = 'tls',
+    String? sni,
+    String? fingerprint = 'chrome',
+    String? flow = 'xtls-rprx-vision',
+    String? host,
+    String? path,
+    String? mode,
+    List<String> alpn = const [],
+  }) async {
     checkNotEmpty(domain, 'domain');
     checkNotEmpty(port, 'port');
     checkNotEmpty(uuid, 'uuid');
@@ -300,7 +470,101 @@ class VpnConfig {
           .replaceAll('<DNS1>', DnsConfig.dns1.value)
           .replaceAll('<DNS2>', DnsConfig.dns2.value);
 
-      final jsonObj = jsonDecode(replaced);
+      final jsonObj = Map<String, dynamic>.from(jsonDecode(replaced));
+      final outbounds = List<dynamic>.from(
+        (jsonObj['outbounds'] as List<dynamic>? ?? const []),
+      );
+      final proxyIndex = outbounds.indexWhere((e) {
+        if (e is! Map) return false;
+        return e['tag'] == 'proxy';
+      });
+      if (proxyIndex < 0) {
+        throw const FormatException('Invalid xray outbound template');
+      }
+
+      final proxyOutbound = Map<String, dynamic>.from(
+        outbounds[proxyIndex] as Map,
+      );
+      outbounds[proxyIndex] = proxyOutbound;
+      jsonObj['outbounds'] = outbounds;
+      final normalizedNetwork = network.trim().toLowerCase();
+      final normalizedSecurity = security.trim().toLowerCase();
+
+      proxyOutbound['protocol'] = protocol;
+      final settings = Map<String, dynamic>.from(
+        proxyOutbound['settings'] as Map? ?? const {},
+      );
+      proxyOutbound['settings'] = settings;
+      final vnext = List<dynamic>.from(
+        settings['vnext'] as List<dynamic>? ?? const [],
+      );
+      if (vnext.isEmpty) {
+        throw const FormatException('Invalid vnext template');
+      }
+
+      final firstVnext = Map<String, dynamic>.from(vnext.first as Map);
+      vnext[0] = firstVnext;
+      settings['vnext'] = vnext;
+      firstVnext['address'] = domain;
+      firstVnext['port'] = int.tryParse(port) ?? 443;
+
+      final users = List<dynamic>.from(
+        firstVnext['users'] as List<dynamic>? ?? const [],
+      );
+      if (users.isEmpty) {
+        throw const FormatException('Invalid users template');
+      }
+      final firstUser = Map<String, dynamic>.from(users.first as Map);
+      users[0] = firstUser;
+      firstVnext['users'] = users;
+      firstUser['id'] = uuid;
+      firstUser['encryption'] = 'none';
+      if (_hasValue(flow)) {
+        firstUser['flow'] = flow!.trim();
+      } else {
+        firstUser.remove('flow');
+      }
+
+      final streamSettings = Map<String, dynamic>.from(
+        proxyOutbound['streamSettings'] as Map? ?? const {},
+      );
+      proxyOutbound['streamSettings'] = streamSettings;
+      streamSettings['network'] = normalizedNetwork;
+      streamSettings['security'] = normalizedSecurity;
+      streamSettings.remove('xhttpSettings');
+
+      if (normalizedSecurity == 'tls') {
+        final tlsSettings = Map<String, dynamic>.from(
+          streamSettings['tlsSettings'] as Map? ?? const {},
+        );
+        tlsSettings['allowInsecure'] = false;
+        tlsSettings['serverName'] = _firstNonEmpty(sni, domain);
+        if (_hasValue(fingerprint)) {
+          tlsSettings['fingerprint'] = fingerprint!.trim();
+        } else {
+          tlsSettings.remove('fingerprint');
+        }
+        if (alpn.isNotEmpty) {
+          tlsSettings['alpn'] = alpn;
+        } else {
+          tlsSettings.remove('alpn');
+        }
+        streamSettings['tlsSettings'] = tlsSettings;
+      } else {
+        streamSettings.remove('tlsSettings');
+      }
+
+      if (normalizedNetwork == 'xhttp') {
+        final xhttpSettings = <String, dynamic>{
+          'path': _firstNonEmpty(_normalizePath(path), '/'),
+          'host': _firstNonEmpty(host, domain),
+        };
+        if (_hasValue(mode)) {
+          xhttpSettings['mode'] = mode!.trim();
+        }
+        streamSettings['xhttpSettings'] = xhttpSettings;
+      }
+
       final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
       return formatted;
@@ -355,8 +619,11 @@ class VpnConfig {
     String serviceName,
     String xrayConfigPath,
     Function(String) setMessage,
-    Function(String) logMessage,
-  ) async {
+    Function(String) logMessage, {
+    String protocol = 'vless',
+    String transport = 'tcp',
+    String security = 'tls',
+  }) async {
     checkNotEmpty(nodeName, 'nodeName');
     checkNotEmpty(nodeCode, 'nodeCode');
     checkNotEmpty(serviceName, 'serviceName');
@@ -370,6 +637,9 @@ class VpnConfig {
       countryCode: nodeCode,
       serviceName: serviceName,
       configPath: xrayConfigPath,
+      protocol: protocol,
+      transport: transport,
+      security: security,
       enabled: true,
     );
 
@@ -398,48 +668,32 @@ class VpnConfig {
     logMessage('✅ vpn_nodes.json 内容生成完成，总节点数: ${currentNodes.length}');
     return vpnNodesJsonContent;
   }
-}
 
-class Tun2socksService {
-  static Future<String> initScripts(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        final content = renderTun2socksPlist(scriptDir: '/opt/homebrew/bin');
-        await NativeBridge.installTun2socksScripts(password);
-        return await NativeBridge.installTun2socksPlist(content, password);
-      default:
-        return '当前平台暂不支持';
+  static String _firstNonEmpty(String? first,
+      [String? second, String fallback = '']) {
+    if (first != null && first.trim().isNotEmpty) {
+      return first.trim();
     }
+    if (second != null && second.trim().isNotEmpty) {
+      return second.trim();
+    }
+    return fallback;
   }
 
-  static Future<String> start(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        return await NativeBridge.startTun2socks(password);
-      case 'linux':
-      case 'windows':
-      case 'android':
-      case 'ios':
-        return '暂未实现';
-      default:
-        return '当前平台暂不支持';
-    }
+  static String? _nullableValue(String? value) {
+    if (value == null) return null;
+    final normalized = value.trim();
+    return normalized.isEmpty ? null : normalized;
   }
 
-  static Future<String> stop(String password) async {
-    checkNotEmpty(password, 'password');
-    switch (Platform.operatingSystem) {
-      case 'macos':
-        return await NativeBridge.stopTun2socks(password);
-      case 'linux':
-      case 'windows':
-      case 'android':
-      case 'ios':
-        return '暂未实现';
-      default:
-        return '当前平台暂不支持';
-    }
+  static bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
+  static String? _normalizePath(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final normalized = value.trim();
+    if (normalized.startsWith('/')) return normalized;
+    return '/$normalized';
   }
 }
