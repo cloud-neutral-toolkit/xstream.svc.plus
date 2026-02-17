@@ -1,0 +1,2 @@
+command script import "$FLUTTER_ROOT/packages/flutter_tools/bin/lldb_commands.py"
+settings set target.inline-breakpoint-strategy always

@@ -2,6 +2,11 @@
 
 本指南适用于希望在 macOS 上本地构建和调试 XStream 项目的开发者。
 
+如果你使用 Xcode 进行 iOS/macOS 联调，请先阅读：
+
+- [Xcode 在线调试（macOS / iOS）](xcode-online-debug.md)
+- [本机 MCP Server（Codex / Genmini）](xstream-mcp-server.md)
+
 ## 环境准备
 
 ### 1. 安装 Flutter

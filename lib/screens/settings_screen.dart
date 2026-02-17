@@ -13,6 +13,7 @@ import '../../services/telemetry/telemetry_service.dart';
 import '../../services/session/session_manager.dart';
 import '../../services/sync/desktop_sync_service.dart';
 import '../../services/sync/sync_state.dart';
+import '../../services/mcp/runtime_mcp_service.dart';
 import '../../utils/app_logger.dart';
 import '../widgets/log_console.dart' show LogLevel;
 
@@ -31,6 +32,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   final SessionManager _sessionManager = SessionManager.instance;
   final DesktopSyncService _syncService = DesktopSyncService.instance;
+  final RuntimeMcpService _runtimeMcpService = RuntimeMcpService.instance;
   final TextEditingController _baseUrlController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -50,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _sessionManager.baseUrl.addListener(_syncBaseUrlFromSession);
     _sessionManager.currentUser.addListener(_syncUsernameFromSession);
     _refreshTunStatus();
+    _runtimeMcpService.init();
   }
 
   Widget _buildButton({
@@ -529,6 +532,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _toggleRuntimeMcp(bool enabled) async {
+    final ok = enabled
+        ? await _runtimeMcpService.start()
+        : await _runtimeMcpService.stop();
+    if (!mounted) return;
+    final msg = ok
+        ? (enabled
+            ? context.l10n.get('runtimeMcpStarted')
+            : context.l10n.get('runtimeMcpStopped'))
+        : (_runtimeMcpService.lastError.value ??
+            context.l10n.get('runtimeMcpToggleFailed'));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -652,6 +669,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style:
                               const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _runtimeMcpService.available,
+                        builder: (context, available, _) {
+                          return ValueListenableBuilder<bool>(
+                            valueListenable: _runtimeMcpService.running,
+                            builder: (context, running, __) {
+                              return ValueListenableBuilder<bool>(
+                                valueListenable: _runtimeMcpService.loading,
+                                builder: (context, loading, ___) {
+                                  final subtitle = available
+                                      ? (running
+                                          ? context.l10n
+                                              .get('runtimeMcpStatusRunning')
+                                          : context.l10n
+                                              .get('runtimeMcpStatusStopped'))
+                                      : context.l10n
+                                          .get('runtimeMcpStatusUnavailable');
+                                  return SizedBox(
+                                    width: double.infinity,
+                                    child: SwitchListTile(
+                                      value: running,
+                                      onChanged: available && !loading
+                                          ? _toggleRuntimeMcp
+                                          : null,
+                                      title: Text(
+                                        context.l10n.get('runtimeMcpServer'),
+                                        style: _menuTextStyle,
+                                      ),
+                                      subtitle: Text(
+                                        loading
+                                            ? context.l10n
+                                                .get('runtimeMcpStatusLoading')
+                                            : subtitle,
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
                       ),
                     ]),
                     _buildSection(context.l10n.get('experimentalFeatures'), [
