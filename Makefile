@@ -28,7 +28,7 @@ DMG_NAME := $(shell \
 		echo "xstream-dev-$(BUILD_ID).dmg"; \
 	fi)
 
-.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 clean
+.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -103,6 +103,7 @@ macos-intel:
 			echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
 			exit 1; \
 		fi; \
+		./scripts/install-runtime-mcp.sh "$(MACOS_APP_BUNDLE)" amd64; \
 			if ! command -v create-dmg >/dev/null 2>&1; then \
 				echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
 				exit 1; \
@@ -166,6 +167,7 @@ macos-arm64:
 			echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
 			exit 1; \
 		fi; \
+		./scripts/install-runtime-mcp.sh "$(MACOS_APP_BUNDLE)" arm64; \
 			if ! command -v create-dmg >/dev/null 2>&1; then \
 				echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
 				exit 1; \
@@ -239,6 +241,28 @@ ios-arm64:
 	else \
 		echo "iOS build only supported on macOS"; \
 	fi
+
+xcode-debug-bootstrap:
+	./scripts/xcode-debug-bootstrap.sh
+
+xcode-mcp-doctor:
+	./scripts/xcode-debug-bootstrap.sh
+	@echo "Xcode MCP workspace paths (recommended):"
+	@echo "  iOS:   $(PWD)/ios/Runner.xcworkspace"
+	@echo "  macOS: $(PWD)/macos/Runner.xcworkspace"
+	@echo "Note: building .xcodeproj directly may miss CocoaPods plugin modules."
+
+xstream-mcp-install:
+	cd tools/xstream-mcp-server && go mod tidy
+
+xstream-mcp-start:
+	./scripts/start-xstream-dev-mcp-server.sh
+
+xstream-mcp-start-dev:
+	./scripts/start-xstream-dev-mcp-server.sh
+
+xstream-mcp-start-runtime:
+	./scripts/start-xstream-runtime-mcp-server.sh
 
 clean:
 	echo "Cleaning build outputs..."

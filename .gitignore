@@ -54,3 +54,6 @@ linux/lib/
 windows/runner/resources/app_icon.ico
 windows/runner/resources/iconset/
 
+# Local MCP server dependencies
+tools/xstream-mcp-server/node_modules/
+tools/xstream-mcp-server/xstream-mcp-server
