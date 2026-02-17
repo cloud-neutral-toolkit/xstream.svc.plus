@@ -148,7 +148,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 leading: Icon(
                   isRunning ? Icons.stop_circle : Icons.play_circle_fill,
                 ),
-                title: Text(isRunning ? '停止加速' : '启动加速'),
+                title: Text(context.l10n
+                    .get(isRunning ? 'stopAcceleration' : 'startAcceleration')),
                 onTap: () async {
                   Navigator.pop(context);
                   await _toggleNode(node);
@@ -156,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.highlight),
-                title: const Text('高亮该节点'),
+                title: Text(context.l10n.get('highlightNode')),
                 onTap: () {
                   Navigator.pop(context);
                   setState(() {
@@ -338,9 +339,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Expanded(
                       child: Text(
-                        '持续时间: ${_formatDuration(_connectedDuration)}  '
-                        '延迟: ${latency == null ? "--" : "${latency}ms"}  '
-                        '位置: $_connectedLocation',
+                        '${context.l10n.get('homeStatusDuration')}: '
+                        '${_formatDuration(_connectedDuration)}  '
+                        '${context.l10n.get('homeStatusLatency')}: '
+                        '${latency == null ? "--" : "${latency}ms"}  '
+                        '${context.l10n.get('homeStatusLocation')}: '
+                        '$_connectedLocation',
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w500,

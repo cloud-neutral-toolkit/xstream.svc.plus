@@ -121,6 +121,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
 
     if (rawUri.isNotEmpty) {
       try {
+        final parsed = VpnConfig.parseVlessUri(
+          rawUri,
+          fallbackNodeName: _nodeNameController.text.trim(),
+        );
         await VpnConfig.generateFromVlessUri(
           vlessUri: rawUri,
           fallbackNodeName: _nodeNameController.text.trim(),
@@ -135,6 +139,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             addAppLog(msg);
           },
         );
+        await _syncHomeAfterImport(parsed.name);
       } catch (e) {
         setState(() {
           _message = '${context.l10n.get('vlessUriInvalid')}: $e';
@@ -170,6 +175,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         addAppLog(msg);
       },
     );
+    await _syncHomeAfterImport(_nodeNameController.text.trim());
+  }
+
+  Future<void> _syncHomeAfterImport(String preferredName) async {
+    await VpnConfig.load();
+    final targetName = preferredName.trim().isNotEmpty
+        ? preferredName.trim()
+        : (VpnConfig.nodes.isNotEmpty ? VpnConfig.nodes.last.name : '');
+    if (targetName.isEmpty) return;
+    GlobalState.lastImportedNodeName.value = targetName;
+    GlobalState.nodeListRevision.value++;
+    GlobalState.activeNodeName.value = '';
+    addAppLog('✅ 导入节点已同步到首页: $targetName');
   }
 
   @override
