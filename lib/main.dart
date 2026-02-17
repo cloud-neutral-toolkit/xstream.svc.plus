@@ -10,8 +10,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
-import 'utils/global_config.dart'
-    show GlobalState, DnsConfig, TunDnsConfig;
+import 'utils/global_config.dart' show GlobalState, DnsConfig, TunDnsConfig;
 import 'services/experimental/experimental_features.dart';
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
@@ -40,7 +39,6 @@ void main(List<String> args) async {
   await VpnConfig.load(); // ✅ 启动时加载 assets + 本地配置
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -77,6 +75,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
+  static const double _mobileBreakpoint = 900;
   int _currentIndex = 0;
 
   @override
@@ -100,7 +99,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
       // ✅ 退出前自动保存配置
       VpnConfig.saveToFile();
     }
@@ -116,11 +116,16 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           content: TextField(
             controller: controller,
             obscureText: true,
-            decoration: InputDecoration(labelText: context.l10n.get('password')),
+            decoration:
+                InputDecoration(labelText: context.l10n.get('password')),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: Text(context.l10n.get('cancel'))),
-            TextButton(onPressed: () => Navigator.pop(context, controller.text), child: Text(context.l10n.get('confirm'))),
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(context.l10n.get('cancel'))),
+            TextButton(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: Text(context.l10n.get('confirm'))),
           ],
         );
       },
@@ -239,6 +244,61 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
+  List<NavigationRailDestination> _buildDestinations(BuildContext context) {
+    return [
+      NavigationRailDestination(
+          icon: const Icon(Icons.home), label: Text(context.l10n.get('home'))),
+      NavigationRailDestination(
+          icon: const Icon(Icons.link), label: Text(context.l10n.get('proxy'))),
+      NavigationRailDestination(
+          icon: const Icon(Icons.settings),
+          label: Text(context.l10n.get('settings'))),
+      NavigationRailDestination(
+          icon: const Icon(Icons.article),
+          label: Text(context.l10n.get('logs'))),
+      NavigationRailDestination(
+          icon: const Icon(Icons.help), label: Text(context.l10n.get('help'))),
+      NavigationRailDestination(
+          icon: const Icon(Icons.info), label: Text(context.l10n.get('about'))),
+    ];
+  }
+
+  String _currentPageTitle(BuildContext context) {
+    final labels = [
+      context.l10n.get('home'),
+      context.l10n.get('proxy'),
+      context.l10n.get('settings'),
+      context.l10n.get('logs'),
+      context.l10n.get('help'),
+      context.l10n.get('about'),
+    ];
+    return labels[_currentIndex.clamp(0, labels.length - 1)];
+  }
+
+  Drawer _buildMobileDrawer(BuildContext context) {
+    final destinations = _buildDestinations(context);
+    return Drawer(
+      child: SafeArea(
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: destinations.length,
+          itemBuilder: (context, index) {
+            final destination = destinations[index];
+            return ListTile(
+              leading: destination.icon,
+              title: destination.label,
+              selected: _currentIndex == index,
+              onTap: () {
+                setState(() => _currentIndex = index);
+                Navigator.of(context).pop();
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
@@ -250,63 +310,72 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       const AboutScreen(),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(''),
-        actions: [
-          IconButton(
-            tooltip: context.l10n.get('language'),
-            icon: const Icon(Icons.language),
-            onPressed: _showLanguageSelector,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isPhonePlatform = Platform.isIOS || Platform.isAndroid;
+        final isMobile =
+            isPhonePlatform && constraints.maxWidth < _mobileBreakpoint;
+        final destinations = _buildDestinations(context);
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(isMobile ? _currentPageTitle(context) : ''),
+            actions: [
+              IconButton(
+                tooltip: context.l10n.get('language'),
+                icon: const Icon(Icons.language),
+                onPressed: _showLanguageSelector,
+              ),
+              IconButton(
+                tooltip: context.l10n.get('addConfig'),
+                icon: const Icon(Icons.add),
+                onPressed: _openAddConfig,
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: GlobalState.isUnlocked,
+                builder: (context, unlocked, _) {
+                  return IconButton(
+                    icon: Icon(unlocked ? Icons.lock_open : Icons.lock),
+                    onPressed: unlocked ? _lock : _promptUnlockDialog,
+                  );
+                },
+              ),
+            ],
           ),
-          IconButton(
-            tooltip: context.l10n.get('addConfig'),
-            icon: const Icon(Icons.add),
-            onPressed: _openAddConfig,
-          ),
-          ValueListenableBuilder<bool>(
-            valueListenable: GlobalState.isUnlocked,
-            builder: (context, unlocked, _) {
-              return IconButton(
-                icon: Icon(unlocked ? Icons.lock_open : Icons.lock),
-                onPressed: unlocked ? _lock : _promptUnlockDialog,
+          drawer: isMobile ? _buildMobileDrawer(context) : null,
+          body: isMobile
+              ? IndexedStack(index: _currentIndex, children: pages)
+              : Row(
+                  children: [
+                    NavigationRail(
+                      selectedIndex: _currentIndex,
+                      onDestinationSelected: (index) =>
+                          setState(() => _currentIndex = index),
+                      labelType: NavigationRailLabelType.all,
+                      destinations: destinations,
+                    ),
+                    const VerticalDivider(width: 1),
+                    Expanded(
+                      child:
+                          IndexedStack(index: _currentIndex, children: pages),
+                    ),
+                  ],
+                ),
+          floatingActionButton: ValueListenableBuilder<bool>(
+            valueListenable: GlobalState.tunnelProxyEnabled,
+            builder: (context, enabled, child) {
+              if (!enabled) return const SizedBox.shrink();
+              return Tooltip(
+                message: context.l10n.get('modeSwitch'),
+                child: FloatingActionButton(
+                  onPressed: _showModeSelector,
+                  child: const Icon(Icons.tune),
+                ),
               );
             },
           ),
-        ],
-      ),
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) => setState(() => _currentIndex = index),
-            labelType: NavigationRailLabelType.all,
-            destinations: [
-              NavigationRailDestination(icon: const Icon(Icons.home), label: Text(context.l10n.get('home'))),
-              NavigationRailDestination(icon: const Icon(Icons.link), label: Text(context.l10n.get('proxy'))),
-              NavigationRailDestination(icon: const Icon(Icons.settings), label: Text(context.l10n.get('settings'))),
-              NavigationRailDestination(icon: const Icon(Icons.article), label: Text(context.l10n.get('logs'))),
-              NavigationRailDestination(icon: const Icon(Icons.help), label: Text(context.l10n.get('help'))),
-              NavigationRailDestination(icon: const Icon(Icons.info), label: Text(context.l10n.get('about'))),
-            ],
-          ),
-          const VerticalDivider(width: 1),
-          Expanded(child: IndexedStack(index: _currentIndex, children: pages)),
-        ],
-      ),
-      floatingActionButton: ValueListenableBuilder<bool>(
-        valueListenable: GlobalState.tunnelProxyEnabled,
-        builder: (context, enabled, child) {
-          if (!enabled) return const SizedBox.shrink();
-          return Tooltip(
-            message: context.l10n.get('modeSwitch'),
-            child: FloatingActionButton(
-              onPressed: _showModeSelector,
-              child: const Icon(Icons.tune),
-            ),
-          );
-        },
-      ),
+        );
+      },
     );
   }
 }
