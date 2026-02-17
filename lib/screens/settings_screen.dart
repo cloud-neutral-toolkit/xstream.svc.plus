@@ -2,8 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:archive/archive_io.dart';
 import '../../utils/global_config.dart'
-    show GlobalState, buildVersion, DnsConfig, TunDnsConfig;
+    show
+        GlobalState,
+        buildVersion,
+        DnsConfig,
+        TunDnsConfig,
+        GlobalApplicationConfig;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -405,6 +411,237 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _onSyncConfig() async {
+    addAppLog('开始同步配置...');
+    try {
+      await VpnConfig.load();
+      addAppLog('✅ 已同步配置文件');
+    } catch (e) {
+      addAppLog('[错误] 同步失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _onSaveConfig() async {
+    addAppLog('开始保存配置...');
+    try {
+      final path = await VpnConfig.getConfigPath();
+      await VpnConfig.saveToFile();
+      addAppLog('✅ 配置已保存到: $path');
+    } catch (e) {
+      addAppLog('[错误] 保存失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _onImportConfig() async {
+    final controller = TextEditingController();
+    final input = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.get('importConfig')),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: '/path/to/backup.zip 或 vless://...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.get('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: Text(context.l10n.get('confirm')),
+            ),
+          ],
+        );
+      },
+    );
+    if (input == null || input.isEmpty) return;
+
+    addAppLog('开始导入配置...');
+    try {
+      if (input.startsWith('vless://')) {
+        if (!GlobalState.isUnlocked.value) {
+          addAppLog('请先解锁再导入 VLESS 配置', level: LogLevel.warning);
+          return;
+        }
+        final password = GlobalState.sudoPassword.value;
+        if (password.isEmpty) {
+          addAppLog('无法获取 sudo 密码', level: LogLevel.error);
+          return;
+        }
+        final bundleId = await GlobalApplicationConfig.getBundleId();
+        await VpnConfig.generateFromVlessUri(
+          vlessUri: input,
+          password: password,
+          bundleId: bundleId,
+          setMessage: (msg) => addAppLog(msg),
+          logMessage: (msg) => addAppLog(msg),
+        );
+        await VpnConfig.load();
+        GlobalState.activeNodeName.value = '';
+        addAppLog('✅ 已从 VLESS 链接导入配置');
+        return;
+      }
+
+      final file = File(input);
+      if (!await file.exists()) {
+        addAppLog('备份文件不存在', level: LogLevel.error);
+        return;
+      }
+      final bytes = await file.readAsBytes();
+      final archive = ZipDecoder().decodeBytes(bytes);
+      for (final entry in archive) {
+        final name = entry.name;
+        String dest;
+        if (name == 'vpn_nodes.json') {
+          dest = await VpnConfig.getConfigPath();
+        } else if (name.endsWith('.json')) {
+          final prefix = await GlobalApplicationConfig.getXrayConfigPath();
+          dest = '$prefix$name';
+        } else if (name.endsWith('.plist') ||
+            name.endsWith('.service') ||
+            name.endsWith('.schtasks')) {
+          dest = await GlobalApplicationConfig.getServicePath(name);
+        } else {
+          continue;
+        }
+        final out = File(dest);
+        await out.create(recursive: true);
+        await out.writeAsBytes(entry.content as List<int>);
+      }
+      await VpnConfig.load();
+      GlobalState.activeNodeName.value = '';
+      addAppLog('✅ 已导入配置');
+    } catch (e) {
+      addAppLog('[错误] 导入失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _onExportConfig() async {
+    addAppLog('开始导出配置...');
+    try {
+      final configPath = await VpnConfig.getConfigPath();
+      final dir = File(configPath).parent.path;
+      final backupPath =
+          '$dir/vpn_backup_${DateTime.now().millisecondsSinceEpoch}.zip';
+
+      final encoder = ZipFileEncoder();
+      encoder.create(backupPath);
+      encoder.addFile(File(configPath), 'vpn_nodes.json');
+      for (final node in VpnConfig.nodes) {
+        final cfg = File(node.configPath);
+        if (await cfg.exists()) {
+          encoder.addFile(cfg, cfg.uri.pathSegments.last);
+        }
+        final servicePath = await GlobalApplicationConfig.getServicePath(
+          node.serviceName,
+        );
+        final svc = File(servicePath);
+        if (await svc.exists()) {
+          encoder.addFile(svc, svc.uri.pathSegments.last);
+        }
+      }
+      encoder.close();
+      addAppLog('✅ 配置已导出: $backupPath');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已导出到: $backupPath')),
+      );
+    } catch (e) {
+      addAppLog('[错误] 导出失败: $e', level: LogLevel.error);
+    }
+  }
+
+  Future<void> _onDeleteConfig() async {
+    if (!GlobalState.isUnlocked.value) {
+      addAppLog('请先解锁以删除配置', level: LogLevel.warning);
+      return;
+    }
+
+    await VpnConfig.load();
+    final nodes = List<VpnNode>.from(VpnConfig.nodes);
+    if (nodes.isEmpty) {
+      addAppLog('暂无可删除节点', level: LogLevel.warning);
+      return;
+    }
+    if (!mounted) return;
+
+    final selected = <String>{};
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: Text(context.l10n.get('deleteConfig')),
+              content: SizedBox(
+                width: 360,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: nodes
+                        .map(
+                          (node) => CheckboxListTile(
+                            value: selected.contains(node.name),
+                            title: Text(node.name),
+                            subtitle: Text(node.countryCode.toUpperCase()),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            onChanged: (checked) {
+                              setStateDialog(() {
+                                if (checked == true) {
+                                  selected.add(node.name);
+                                } else {
+                                  selected.remove(node.name);
+                                }
+                              });
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(context.l10n.get('cancel')),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text(context.l10n.get('confirm')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (shouldDelete != true || selected.isEmpty) {
+      addAppLog('未选择要删除的节点', level: LogLevel.warning);
+      return;
+    }
+
+    try {
+      var count = 0;
+      for (final name in selected) {
+        final node = nodes.firstWhere((n) => n.name == name);
+        await VpnConfig.deleteNodeFiles(node);
+        count++;
+      }
+      await VpnConfig.load();
+      if (selected.contains(GlobalState.activeNodeName.value)) {
+        GlobalState.activeNodeName.value = '';
+      }
+      addAppLog('✅ 已删除 $count 个节点并更新配置');
+    } catch (e) {
+      addAppLog('[错误] 删除失败: $e', level: LogLevel.error);
+    }
+  }
+
   void _onInitXray() async {
     final isUnlocked = GlobalState.isUnlocked.value;
 
@@ -591,6 +828,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 )
                               : const SizedBox.shrink();
                         },
+                      ),
+                      _buildButton(
+                        icon: Icons.sync,
+                        label: context.l10n.get('syncConfig'),
+                        onPressed: isUnlocked ? _onSyncConfig : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.upload_file,
+                        label: context.l10n.get('importConfig'),
+                        onPressed: _onImportConfig,
+                      ),
+                      _buildButton(
+                        icon: Icons.download,
+                        label: context.l10n.get('exportConfig'),
+                        onPressed: _onExportConfig,
+                      ),
+                      _buildButton(
+                        icon: Icons.delete_forever,
+                        label: context.l10n.get('deleteConfig'),
+                        style: _menuButtonStyle.copyWith(
+                          backgroundColor:
+                              WidgetStateProperty.all(Colors.red[400]),
+                        ),
+                        onPressed: isUnlocked ? _onDeleteConfig : null,
+                      ),
+                      _buildButton(
+                        icon: Icons.save,
+                        label: context.l10n.get('saveConfig'),
+                        onPressed: _onSaveConfig,
                       ),
                     ]),
                     _buildSection(context.l10n.get('configMgmt'), [
