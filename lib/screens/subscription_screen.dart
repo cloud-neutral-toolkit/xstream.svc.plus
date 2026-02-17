@@ -6,7 +6,9 @@ import '../../services/vpn_config_service.dart';
 import '../l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key});
+  const SubscriptionScreen({super.key, this.initialVlessUri});
+
+  final String? initialVlessUri;
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -34,6 +36,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
         _bundleId = 'com.xstream'; // Fallback value if error occurs
       });
     });
+
+    final initialUri = widget.initialVlessUri?.trim() ?? '';
+    if (initialUri.isNotEmpty) {
+      _vlessUriController.text = initialUri;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _onParseVlessUri();
+      });
+    }
   }
 
   @override

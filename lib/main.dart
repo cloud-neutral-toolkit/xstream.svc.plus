@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/subscription_screen.dart';
@@ -151,6 +152,87 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
     );
+  }
+
+  void _openAddConfigWithUri(String uri) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SubscriptionScreen(initialVlessUri: uri),
+      ),
+    );
+  }
+
+  Future<void> _showAddNodeMenuAction(_AddNodeMenuAction action) async {
+    switch (action) {
+      case _AddNodeMenuAction.manualInput:
+        _openAddConfig();
+        break;
+      case _AddNodeMenuAction.subscriptionLink:
+        await _showSubscriptionLinkDialog();
+        break;
+      case _AddNodeMenuAction.scanQr:
+      case _AddNodeMenuAction.pickImage:
+        _showComingSoon(context.l10n.get('addNodeScanQr'));
+        break;
+      case _AddNodeMenuAction.pickFile:
+        if (mounted) {
+          setState(() => _currentIndex = 2);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.l10n.get('openSettingsImportHint'))),
+          );
+        }
+        break;
+      case _AddNodeMenuAction.readClipboard:
+        await _importFromClipboard();
+        break;
+    }
+  }
+
+  Future<void> _showSubscriptionLinkDialog() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.get('addNodeSubscriptionLink')),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'vless://...',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.get('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: Text(context.l10n.get('confirm')),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted || value == null || value.isEmpty) return;
+    _openAddConfigWithUri(value);
+  }
+
+  Future<void> _importFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final raw = (data?.text ?? '').trim();
+    if (!mounted) return;
+    if (!raw.startsWith('vless://')) {
+      _showComingSoon(context.l10n.get('clipboardNoVless'));
+      return;
+    }
+    _openAddConfigWithUri(raw);
+  }
+
+  void _showComingSoon(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
   void _showLanguageSelector() {
@@ -339,6 +421,31 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
+  PopupMenuItem<_AddNodeMenuAction> _buildAddNodeItem(
+    BuildContext context, {
+    required _AddNodeMenuAction action,
+    required IconData icon,
+    required String text,
+  }) {
+    return PopupMenuItem<_AddNodeMenuAction>(
+      value: action,
+      height: 68,
+      child: SizedBox(
+        width: 220,
+        child: Row(
+          children: [
+            Icon(icon, size: 30, color: const Color(0xFF434A55)),
+            const SizedBox(width: 18),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 22, color: Color(0xFF1E2025)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
@@ -366,10 +473,49 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 icon: const Icon(Icons.language),
                 onPressed: _showLanguageSelector,
               ),
-              IconButton(
+              PopupMenuButton<_AddNodeMenuAction>(
                 tooltip: context.l10n.get('addConfig'),
                 icon: const Icon(Icons.add),
-                onPressed: _openAddConfig,
+                position: PopupMenuPosition.under,
+                onSelected: _showAddNodeMenuAction,
+                itemBuilder: (context) => [
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.manualInput,
+                    icon: Icons.edit,
+                    text: context.l10n.get('addNodeManualInput'),
+                  ),
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.subscriptionLink,
+                    icon: Icons.link,
+                    text: context.l10n.get('addNodeSubscriptionLink'),
+                  ),
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.scanQr,
+                    icon: Icons.qr_code_scanner,
+                    text: context.l10n.get('addNodeScanQr'),
+                  ),
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.pickImage,
+                    icon: Icons.image,
+                    text: context.l10n.get('addNodePickImage'),
+                  ),
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.pickFile,
+                    icon: Icons.file_open,
+                    text: context.l10n.get('addNodePickFile'),
+                  ),
+                  _buildAddNodeItem(
+                    context,
+                    action: _AddNodeMenuAction.readClipboard,
+                    icon: Icons.content_paste,
+                    text: context.l10n.get('addNodeReadClipboard'),
+                  ),
+                ],
               ),
               ValueListenableBuilder<bool>(
                 valueListenable: GlobalState.isUnlocked,
@@ -405,4 +551,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       },
     );
   }
+}
+
+enum _AddNodeMenuAction {
+  manualInput,
+  subscriptionLink,
+  scanQr,
+  pickImage,
+  pickFile,
+  readClipboard,
 }
