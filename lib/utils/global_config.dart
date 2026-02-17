@@ -78,6 +78,13 @@ class GlobalState {
   /// 当前活跃节点名称（桌面菜单栏/主界面共享）
   static final ValueNotifier<String> activeNodeName = ValueNotifier<String>('');
 
+  /// 最近导入/新增的节点名称（用于主界面高亮）
+  static final ValueNotifier<String> lastImportedNodeName =
+      ValueNotifier<String>('');
+
+  /// 节点列表修订号（导入/删除后递增，用于触发主界面刷新）
+  static final ValueNotifier<int> nodeListRevision = ValueNotifier<int>(0);
+
   /// 当前语言环境，默认中文
   static final ValueNotifier<Locale> locale =
       ValueNotifier<Locale>(const Locale('zh'));

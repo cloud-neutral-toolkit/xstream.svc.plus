@@ -473,6 +473,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           return;
         }
         final bundleId = await GlobalApplicationConfig.getBundleId();
+        final profile = VpnConfig.parseVlessUri(input);
         await VpnConfig.generateFromVlessUri(
           vlessUri: input,
           password: password,
@@ -482,10 +483,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
         await VpnConfig.load();
         GlobalState.activeNodeName.value = '';
+        GlobalState.lastImportedNodeName.value = profile.name;
+        GlobalState.nodeListRevision.value++;
         addAppLog('✅ 已从 VLESS 链接导入配置');
         return;
       }
 
+      final existingNames = VpnConfig.nodes.map((e) => e.name).toSet();
       final file = File(input);
       if (!await file.exists()) {
         addAppLog('备份文件不存在', level: LogLevel.error);
@@ -514,6 +518,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       await VpnConfig.load();
       GlobalState.activeNodeName.value = '';
+      final imported = VpnConfig.nodes
+          .map((e) => e.name)
+          .firstWhere((name) => !existingNames.contains(name), orElse: () {
+        return VpnConfig.nodes.isNotEmpty ? VpnConfig.nodes.first.name : '';
+      });
+      GlobalState.lastImportedNodeName.value = imported;
+      GlobalState.nodeListRevision.value++;
       addAppLog('✅ 已导入配置');
     } catch (e) {
       addAppLog('[错误] 导入失败: $e', level: LogLevel.error);
@@ -636,6 +647,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (selected.contains(GlobalState.activeNodeName.value)) {
         GlobalState.activeNodeName.value = '';
       }
+      GlobalState.nodeListRevision.value++;
       addAppLog('✅ 已删除 $count 个节点并更新配置');
     } catch (e) {
       addAppLog('[错误] 删除失败: $e', level: LogLevel.error);
