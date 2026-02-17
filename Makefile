@@ -28,7 +28,7 @@ DMG_NAME := $(shell \
 		echo "xstream-dev-$(BUILD_ID).dmg"; \
 	fi)
 
-.PHONY: all macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
+.PHONY: all macos-intel macos-arm64 macos-debug-run windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 ios-install-debug ios-install-release xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -188,6 +188,14 @@ macos-arm64:
 		echo "Skipping macOS ARM64 build (not on ARM architecture)"; \
 	fi
 
+macos-debug-run:
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		echo "Run XStream on macOS (debug, no resident)..."; \
+		$(FLUTTER) run -d macos --debug --no-resident; \
+	else \
+		echo "macOS debug run is only supported on macOS"; \
+	fi
+
 windows-x64:
 @if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
  echo "Building for Windows (native)..."; \
@@ -240,6 +248,36 @@ ios-arm64:
 		cd build/ios/iphoneos && zip -r xstream.app.zip Runner.app; \
 	else \
 		echo "iOS build only supported on macOS"; \
+	fi
+
+ios-install-debug:
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		DEVICE_ID="$${IOS_DEVICE:-$$(flutter devices | awk -F'•' '/• ios •/ && first=="" {gsub(/ /,"",$$2); first=$$2} END {print first}')}"; \
+		if [ -z "$$DEVICE_ID" ]; then \
+			echo "❌ No iOS device found. Connect an iPhone or set IOS_DEVICE=<udid>."; \
+			exit 1; \
+		fi; \
+		echo "Installing debug build to iOS device: $$DEVICE_ID"; \
+		if [ "$${IOS_NO_RESIDENT:-0}" = "1" ]; then \
+			$(FLUTTER) run -d "$$DEVICE_ID" --debug --no-resident; \
+		else \
+			$(FLUTTER) run -d "$$DEVICE_ID" --debug; \
+		fi; \
+	else \
+		echo "iOS install is only supported on macOS"; \
+	fi
+
+ios-install-release:
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		DEVICE_ID="$${IOS_DEVICE:-$$(flutter devices | awk -F'•' '/• ios •/ && first=="" {gsub(/ /,"",$$2); first=$$2} END {print first}')}"; \
+		if [ -z "$$DEVICE_ID" ]; then \
+			echo "❌ No iOS device found. Connect an iPhone or set IOS_DEVICE=<udid>."; \
+			exit 1; \
+		fi; \
+		echo "Installing release build to iOS device: $$DEVICE_ID"; \
+		$(FLUTTER) run -d "$$DEVICE_ID" --release --no-resident; \
+	else \
+		echo "iOS install is only supported on macOS"; \
 	fi
 
 xcode-debug-bootstrap:

@@ -16,6 +16,8 @@ class NativeBridge {
   static final darwin_host.DarwinHostApi _darwinHostApi =
       darwin_host.DarwinHostApi();
   static bool _darwinFlutterApiReady = false;
+  static Future<void> Function(String action, Map<String, dynamic> payload)?
+      _nativeMenuActionHandler;
   static String? _mobileActiveNodeName;
 
   static final bool _useFfi = Platform.isWindows ||
@@ -263,6 +265,49 @@ class NativeBridge {
         if (log is String) onLog(log);
       }
     });
+  }
+
+  static void initializeNativeMenuActions(
+    Future<void> Function(String action, Map<String, dynamic> payload) onAction,
+  ) {
+    _nativeMenuActionHandler = onAction;
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'nativeMenuAction') {
+        final args = (call.arguments as Map?)?.cast<Object?, Object?>() ??
+            <Object?, Object?>{};
+        final action = (args['action'] as String?) ?? '';
+        final payloadRaw =
+            (args['payload'] as Map?)?.cast<Object?, Object?>() ??
+                <Object?, Object?>{};
+        final payload = <String, dynamic>{};
+        payloadRaw.forEach((key, value) {
+          if (key is String) {
+            payload[key] = value;
+          }
+        });
+        if (action.isNotEmpty) {
+          final handler = _nativeMenuActionHandler;
+          if (handler != null) {
+            await handler(action, payload);
+          }
+        }
+      }
+    });
+  }
+
+  static Future<void> updateMenuState({
+    required bool connected,
+    required String nodeName,
+    required String proxyMode,
+  }) async {
+    if (!Platform.isMacOS) return;
+    try {
+      await _channel.invokeMethod<String>('updateMenuState', {
+        'connected': connected,
+        'nodeName': nodeName,
+        'proxyMode': proxyMode,
+      });
+    } catch (_) {}
   }
 
   // 初始化 Xray：会触发原生 performAction:initXray

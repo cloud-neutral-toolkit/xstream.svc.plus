@@ -19,6 +19,7 @@ import 'services/global_proxy_service.dart';
 import 'services/permission_guide_service.dart';
 import 'services/sync/desktop_sync_service.dart';
 import 'services/tun_settings_service.dart';
+import 'widgets/log_console.dart' show LogLevel;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -86,14 +87,18 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     NativeBridge.initializeLogger((log) {
       addAppLog("[macOS] $log");
     });
+    NativeBridge.initializeNativeMenuActions(_handleNativeMenuAction);
 
     GlobalState.connectionMode.addListener(_onConnectionModeChanged);
+    GlobalState.activeNodeName.addListener(_syncNativeMenuState);
+    _syncNativeMenuState();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this); // ✅ 注销生命周期观察器
     GlobalState.connectionMode.removeListener(_onConnectionModeChanged);
+    GlobalState.activeNodeName.removeListener(_syncNativeMenuState);
     super.dispose();
   }
 
@@ -180,54 +185,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     );
   }
 
-  void _showModeSelector() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return ValueListenableBuilder<String>(
-          valueListenable: GlobalState.connectionMode,
-          builder: (context, mode, _) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Tooltip(
-                  message: context.l10n.get('vpnDesc'),
-                  child: ListTile(
-                    leading: Radio<String>(
-                      value: 'VPN',
-                      groupValue: mode,
-                      onChanged: (v) {
-                        if (v != null) GlobalState.connectionMode.value = v;
-                        Navigator.pop(context);
-                      },
-                    ),
-                    title: Text(context.l10n.get('vpn')),
-                    subtitle: SelectableText(context.l10n.get('vpnDesc')),
-                  ),
-                ),
-                Tooltip(
-                  message: context.l10n.get('proxyDesc'),
-                  child: ListTile(
-                    leading: Radio<String>(
-                      value: '仅代理',
-                      groupValue: mode,
-                      onChanged: (v) {
-                        if (v != null) GlobalState.connectionMode.value = v;
-                        Navigator.pop(context);
-                      },
-                    ),
-                    title: Text(context.l10n.get('proxyOnly')),
-                    subtitle: SelectableText(context.l10n.get('proxyDesc')),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Future<void> _onConnectionModeChanged() async {
     if (!GlobalState.isUnlocked.value) return;
     final mode = GlobalState.connectionMode.value;
@@ -239,9 +196,92 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       msg = await NativeBridge.stopPacketTunnel();
     }
     addAppLog('[packet tunnel] $msg');
+    _syncNativeMenuState();
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
+  }
+
+  Future<void> _handleNativeMenuAction(
+    String action,
+    Map<String, dynamic> payload,
+  ) async {
+    switch (action) {
+      case 'showMainWindow':
+        break;
+      case 'openLogs':
+        if (mounted) {
+          setState(() => _currentIndex = 3);
+        }
+        break;
+      case 'editRules':
+        if (mounted) {
+          setState(() => _currentIndex = 1);
+        }
+        break;
+      case 'setProxyMode':
+        final mode = (payload['mode'] as String?) ?? 'VPN';
+        GlobalState.connectionMode.value = mode;
+        break;
+      case 'startAcceleration':
+        await _startAccelerationFromMenu(payload);
+        break;
+      case 'stopAcceleration':
+        await _stopAccelerationFromMenu(payload);
+        break;
+      case 'connectionStateChanged':
+        final connected = payload['connected'] == true;
+        final nodeName = (payload['nodeName'] as String?) ?? '';
+        if (!connected) {
+          GlobalState.activeNodeName.value = '';
+        } else if (nodeName.isNotEmpty) {
+          GlobalState.activeNodeName.value = nodeName;
+        }
+        break;
+      default:
+        break;
+    }
+    _syncNativeMenuState();
+  }
+
+  Future<void> _startAccelerationFromMenu(Map<String, dynamic> payload) async {
+    String nodeName = (payload['nodeName'] as String?)?.trim() ?? '';
+    if (nodeName.isEmpty) {
+      await VpnConfig.load();
+      if (VpnConfig.nodes.isEmpty) {
+        addAppLog('[menu] 未找到可用节点', level: LogLevel.warning);
+        return;
+      }
+      nodeName = VpnConfig.nodes.first.name;
+    }
+    final message = await NativeBridge.startNodeService(nodeName);
+    final running = await NativeBridge.checkNodeStatus(nodeName);
+    if (running) {
+      GlobalState.activeNodeName.value = nodeName;
+    }
+    addAppLog('[menu] $message');
+  }
+
+  Future<void> _stopAccelerationFromMenu(Map<String, dynamic> payload) async {
+    String nodeName = (payload['nodeName'] as String?)?.trim() ?? '';
+    nodeName = nodeName.isEmpty ? GlobalState.activeNodeName.value : nodeName;
+    if (nodeName.isEmpty) return;
+    final message = await NativeBridge.stopNodeService(nodeName);
+    GlobalState.activeNodeName.value = '';
+    addAppLog('[menu] $message');
+  }
+
+  Future<void> _syncNativeMenuState() async {
+    if (!Platform.isMacOS) return;
+    final nodeName = GlobalState.activeNodeName.value.trim();
+    final connected = nodeName.isNotEmpty;
+    final mode =
+        GlobalState.connectionMode.value == '仅代理' ? 'proxyOnly' : 'tun';
+    await NativeBridge.updateMenuState(
+      connected: connected,
+      nodeName: connected ? nodeName : '-',
+      proxyMode: mode,
+    );
   }
 
   List<NavigationRailDestination> _buildDestinations(BuildContext context) {
@@ -361,19 +401,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ),
                   ],
                 ),
-          floatingActionButton: ValueListenableBuilder<bool>(
-            valueListenable: GlobalState.tunnelProxyEnabled,
-            builder: (context, enabled, child) {
-              if (!enabled) return const SizedBox.shrink();
-              return Tooltip(
-                message: context.l10n.get('modeSwitch'),
-                child: FloatingActionButton(
-                  onPressed: _showModeSelector,
-                  child: const Icon(Icons.tune),
-                ),
-              );
-            },
-          ),
         );
       },
     );

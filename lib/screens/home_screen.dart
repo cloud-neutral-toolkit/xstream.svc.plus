@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() {
       vpnNodes = VpnConfig.nodes;
+      _activeNode = GlobalState.activeNodeName.value;
     });
   }
 
@@ -56,17 +57,20 @@ class _HomeScreenState extends State<HomeScreen> {
       final msg = await NativeBridge.stopNodeService(nodeName);
       if (!mounted) return;
       setState(() => _activeNode = '');
+      GlobalState.activeNodeName.value = '';
       _showMessage(msg);
     } else {
       if (_activeNode.isNotEmpty) {
         await NativeBridge.stopNodeService(_activeNode);
         if (!mounted) return;
+        GlobalState.activeNodeName.value = '';
       }
 
       final isRunning = await NativeBridge.checkNodeStatus(nodeName);
       if (!mounted) return;
       if (isRunning) {
         setState(() => _activeNode = nodeName);
+        GlobalState.activeNodeName.value = nodeName;
         _showMessage(context.l10n.get('serviceRunning'));
         return;
       }
@@ -74,6 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final msg = await NativeBridge.startNodeService(nodeName);
       if (!mounted) return;
       setState(() => _activeNode = nodeName);
+      GlobalState.activeNodeName.value = nodeName;
       _showMessage(msg);
     }
   }
@@ -120,6 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
         vpnNodes = VpnConfig.nodes;
         if (names.contains(_activeNode)) {
           _activeNode = '';
+          GlobalState.activeNodeName.value = '';
         }
         _selectedNodeNames.clear();
       });
@@ -199,6 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _selectedNodeNames.clear();
         _activeNode = '';
       });
+      GlobalState.activeNodeName.value = '';
       addAppLog('✅ 已导入配置');
     } catch (e) {
       addAppLog('[错误] 导入失败: $e', level: LogLevel.error);

@@ -715,18 +715,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ]),
                     _buildSection(context.l10n.get('experimentalFeatures'), [
-                      SizedBox(
-                        width: double.infinity,
-                        child: SwitchListTile(
-                          secondary: const Icon(Icons.science),
-                          title: Text(context.l10n.get('tunnelProxyMode'),
-                              style: _menuTextStyle),
-                          value: GlobalState.tunnelProxyEnabled.value,
-                          onChanged: (v) {
-                            setState(
-                                () => GlobalState.tunnelProxyEnabled.value = v);
-                          },
-                        ),
+                      ValueListenableBuilder<String>(
+                        valueListenable: GlobalState.connectionMode,
+                        builder: (context, mode, _) {
+                          final vpnMode = mode == 'VPN';
+                          return SizedBox(
+                            width: double.infinity,
+                            child: SwitchListTile(
+                              secondary: const Icon(Icons.science),
+                              title: Text(context.l10n.get('tunnelProxyMode'),
+                                  style: _menuTextStyle),
+                              subtitle: Text(
+                                vpnMode
+                                    ? context.l10n.get('vpn')
+                                    : context.l10n.get('proxyOnly'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              value: vpnMode,
+                              onChanged: (v) {
+                                GlobalState.connectionMode.value =
+                                    v ? 'VPN' : '仅代理';
+                              },
+                            ),
+                          );
+                        },
                       ),
                     ]),
                     if (!isUnlocked)

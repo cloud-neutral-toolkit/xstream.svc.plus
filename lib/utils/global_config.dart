@@ -15,7 +15,8 @@ final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();
 final String buildVersion = (() {
   const branch = String.fromEnvironment('BRANCH_NAME', defaultValue: '');
   const buildId = String.fromEnvironment('BUILD_ID', defaultValue: 'local');
-  const buildDate = String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
+  const buildDate =
+      String.fromEnvironment('BUILD_DATE', defaultValue: 'unknown');
 
   if (branch.startsWith('release/')) {
     final version = branch.replaceFirst('release/', '');
@@ -49,11 +50,12 @@ class GlobalState {
   static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
 
   /// 遥测开关：true 表示发送匿名统计信息
-  static final ValueNotifier<bool> telemetryEnabled = ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> telemetryEnabled =
+      ValueNotifier<bool>(false);
 
   /// 全局代理开关
   static final ValueNotifier<bool> globalProxy = ValueNotifier<bool>(false);
-  
+
   /// 隧道模式开关
   static final ValueNotifier<bool> tunnelProxyEnabled =
       ValueNotifier<bool>(false);
@@ -72,6 +74,9 @@ class GlobalState {
   /// 当前连接模式，可在底部弹出栏中切换（如 VPN / 仅代理）
   static final ValueNotifier<String> connectionMode =
       ValueNotifier<String>('VPN');
+
+  /// 当前活跃节点名称（桌面菜单栏/主界面共享）
+  static final ValueNotifier<String> activeNodeName = ValueNotifier<String>('');
 
   /// 当前语言环境，默认中文
   static final ValueNotifier<Locale> locale =
@@ -105,21 +110,17 @@ class TunDnsConfig {
   static const _tlsNameKey = 'tunDnsTlsServerName';
   static const _dotEnabledKey = 'tunDnsOverTls';
 
-  static final ValueNotifier<String> dns1 =
-      ValueNotifier<String>('1.1.1.1');
-  static final ValueNotifier<String> dns2 =
-      ValueNotifier<String>('8.8.8.8');
+  static final ValueNotifier<String> dns1 = ValueNotifier<String>('1.1.1.1');
+  static final ValueNotifier<String> dns2 = ValueNotifier<String>('8.8.8.8');
   static final ValueNotifier<String> tlsServerName =
       ValueNotifier<String>('cloudflare-dns.com');
-  static final ValueNotifier<bool> dotEnabled =
-      ValueNotifier<bool>(true);
+  static final ValueNotifier<bool> dotEnabled = ValueNotifier<bool>(true);
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
     dns1.value = prefs.getString(_dns1Key) ?? dns1.value;
     dns2.value = prefs.getString(_dns2Key) ?? dns2.value;
-    tlsServerName.value =
-        prefs.getString(_tlsNameKey) ?? tlsServerName.value;
+    tlsServerName.value = prefs.getString(_tlsNameKey) ?? tlsServerName.value;
     dotEnabled.value = prefs.getBool(_dotEnabledKey) ?? dotEnabled.value;
 
     dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
@@ -155,7 +156,7 @@ class GlobalApplicationConfig {
     return configDir.path;
   }
 
-  /// 获取服务文件目录路径  
+  /// 获取服务文件目录路径
   static Future<String> getServicesPath() async {
     final basePath = await getSandboxBasePath();
     final servicesDir = Directory('$basePath/services');
@@ -216,6 +217,7 @@ class GlobalApplicationConfig {
     final logsPath = await getLogsPath();
     return '$logsPath/$logName';
   }
+
   /// Windows 平台默认安装目录
   static String get windowsBasePath {
     final program = Platform.environment['ProgramFiles'];
@@ -255,12 +257,14 @@ class GlobalApplicationConfig {
         return '${binDir.path}/xray';
     }
   }
+
   /// 从配置文件或默认值中获取 PRODUCT_BUNDLE_IDENTIFIER
   static Future<String> getBundleId() async {
     if (Platform.isMacOS) {
       try {
         // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
-        final config = await rootBundle.loadString('macos/Runner/Configs/AppInfo.xcconfig');
+        final config = await rootBundle
+            .loadString('macos/Runner/Configs/AppInfo.xcconfig');
         final line = config
             .split('\n')
             .firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
@@ -283,7 +287,8 @@ class GlobalApplicationConfig {
         final configsPath = await getConfigsPath();
         return '$configsPath/';
       case 'windows':
-        final base = Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
+        final base =
+            Platform.environment['ProgramFiles'] ?? 'C:\\Program Files';
         return '$base\\Xstream\\';
       case 'linux':
         return '/opt/etc/';

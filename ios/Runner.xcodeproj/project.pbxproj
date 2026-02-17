@@ -36,13 +36,6 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
-		47CDC99409A21CE76CF95907 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = CE12B2E314BDA3C6F1B463FA;
-			remoteInfo = PacketTunnel;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -147,7 +140,6 @@
 				1B864040B09749EFA0434B3F /* Pods-RunnerTests.release.xcconfig */,
 				60FEE8DA7BBD63DBA9EF6D84 /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -241,7 +233,6 @@
 				BE1941846EBC7C969B206E56 /* PacketTunnelProvider.swift */,
 				EF1131BF2E18EA49B610623E /* PacketTunnel-Bridging-Header.h */,
 			);
-			name = PacketTunnel;
 			path = PacketTunnel;
 			sourceTree = "<group>";
 		};
@@ -591,18 +582,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					ENABLE_BITCODE = NO;
-					FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
-					HEADER_SEARCH_PATHS = (
-						"$(inherited)",
-						"$(SRCROOT)/../bindings",
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -666,6 +658,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				DEVELOPMENT_TEAM = N3G9T67W78;
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -673,7 +666,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -689,6 +682,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				DEVELOPMENT_TEAM = N3G9T67W78;
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -696,7 +690,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.debug.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -823,18 +817,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					ENABLE_BITCODE = NO;
-					FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
-					HEADER_SEARCH_PATHS = (
-						"$(inherited)",
-						"$(SRCROOT)/../bindings",
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.debug;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -850,18 +845,19 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-					ENABLE_BITCODE = NO;
-					FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
-					HEADER_SEARCH_PATHS = (
-						"$(inherited)",
-						"$(SRCROOT)/../bindings",
+				DEVELOPMENT_TEAM = N3G9T67W78;
+				ENABLE_BITCODE = NO;
+				FLUTTER_APPLICATION_PATH = "$(SRCROOT)/..";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../bindings",
 				);
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -875,6 +871,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGN_ENTITLEMENTS = PacketTunnel/PacketTunnel.entitlements;
+				DEVELOPMENT_TEAM = N3G9T67W78;
 				INFOPLIST_FILE = PacketTunnel/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -882,7 +879,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.xstreamApp.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
