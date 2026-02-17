@@ -5,6 +5,8 @@ PROJECT_NAME = XStream
 APP_NAME := Xstream
 ICON_SRC := assets/logo.png
 ICON_DST := macos/Runner/Assets.xcassets/AppIcon.appiconset
+MACOS_APP_BUNDLE := build/macos/Build/Products/Release/xstream.app
+MACOS_BUILD_LOCK_DIR := build/.macos-build.lock
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -60,40 +62,126 @@ fix-macos-signing:
 
 macos-intel:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "x86_64" ]; then \
+		set -e; \
 		echo "Building for macOS (Intel)..."; \
+		if [ "$$(id -u)" = "0" ]; then \
+			if [ "$$XSTREAM_SUDO_DELEGATED" = "1" ]; then \
+				echo "❌ Failed to switch from root to regular user. Please run build as a regular user shell."; \
+				exit 1; \
+			fi; \
+			if [ -z "$$SUDO_USER" ]; then \
+				echo "❌ Root shell detected without SUDO_USER. Please run: sudo make macos-intel (from a regular user)."; \
+				exit 1; \
+			fi; \
+			echo "↪ Detected sudo mode. Switching build to user: $$SUDO_USER"; \
+			for path in macos/Flutter/ephemeral ios/Flutter/ephemeral linux/flutter/ephemeral windows/flutter/ephemeral .dart_tool build; do \
+				if [ -e "$$path" ]; then \
+					chown -R "$$SUDO_USER" "$$path" || true; \
+				fi; \
+			done; \
+			exec sudo -H -u "$$SUDO_USER" env XSTREAM_SUDO_DELEGATED=1 PATH="$$PATH" make macos-intel; \
+		fi; \
+		if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
+			echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+			echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
+			exit 1; \
+		fi; \
+		trap 'rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
+		if ! command -v pod >/dev/null 2>&1; then \
+			echo "❌ CocoaPods not installed or not in a valid state. Install with: brew install cocoapods"; \
+			exit 1; \
+		fi; \
+		if ! pod --version >/dev/null 2>&1; then \
+			echo "❌ CocoaPods command exists but failed. Reinstall with: brew reinstall cocoapods"; \
+			exit 1; \
+		fi; \
 		$(FLUTTER) build macos --release \
 			--dart-define=BRANCH_NAME=$(BRANCH) \
 			--dart-define=BUILD_ID=$(BUILD_ID) \
 			--dart-define=BUILD_DATE=$(BUILD_DATE); \
-		brew install create-dmg || true; \
-		create-dmg \
-			--volname "XStream Installer" \
-			--window-pos 200 120 \
-			--window-size 800 400 \
+		if [ ! -d "$(MACOS_APP_BUNDLE)" ]; then \
+			echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
+			exit 1; \
+		fi; \
+			if ! command -v create-dmg >/dev/null 2>&1; then \
+				echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
+				exit 1; \
+			fi; \
+			rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
+			create-dmg \
+				--no-internet-enable \
+				--skip-jenkins \
+				--hdiutil-retries 10 \
+				--volname "XStream Installer" \
+				--window-pos 200 120 \
+				--window-size 800 400 \
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$(DMG_NAME) \
-			build/macos/Build/Products/Release/xstream.app; \
+			$(MACOS_APP_BUNDLE); \
 	else \
 		echo "Skipping macOS Intel build (not on Intel architecture)"; \
 	fi
 
 macos-arm64:
 	@if [ "$(UNAME_S)" = "Darwin" ] && [ "$(UNAME_M)" = "arm64" ]; then \
+		set -e; \
 		echo "Building for macOS (ARM64)..."; \
+		if [ "$$(id -u)" = "0" ]; then \
+			if [ "$$XSTREAM_SUDO_DELEGATED" = "1" ]; then \
+				echo "❌ Failed to switch from root to regular user. Please run build as a regular user shell."; \
+				exit 1; \
+			fi; \
+			if [ -z "$$SUDO_USER" ]; then \
+				echo "❌ Root shell detected without SUDO_USER. Please run: sudo make macos-arm64 (from a regular user)."; \
+				exit 1; \
+			fi; \
+			echo "↪ Detected sudo mode. Switching build to user: $$SUDO_USER"; \
+			for path in macos/Flutter/ephemeral ios/Flutter/ephemeral linux/flutter/ephemeral windows/flutter/ephemeral .dart_tool build; do \
+				if [ -e "$$path" ]; then \
+					chown -R "$$SUDO_USER" "$$path" || true; \
+				fi; \
+			done; \
+			exec sudo -H -u "$$SUDO_USER" env XSTREAM_SUDO_DELEGATED=1 PATH="$$PATH" make macos-arm64; \
+		fi; \
+		if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
+			echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+			echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
+			exit 1; \
+		fi; \
+		trap 'rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
+		if ! command -v pod >/dev/null 2>&1; then \
+			echo "❌ CocoaPods not installed or not in a valid state. Install with: brew install cocoapods"; \
+			exit 1; \
+		fi; \
+		if ! pod --version >/dev/null 2>&1; then \
+			echo "❌ CocoaPods command exists but failed. Reinstall with: brew reinstall cocoapods"; \
+			exit 1; \
+		fi; \
 		$(FLUTTER) build macos --release \
 			--dart-define=BRANCH_NAME=$(BRANCH) \
 			--dart-define=BUILD_ID=$(BUILD_ID) \
 			--dart-define=BUILD_DATE=$(BUILD_DATE); \
-		brew install create-dmg || true; \
-		create-dmg \
-			--volname "XStream Installer" \
-			--window-pos 200 120 \
-			--window-size 800 400 \
+		if [ ! -d "$(MACOS_APP_BUNDLE)" ]; then \
+			echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
+			exit 1; \
+		fi; \
+			if ! command -v create-dmg >/dev/null 2>&1; then \
+				echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
+				exit 1; \
+			fi; \
+			rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
+			create-dmg \
+				--no-internet-enable \
+				--skip-jenkins \
+				--hdiutil-retries 10 \
+				--volname "XStream Installer" \
+				--window-pos 200 120 \
+				--window-size 800 400 \
 			--icon-size 100 \
 			--app-drop-link 600 185 \
 			build/macos/$(DMG_NAME) \
-			build/macos/Build/Products/Release/xstream.app; \
+			$(MACOS_APP_BUNDLE); \
 	else \
 		echo "Skipping macOS ARM64 build (not on ARM architecture)"; \
 	fi
