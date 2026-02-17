@@ -34,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _baseUrlController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _mfaCodeController = TextEditingController();
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
   static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
@@ -106,8 +107,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         '${twoDigits(local.hour)}:${twoDigits(local.minute)}';
   }
 
-  String _formatTunStatusText(
-      BuildContext context, PacketTunnelStatus status) {
+  String _formatTunStatusText(BuildContext context, PacketTunnelStatus status) {
     final label = switch (status.status) {
       'connected' => context.l10n.get('tunStatusConnected'),
       'connecting' => context.l10n.get('tunStatusConnecting'),
@@ -126,30 +126,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _handleLogin() async {
-    final baseUrl = _baseUrlController.text.trim();
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text;
-    if (baseUrl.isEmpty || username.isEmpty || password.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.get('loginMissingFields'))),
+    final isMfaStep = _sessionManager.status.value == SessionStatus.mfaRequired;
+    LoginResult result;
+    if (isMfaStep) {
+      final mfaCode = _mfaCodeController.text.trim();
+      if (mfaCode.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.get('mfaCodeMissing'))),
+        );
+        return;
+      }
+      result = await _sessionManager.verifyMfaCode(mfaCode);
+    } else {
+      final baseUrl = _baseUrlController.text.trim();
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text;
+      if (baseUrl.isEmpty || username.isEmpty || password.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.get('loginMissingFields'))),
+        );
+        return;
+      }
+      await _sessionManager.setBaseUrl(baseUrl);
+      result = await _sessionManager.login(
+        username: username,
+        password: password,
       );
-      return;
     }
-
-    await _sessionManager.setBaseUrl(baseUrl);
-    final result = await _sessionManager.login(
-      username: username,
-      password: password,
-    );
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(result.message)),
     );
 
-    if (result.success) {
+    if (result.success && _sessionManager.isLoggedIn) {
       _passwordController.clear();
+      _mfaCodeController.clear();
       final syncResult = await _syncService.syncNow(manual: true);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -160,6 +174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _handleLogout() async {
     await _sessionManager.logout();
+    _mfaCodeController.clear();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.l10n.get('logoutSuccess'))),
@@ -179,6 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       valueListenable: _sessionManager.status,
       builder: (context, status, _) {
         final isLoggedIn = status == SessionStatus.loggedIn;
+        final isMfaRequired = status == SessionStatus.mfaRequired;
         return ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
           child: Card(
@@ -205,13 +221,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             decoration: InputDecoration(
                               labelText: context.l10n.get('serverAddress'),
                             ),
-                            onSubmitted: (_) =>
-                                _sessionManager.setBaseUrl(_baseUrlController.text),
+                            onSubmitted: (_) => _sessionManager
+                                .setBaseUrl(_baseUrlController.text),
                           ),
                           const SizedBox(height: 8),
                           TextField(
                             controller: _usernameController,
-                            enabled: !loading && !isLoggedIn,
+                            enabled: !loading && !isLoggedIn && !isMfaRequired,
                             decoration: InputDecoration(
                               labelText: context.l10n.get('username'),
                             ),
@@ -220,11 +236,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextField(
                             controller: _passwordController,
                             obscureText: true,
-                            enabled: !loading && !isLoggedIn,
+                            enabled: !loading && !isLoggedIn && !isMfaRequired,
                             decoration: InputDecoration(
                               labelText: context.l10n.get('password'),
                             ),
                           ),
+                          if (isMfaRequired) ...[
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _mfaCodeController,
+                              enabled: !loading && !isLoggedIn,
+                              decoration: InputDecoration(
+                                labelText: context.l10n.get('mfaCode'),
+                                helperText: context.l10n.get('mfaRequiredHint'),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 12),
                           Row(
                             children: [
@@ -235,11 +262,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         ? _handleLogout
                                         : _handleLogin),
                                 icon: Icon(
-                                  isLoggedIn ? Icons.logout : Icons.login,
+                                  isLoggedIn
+                                      ? Icons.logout
+                                      : (isMfaRequired
+                                          ? Icons.verified
+                                          : Icons.login),
                                 ),
                                 label: Text(
-                                  context.l10n.get(
-                                      isLoggedIn ? 'logout' : 'login'),
+                                  context.l10n.get(isLoggedIn
+                                      ? 'logout'
+                                      : (isMfaRequired
+                                          ? 'verifyMfa'
+                                          : 'login')),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -247,8 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 valueListenable: _syncService.syncing,
                                 builder: (context, syncing, _) {
                                   return ElevatedButton.icon(
-                                    onPressed:
-                                        isLoggedIn && !syncing ? _handleSyncNow : null,
+                                    onPressed: isLoggedIn && !syncing
+                                        ? _handleSyncNow
+                                        : null,
                                     icon: syncing
                                         ? const SizedBox(
                                             width: 16,
@@ -614,7 +649,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         padding: const EdgeInsets.only(left: 16.0, top: 4),
                         child: Text(
                           _formatTunStatusText(context, _tunStatus),
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style:
+                              const TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ),
                     ]),
@@ -627,8 +663,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               style: _menuTextStyle),
                           value: GlobalState.tunnelProxyEnabled.value,
                           onChanged: (v) {
-                            setState(() =>
-                                GlobalState.tunnelProxyEnabled.value = v);
+                            setState(
+                                () => GlobalState.tunnelProxyEnabled.value = v);
                           },
                         ),
                       ),
@@ -690,6 +726,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _baseUrlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
+    _mfaCodeController.dispose();
     super.dispose();
   }
 
@@ -775,8 +812,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onPressed: () {
               TunDnsConfig.dns1.value = dns1Controller.text.trim();
               TunDnsConfig.dns2.value = dns2Controller.text.trim();
-              TunDnsConfig.tlsServerName.value =
-                  tlsNameController.text.trim();
+              TunDnsConfig.tlsServerName.value = tlsNameController.text.trim();
               Navigator.pop(context);
             },
             child: Text(context.l10n.get('confirm')),
@@ -824,7 +860,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    const text = '''1. 允许 /opt/homebrew/、/Library/LaunchDaemons/、~/Library/Application Support/ 目录读写
+    const text =
+        '''1. 允许 /opt/homebrew/、/Library/LaunchDaemons/、~/Library/Application Support/ 目录读写
 2. 允许启动和停止 plist 服务
 3. 允许修改系统代理与 DNS 设置''';
 
@@ -862,8 +899,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _openSecurityPage() {
     if (Platform.isMacOS) {
-      Process.run('open',
-          ['x-apple.systempreferences:com.apple.preference.security']);
+      Process.run(
+          'open', ['x-apple.systempreferences:com.apple.preference.security']);
     } else if (Platform.isWindows) {
       Process.run('cmd', ['/c', 'start', 'ms-settings:privacy']);
     } else if (Platform.isLinux) {
