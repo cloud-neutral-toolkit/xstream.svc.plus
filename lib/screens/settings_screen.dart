@@ -394,23 +394,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return match?.group(1) ?? '0.0.0';
   }
 
-  void _onGenerateDefaultNodes() async {
-    final isUnlocked = GlobalState.isUnlocked.value;
-    final password = GlobalState.sudoPassword.value;
-
-    if (!isUnlocked) {
-      addAppLog('请先解锁以执行生成操作', level: LogLevel.warning);
-      return;
-    }
-
-    addAppLog('开始生成默认节点...');
-    await VpnConfig.generateDefaultNodes(
-      password: password,
-      setMessage: (msg) => addAppLog(msg),
-      logMessage: (msg) => addAppLog(msg),
-    );
-  }
-
   Future<void> _onSyncConfig() async {
     addAppLog('开始同步配置...');
     try {
@@ -873,11 +856,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ]),
                     _buildSection(context.l10n.get('configMgmt'), [
                       _buildButton(
-                        icon: Icons.settings,
-                        label: context.l10n.get('genDefaultNodes'),
-                        onPressed: isUnlocked ? _onGenerateDefaultNodes : null,
-                      ),
-                      _buildButton(
                         icon: Icons.security,
                         label: context.l10n.get('permissionGuide'),
                         onPressed: _showPermissionGuide,
@@ -1211,7 +1189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
 
     const text =
-        '''1. 允许 /opt/homebrew/、/Library/LaunchDaemons/、~/Library/Application Support/ 目录读写
+        '''1. 允许 ~/Library/Application Support/<bundle-id>/ 目录读写
 2. 允许启动和停止 plist 服务
 3. 允许修改系统代理与 DNS 设置''';
 

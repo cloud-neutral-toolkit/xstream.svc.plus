@@ -10,6 +10,7 @@ import '../templates/xray_config_template.dart';
 import '../templates/xray_service_macos_template.dart';
 import '../templates/xray_service_linux_template.dart';
 import '../templates/xray_service_windows_template.dart';
+import 'sqlite_node_store.dart';
 
 class VlessUriProfile {
   final String name;
@@ -127,6 +128,17 @@ class VpnConfig {
   static Future<void> load() async {
     List<VpnNode> fromLocal = [];
 
+    // SQLite is the primary source of truth.
+    try {
+      final fromDb = await SqliteNodeStore.loadNodes();
+      if (fromDb.isNotEmpty) {
+        _nodes = fromDb.map((e) => VpnNode.fromJson(e)).toList();
+        return;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to load sqlite nodes: $e');
+    }
+
     try {
       final path = await GlobalApplicationConfig.getLocalConfigPath();
       final file = File(path);
@@ -140,6 +152,15 @@ class VpnConfig {
     }
 
     _nodes = fromLocal;
+    if (_nodes.isNotEmpty) {
+      try {
+        await SqliteNodeStore.replaceAll(
+          _nodes.map((e) => e.toJson()).toList(),
+        );
+      } catch (e) {
+        debugPrint('⚠️ Failed to migrate vpn_nodes.json to sqlite: $e');
+      }
+    }
   }
 
   static List<VpnNode> get nodes => _nodes;
@@ -180,6 +201,11 @@ class VpnConfig {
     final file = File(path);
     await file.create(recursive: true);
     await file.writeAsString(exportToJson());
+    try {
+      await SqliteNodeStore.replaceAll(_nodes.map((e) => e.toJson()).toList());
+    } catch (e) {
+      debugPrint('⚠️ Failed to persist sqlite nodes: $e');
+    }
     return path;
   }
 
@@ -210,6 +236,11 @@ class VpnConfig {
 
       removeNode(node.name);
       await saveToFile();
+      try {
+        await SqliteNodeStore.deleteNode(node.name);
+      } catch (e) {
+        debugPrint('⚠️ 删除 sqlite 节点失败: $e');
+      }
     } catch (e) {
       debugPrint('⚠️ 删除节点文件失败: $e');
     }
@@ -349,6 +380,13 @@ class VpnConfig {
       setMessage('✅ 服务项已生成: $servicePath');
       setMessage('✅ 菜单项已更新: $vpnNodesConfigPath');
       logMessage('配置已成功保存并生成');
+      try {
+        await SqliteNodeStore.replaceAll(
+          _nodes.map((e) => e.toJson()).toList(),
+        );
+      } catch (e) {
+        logMessage('⚠️ SQLite 写入失败: $e');
+      }
       // Reload nodes from file so that the in-memory list stays updated
       await load();
     } catch (e) {

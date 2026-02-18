@@ -116,9 +116,29 @@ extension AppDelegate {
       return
     }
 
+    guard let runtimeConfigPath = resolvedRuntimeConfigPath(),
+          let runtimeLogPath = resolvedRuntimeLogPath(),
+          let xrayExecutable = resolvedXrayExecutablePath() else {
+      result(FlutterError(code: "PATH_RESOLVE_FAILED", message: "resolve app support path failed", details: nil))
+      return
+    }
+    if !FileManager.default.isExecutableFile(atPath: xrayExecutable) {
+      result(FlutterError(code: "XRAY_MISSING", message: "xray not initialized", details: xrayExecutable))
+      return
+    }
+
+    let escapedSourceConfig = shellEscaped(sourceConfig)
+    let escapedRuntimeConfig = shellEscaped(runtimeConfigPath)
+    let escapedRuntimeLog = shellEscaped(runtimeLogPath)
+    let escapedXray = shellEscaped(xrayExecutable)
+
     let prepareCommand = """
-mkdir -p /opt/homebrew/etc/xray
-cp -f "\(sourceConfig)" /opt/homebrew/etc/xray/config.json
+XRAY_CFG=\(escapedRuntimeConfig)
+XRAY_LOG=\(escapedRuntimeLog)
+SRC_CFG=\(escapedSourceConfig)
+mkdir -p "$(dirname "$XRAY_CFG")"
+mkdir -p "$(dirname "$XRAY_LOG")"
+cp -f "$SRC_CFG" "$XRAY_CFG"
 """
     let (prepareOK, prepareOutput) = runCommandAndCapture(command: prepareCommand)
     if !prepareOK {
@@ -127,7 +147,10 @@ cp -f "\(sourceConfig)" /opt/homebrew/etc/xray/config.json
     }
 
     let startCommand = """
-nohup /opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json >/tmp/xstream-xray-runtime.log 2>&1 &
+XRAY_BIN=\(escapedXray)
+XRAY_CFG=\(escapedRuntimeConfig)
+XRAY_LOG=\(escapedRuntimeLog)
+nohup "$XRAY_BIN" run -c "$XRAY_CFG" >"$XRAY_LOG" 2>&1 &
 sleep 1
 """
     let (startOK, startOutput) = runCommandAndCapture(command: startCommand)
@@ -146,8 +169,17 @@ sleep 1
   }
 
   private func stopNodeServiceWithDirectXray(result: @escaping FlutterResult) {
+    guard let runtimeConfigPath = resolvedRuntimeConfigPath(),
+          let xrayExecutable = resolvedXrayExecutablePath() else {
+      result("停止失败: 路径解析失败")
+      return
+    }
+    let escapedRuntimeConfig = shellEscaped(runtimeConfigPath)
+    let escapedXray = shellEscaped(xrayExecutable)
     let stopCommand = """
-pkill -f "/opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json" || true
+XRAY_BIN=\(escapedXray)
+XRAY_CFG=\(escapedRuntimeConfig)
+pkill -f "$XRAY_BIN run -c $XRAY_CFG" || true
 sleep 1
 """
     _ = runCommandAndCapture(command: stopCommand)
@@ -155,7 +187,17 @@ sleep 1
   }
 
   private func isDirectXrayRunning() -> Bool {
-    let checkCommand = "pgrep -f \"/opt/homebrew/bin/xray run -c /opt/homebrew/etc/xray/config.json\" >/dev/null"
+    guard let runtimeConfigPath = resolvedRuntimeConfigPath(),
+          let xrayExecutable = resolvedXrayExecutablePath() else {
+      return false
+    }
+    let escapedRuntimeConfig = shellEscaped(runtimeConfigPath)
+    let escapedXray = shellEscaped(xrayExecutable)
+    let checkCommand = """
+XRAY_BIN=\(escapedXray)
+XRAY_CFG=\(escapedRuntimeConfig)
+pgrep -f "$XRAY_BIN run -c $XRAY_CFG" >/dev/null
+"""
     let (ok, _) = runCommandAndCapture(command: checkCommand)
     return ok
   }
@@ -194,5 +236,40 @@ sleep 1
     } catch {
       return (false, error.localizedDescription)
     }
+  }
+
+  private func resolvedAppSupportRoot() -> URL? {
+    let fileManager = FileManager.default
+    guard let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+      return nil
+    }
+    let bundleId = Bundle.main.bundleIdentifier ?? "com.xstream"
+    let root = appSupport.appendingPathComponent(bundleId, isDirectory: true)
+    try? fileManager.createDirectory(at: root, withIntermediateDirectories: true)
+    return root
+  }
+
+  private func resolvedRuntimeConfigPath() -> String? {
+    guard let root = resolvedAppSupportRoot() else { return nil }
+    let configDir = root.appendingPathComponent("configs", isDirectory: true)
+    try? FileManager.default.createDirectory(at: configDir, withIntermediateDirectories: true)
+    return configDir.appendingPathComponent("config.json").path
+  }
+
+  private func resolvedRuntimeLogPath() -> String? {
+    guard let root = resolvedAppSupportRoot() else { return nil }
+    let logsDir = root.appendingPathComponent("logs", isDirectory: true)
+    try? FileManager.default.createDirectory(at: logsDir, withIntermediateDirectories: true)
+    return logsDir.appendingPathComponent("xray-runtime.log").path
+  }
+
+  private func resolvedXrayExecutablePath() -> String? {
+    guard let root = resolvedAppSupportRoot() else { return nil }
+    return root.appendingPathComponent("bin", isDirectory: true).appendingPathComponent("xray").path
+  }
+
+  private func shellEscaped(_ value: String) -> String {
+    let escaped = value.replacingOccurrences(of: "'", with: "'\"'\"'")
+    return "'\(escaped)'"
   }
 }
