@@ -261,6 +261,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           ? const Color(0xFFCFE6FF)
                           : Colors.transparent);
                   final latency = _latencyByNode[node.name];
+                  final tags = <String>[
+                    node.protocol.trim().toLowerCase(),
+                    node.transport.trim().toLowerCase(),
+                    node.security.trim().toLowerCase(),
+                  ].where((e) => e.isNotEmpty).toList();
 
                   return InkWell(
                     onTap: isUnlocked ? () => _toggleNode(node) : null,
@@ -286,17 +291,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 10),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    _buildTag(node.protocol.toLowerCase()),
-                                    _buildTag(node.transport.toLowerCase()),
-                                    _buildTag(node.security.toLowerCase()),
-                                    if (latency != null)
-                                      _buildTag('${latency}ms'),
-                                  ],
-                                ),
+                                if (tags.isNotEmpty || latency != null)
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      ...tags.map(_buildTag),
+                                      if (latency != null)
+                                        _buildTag('${latency}ms'),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),

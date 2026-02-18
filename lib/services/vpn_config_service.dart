@@ -66,9 +66,9 @@ class VpnNode {
     required this.countryCode,
     required this.configPath,
     required this.serviceName,
-    this.protocol = 'vless',
-    this.transport = 'tcp',
-    this.security = 'tls',
+    this.protocol = '',
+    this.transport = '',
+    this.security = '',
     this.enabled = true,
   }) {
     checkNotEmpty(name, 'name');
@@ -82,9 +82,9 @@ class VpnNode {
     final countryCode = json['countryCode'] ?? '';
     final configPath = json['configPath'] ?? '';
     final serviceName = json['serviceName'] ?? json['plistName'] ?? '';
-    final protocol = json['protocol'] ?? 'vless';
-    final transport = json['transport'] ?? 'tcp';
-    final security = json['security'] ?? 'tls';
+    final protocol = json['protocol'] ?? '';
+    final transport = json['transport'] ?? '';
+    final security = json['security'] ?? '';
 
     checkNotEmpty(name, 'name');
     checkNotEmpty(countryCode, 'countryCode');
