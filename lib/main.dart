@@ -171,8 +171,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         await _showSubscriptionLinkDialog();
         break;
       case _AddNodeMenuAction.scanQr:
+        await _showQrInputDialog();
+        break;
       case _AddNodeMenuAction.pickImage:
-        _showComingSoon(context.l10n.get('addNodeScanQr'));
+        _showComingSoon(context.l10n.get('addNodePickImage'));
         break;
       case _AddNodeMenuAction.pickFile:
         if (mounted) {
@@ -216,6 +218,41 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       },
     );
     if (!mounted || value == null || value.isEmpty) return;
+    _openAddConfigWithUri(value);
+  }
+
+  Future<void> _showQrInputDialog() async {
+    final controller = TextEditingController();
+    final value = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.get('addNodeScanQr')),
+          content: TextField(
+            controller: controller,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: context.l10n.get('scanResultHint'),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(context.l10n.get('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: Text(context.l10n.get('confirm')),
+            ),
+          ],
+        );
+      },
+    );
+    if (!mounted || value == null || value.isEmpty) return;
+    if (!value.startsWith('vless://')) {
+      _showComingSoon(context.l10n.get('vlessUriInvalid'));
+      return;
+    }
     _openAddConfigWithUri(value);
   }
 

@@ -28,6 +28,8 @@ class AppLocalizations {
       'openSettingsImportHint':
           'Open Settings > Xray Management > Import Config',
       'clipboardNoVless': 'Clipboard does not contain a vless:// link',
+      'autoImportInProgress': 'Parsing and importing...',
+      'scanResultHint': 'Paste QR result (vless://...)',
       'startAcceleration': 'Start Acceleration',
       'stopAcceleration': 'Stop Acceleration',
       'highlightNode': 'Highlight Node',
@@ -156,6 +158,8 @@ class AppLocalizations {
       'addNodeReadClipboard': '读取剪贴板',
       'openSettingsImportHint': '请在 设置 > Xray 管理 中使用导入配置',
       'clipboardNoVless': '剪贴板中没有 vless:// 链接',
+      'autoImportInProgress': '正在解析并导入...',
+      'scanResultHint': '粘贴扫码结果（vless://...）',
       'startAcceleration': '启动加速',
       'stopAcceleration': '停止加速',
       'highlightNode': '高亮该节点',

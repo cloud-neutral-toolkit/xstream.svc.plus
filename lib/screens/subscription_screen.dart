@@ -22,6 +22,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   final _uuidController = TextEditingController();
   String _message = '';
   String? _bundleId; // Start with null and load it asynchronously
+  bool _autoFlowRunning = false;
 
   @override
   void initState() {
@@ -42,7 +43,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       _vlessUriController.text = initialUri;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        _onParseVlessUri();
+        _onParseVlessUri(autoComplete: true);
       });
     }
   }
@@ -57,7 +58,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     super.dispose();
   }
 
-  void _onParseVlessUri() {
+  Future<void> _onParseVlessUri({bool autoComplete = true}) async {
     final rawUri = _vlessUriController.text.trim();
     if (rawUri.isEmpty) {
       setState(() {
@@ -82,6 +83,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       addAppLog(
         '已解析 VLESS 链接: ${parsed.name}, ${parsed.protocol}/${parsed.network}/${parsed.security}',
       );
+      if (autoComplete) {
+        await _generateAndSyncFromVless(
+          rawUri: rawUri,
+          fallbackNodeName: parsed.name,
+          autoFlow: true,
+        );
+      }
     } catch (e) {
       setState(() {
         _message = '${context.l10n.get('vlessUriInvalid')}: $e';
@@ -91,8 +99,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
   }
 
   Future<void> _onCreateConfig() async {
-    final unlocked = GlobalState.isUnlocked.value;
-    final password = GlobalState.sudoPassword.value;
     final rawUri = _vlessUriController.text.trim();
 
     if (_bundleId == null || _bundleId!.isEmpty) {
@@ -103,6 +109,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       return;
     }
 
+    if (rawUri.isNotEmpty) {
+      await _generateAndSyncFromVless(
+        rawUri: rawUri,
+        fallbackNodeName: _nodeNameController.text.trim(),
+        autoFlow: false,
+      );
+      return;
+    }
+
+    final unlocked = GlobalState.isUnlocked.value;
+    final password = GlobalState.sudoPassword.value;
     if (!unlocked) {
       setState(() {
         _message = context.l10n.get('unlockFirst');
@@ -110,42 +127,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       addAppLog('请先解锁后再创建配置', level: LogLevel.warning);
       return;
     }
-
     if (password.isEmpty) {
       setState(() {
         _message = context.l10n.get('sudoMissing');
       });
       addAppLog('无法获取 sudo 密码', level: LogLevel.error);
-      return;
-    }
-
-    if (rawUri.isNotEmpty) {
-      try {
-        final parsed = VpnConfig.parseVlessUri(
-          rawUri,
-          fallbackNodeName: _nodeNameController.text.trim(),
-        );
-        await VpnConfig.generateFromVlessUri(
-          vlessUri: rawUri,
-          fallbackNodeName: _nodeNameController.text.trim(),
-          password: password,
-          bundleId: _bundleId!,
-          setMessage: (msg) {
-            setState(() {
-              _message = msg;
-            });
-          },
-          logMessage: (msg) {
-            addAppLog(msg);
-          },
-        );
-        await _syncHomeAfterImport(parsed.name);
-      } catch (e) {
-        setState(() {
-          _message = '${context.l10n.get('vlessUriInvalid')}: $e';
-        });
-        addAppLog('VLESS 链接创建失败: $e', level: LogLevel.error);
-      }
       return;
     }
 
@@ -176,6 +162,65 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       },
     );
     await _syncHomeAfterImport(_nodeNameController.text.trim());
+  }
+
+  Future<void> _generateAndSyncFromVless({
+    required String rawUri,
+    required String fallbackNodeName,
+    required bool autoFlow,
+  }) async {
+    if (_autoFlowRunning) return;
+    final unlocked = GlobalState.isUnlocked.value;
+    final password = GlobalState.sudoPassword.value;
+    if (!unlocked) {
+      setState(() {
+        _message = context.l10n.get('unlockFirst');
+      });
+      addAppLog('请先解锁后再创建配置', level: LogLevel.warning);
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() {
+        _message = context.l10n.get('sudoMissing');
+      });
+      addAppLog('无法获取 sudo 密码', level: LogLevel.error);
+      return;
+    }
+
+    try {
+      _autoFlowRunning = true;
+      if (autoFlow) {
+        setState(() {
+          _message = context.l10n.get('autoImportInProgress');
+        });
+      }
+      final parsed = VpnConfig.parseVlessUri(
+        rawUri,
+        fallbackNodeName: fallbackNodeName,
+      );
+      await VpnConfig.generateFromVlessUri(
+        vlessUri: rawUri,
+        fallbackNodeName: fallbackNodeName,
+        password: password,
+        bundleId: _bundleId!,
+        setMessage: (msg) {
+          setState(() {
+            _message = msg;
+          });
+        },
+        logMessage: (msg) {
+          addAppLog(msg);
+        },
+      );
+      await _syncHomeAfterImport(parsed.name);
+    } catch (e) {
+      setState(() {
+        _message = '${context.l10n.get('vlessUriInvalid')}: $e';
+      });
+      addAppLog('VLESS 链接创建失败: $e', level: LogLevel.error);
+    } finally {
+      _autoFlowRunning = false;
+    }
   }
 
   Future<void> _syncHomeAfterImport(String preferredName) async {
@@ -211,7 +256,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: OutlinedButton(
-                onPressed: _onParseVlessUri,
+                onPressed: () => _onParseVlessUri(autoComplete: true),
                 child: Text(context.l10n.get('parseVlessUri')),
               ),
             ),
