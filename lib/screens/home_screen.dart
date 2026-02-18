@@ -174,6 +174,34 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  VpnNode? _resolveFloatingMenuNode() {
+    final active = _activeNode.trim();
+    if (active.isNotEmpty) {
+      for (final node in vpnNodes) {
+        if (node.name == active) return node;
+      }
+    }
+
+    final highlighted = _highlightNode.trim();
+    if (highlighted.isNotEmpty) {
+      for (final node in vpnNodes) {
+        if (node.name == highlighted) return node;
+      }
+    }
+
+    if (vpnNodes.isNotEmpty) return vpnNodes.first;
+    return null;
+  }
+
+  Future<void> _openFloatingHomeMenu() async {
+    final node = _resolveFloatingMenuNode();
+    if (node == null) {
+      _showMessage(context.l10n.get('noNodes'));
+      return;
+    }
+    await _openNodeMenu(node);
+  }
+
   Future<void> _toggleNode(VpnNode node) async {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
@@ -304,10 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.more_vert),
-                            onPressed: () => _openNodeMenu(node),
-                          ),
+                          const SizedBox.shrink(),
                         ],
                       ),
                     ),
@@ -315,51 +340,60 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               );
 
-        if (_activeNode.isEmpty) return content;
-
+        final showStatusBar = _activeNode.isNotEmpty;
         final latency = _latencyByNode[_activeNode];
         return Stack(
           children: [
             content,
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 12,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x22000000),
-                      blurRadius: 12,
-                      offset: Offset(0, 4),
-                    )
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${context.l10n.get('homeStatusDuration')}: '
-                        '${_formatDuration(_connectedDuration)}  '
-                        '${context.l10n.get('homeStatusLatency')}: '
-                        '${latency == null ? "--" : "${latency}ms"}  '
-                        '${context.l10n.get('homeStatusLocation')}: '
-                        '$_connectedLocation',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
+            if (showStatusBar)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 12,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x22000000),
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${context.l10n.get('homeStatusDuration')}: '
+                          '${_formatDuration(_connectedDuration)}  '
+                          '${context.l10n.get('homeStatusLatency')}: '
+                          '${latency == null ? "--" : "${latency}ms"}  '
+                          '${context.l10n.get('homeStatusLocation')}: '
+                          '$_connectedLocation',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                    const Icon(Icons.chevron_right),
-                  ],
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            if (vpnNodes.isNotEmpty)
+              Positioned(
+                right: 16,
+                bottom: showStatusBar ? 92 : 16,
+                child: FloatingActionButton(
+                  onPressed: _openFloatingHomeMenu,
+                  child: const Icon(Icons.more_horiz),
+                ),
+              ),
           ],
         );
       },
