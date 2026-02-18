@@ -81,6 +81,14 @@ extension AppDelegate {
         try fm.removeItem(at: target)
       }
       try fm.copyItem(atPath: source, toPath: target.path)
+      try copyOptionalResource(
+        fileName: "geoip.dat",
+        resourcePath: resourcePath,
+        destinationDir: binDir)
+      try copyOptionalResource(
+        fileName: "geosite.dat",
+        resourcePath: resourcePath,
+        destinationDir: binDir)
 
       let chmod = Process()
       chmod.launchPath = "/bin/chmod"
@@ -166,6 +174,14 @@ extension AppDelegate {
               try fm.removeItem(at: target)
             }
             try fm.copyItem(atPath: xrayPath, toPath: target.path)
+            try self.copyOptionalResource(
+              fileName: "geoip.dat",
+              resourcePath: Bundle.main.resourcePath ?? "",
+              destinationDir: binDir)
+            try self.copyOptionalResource(
+              fileName: "geosite.dat",
+              resourcePath: Bundle.main.resourcePath ?? "",
+              destinationDir: binDir)
             let chmod = Process()
             chmod.launchPath = "/bin/chmod"
             chmod.arguments = ["755", target.path]
@@ -221,5 +237,23 @@ extension AppDelegate {
     let root = appSupport.appendingPathComponent(bundleId, isDirectory: true)
     try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
     return root
+  }
+
+  private func copyOptionalResource(
+    fileName: String,
+    resourcePath: String,
+    destinationDir: URL
+  ) throws {
+    guard !resourcePath.isEmpty else { return }
+    let fm = FileManager.default
+    let source = URL(fileURLWithPath: resourcePath)
+      .appendingPathComponent("xray", isDirectory: true)
+      .appendingPathComponent(fileName)
+    guard fm.fileExists(atPath: source.path) else { return }
+    let destination = destinationDir.appendingPathComponent(fileName)
+    if fm.fileExists(atPath: destination.path) {
+      try fm.removeItem(at: destination)
+    }
+    try fm.copyItem(at: source, to: destination)
   }
 }

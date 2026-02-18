@@ -1,0 +1,3 @@
+[submodule "vendor/Xray-core"]
+	path = vendor/Xray-core
+	url = https://github.com/XTLS/Xray-core.git

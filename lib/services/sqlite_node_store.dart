@@ -32,6 +32,13 @@ class SqliteNodeStore {
         updated_at INTEGER NOT NULL
       );
     ''');
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS app_state (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+    ''');
 
     _db = db;
     return db;
@@ -100,5 +107,27 @@ class SqliteNodeStore {
   static Future<void> deleteNode(String name) async {
     final db = await _openDb();
     db.execute('DELETE FROM vpn_nodes WHERE name = ?', [name]);
+  }
+
+  static Future<void> setAppState(String key, String value) async {
+    final db = await _openDb();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    db.execute('''
+      INSERT INTO app_state(key, value, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(key) DO UPDATE SET
+        value=excluded.value,
+        updated_at=excluded.updated_at
+    ''', [key, value, now]);
+  }
+
+  static Future<String?> getAppState(String key) async {
+    final db = await _openDb();
+    final rs = db.select(
+      'SELECT value FROM app_state WHERE key = ? LIMIT 1',
+      [key],
+    );
+    if (rs.isEmpty) return null;
+    return rs.first['value'] as String?;
   }
 }

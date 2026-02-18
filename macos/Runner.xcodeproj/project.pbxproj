@@ -36,6 +36,10 @@
 		972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
 		972D45862DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
 		972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
+		972D45882DF2D0D700A356CC /* geoip.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458A2DF2D0D700A356CC /* geoip.dat */; };
+		972D45892DF2D0D700A356CC /* geosite.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458B2DF2D0D700A356CC /* geosite.dat */; };
+		972D458C2DF2D0D700A356CC /* geoip.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458A2DF2D0D700A356CC /* geoip.dat */; };
+		972D458D2DF2D0D700A356CC /* geosite.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458B2DF2D0D700A356CC /* geosite.dat */; };
 		9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
 		9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
@@ -133,6 +137,8 @@
 		8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
 		972D45822DF2D0D700A356CC /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = xray; path = Resources/xray/xray; sourceTree = SOURCE_ROOT; };
 		972D45832DF2D0D700A356CC /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "xray-x86_64"; path = "Resources/xray/xray-x86_64"; sourceTree = SOURCE_ROOT; };
+		972D458A2DF2D0D700A356CC /* geoip.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = geoip.dat; path = Resources/xray/geoip.dat; sourceTree = SOURCE_ROOT; };
+		972D458B2DF2D0D700A356CC /* geosite.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = geosite.dat; path = Resources/xray/geosite.dat; sourceTree = SOURCE_ROOT; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ConfigWriter.swift"; sourceTree = "<group>"; };
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
@@ -274,6 +280,8 @@
 				97AB92F72DF3F9FA00393014 /* reset_xray.sh */,
 				972D45822DF2D0D700A356CC /* xray */,
 				972D45832DF2D0D700A356CC /* xray-x86_64 */,
+				972D458A2DF2D0D700A356CC /* geoip.dat */,
+				972D458B2DF2D0D700A356CC /* geosite.dat */,
 			);
 			path = xray;
 			sourceTree = "<group>";
@@ -443,6 +451,8 @@
 				97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
 				972D45842DF2D0D700A356CC /* xray in Resources */,
 				972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
+				972D45882DF2D0D700A356CC /* geoip.dat in Resources */,
+				972D45892DF2D0D700A356CC /* geosite.dat in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -452,6 +462,8 @@
 			files = (
 				972D45862DF2D0D700A356CC /* xray in Resources */,
 				972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
+				972D458C2DF2D0D700A356CC /* geoip.dat in Resources */,
+				972D458D2DF2D0D700A356CC /* geosite.dat in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
 				97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,

@@ -1,7 +1,5 @@
-// lib/screens/home_screen.dart
-
-import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import '../../utils/native_bridge.dart';
 import '../../utils/global_config.dart' show GlobalState;
@@ -19,6 +17,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _activeNode = '';
+  String _selectedNode = '';
+  String _hoveredNode = '';
   String _highlightNode = '';
   List<VpnNode> vpnNodes = [];
   final Map<String, int> _latencyByNode = {};
@@ -53,12 +53,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initializeConfig() async {
     await VpnConfig.load();
     if (!mounted) return;
+    final loaded = List<VpnNode>.from(VpnConfig.nodes);
+    if (loaded.isEmpty) {
+      setState(() {
+        vpnNodes = const [];
+        _activeNode = '';
+        _highlightNode = '';
+        _selectedNode = '';
+        _connectedAt = null;
+        _connectedDuration = Duration.zero;
+        _connectedLocation = '-';
+      });
+      _durationTimer?.cancel();
+      _durationTimer = null;
+      GlobalState.activeNodeName.value = '';
+      GlobalState.lastImportedNodeName.value = '';
+      return;
+    }
+
     setState(() {
-      vpnNodes = VpnConfig.nodes;
+      vpnNodes = loaded;
       _activeNode = GlobalState.activeNodeName.value;
       _highlightNode = GlobalState.lastImportedNodeName.value;
+      _selectedNode = _activeNode.isNotEmpty ? _activeNode : _highlightNode;
     });
-    _ensureActiveNodeMeta();
+    _syncConnectedMeta();
     _scheduleClearHighlight();
   }
 
@@ -70,19 +89,23 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
     setState(() {
       _activeNode = GlobalState.activeNodeName.value;
+      if (_activeNode.isNotEmpty) {
+        _selectedNode = _activeNode;
+        _highlightNode = _activeNode;
+      }
     });
-    _ensureActiveNodeMeta();
+    _syncConnectedMeta();
   }
 
-  void _ensureActiveNodeMeta() {
+  void _syncConnectedMeta() {
     if (_activeNode.isEmpty) {
       _connectedAt = null;
       _connectedDuration = Duration.zero;
       _connectedLocation = '-';
       _durationTimer?.cancel();
+      _durationTimer = null;
       return;
     }
-
     _connectedAt ??= DateTime.now();
     final node = vpnNodes.cast<VpnNode?>().firstWhere(
           (n) => n?.name == _activeNode,
@@ -95,6 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _connectedDuration = DateTime.now().difference(_connectedAt!);
       });
     });
+  }
+
+  String _formatDuration(Duration duration) {
+    final secs = duration.inSeconds;
+    if (secs < 60) return '$secs${context.l10n.get('secondsSuffix')}';
+    final mins = secs ~/ 60;
+    final rem = secs % 60;
+    return '$mins m $rem${context.l10n.get('secondsSuffix')}';
   }
 
   void _scheduleClearHighlight() {
@@ -127,79 +158,38 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _formatDuration(Duration duration) {
-    final secs = duration.inSeconds;
-    if (secs < 60) return '${secs}s';
-    final mins = secs ~/ 60;
-    final rem = secs % 60;
-    return '${mins}m ${rem}s';
-  }
-
-  Future<void> _openNodeMenu(VpnNode node) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      builder: (context) {
-        final isRunning = _activeNode == node.name;
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(
-                  isRunning ? Icons.stop_circle : Icons.play_circle_fill,
-                ),
-                title: Text(context.l10n
-                    .get(isRunning ? 'stopAcceleration' : 'startAcceleration')),
-                onTap: () async {
-                  Navigator.pop(context);
-                  await _toggleNode(node);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.highlight),
-                title: Text(context.l10n.get('highlightNode')),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() {
-                    _highlightNode = node.name;
-                    GlobalState.lastImportedNodeName.value = node.name;
-                  });
-                  _scheduleClearHighlight();
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  VpnNode? _resolveFloatingMenuNode() {
+  VpnNode? _resolveActionNode() {
+    final selected = _selectedNode.trim();
+    if (selected.isNotEmpty) {
+      for (final node in vpnNodes) {
+        if (node.name == selected) return node;
+      }
+    }
     final active = _activeNode.trim();
     if (active.isNotEmpty) {
       for (final node in vpnNodes) {
         if (node.name == active) return node;
       }
     }
-
-    final highlighted = _highlightNode.trim();
-    if (highlighted.isNotEmpty) {
-      for (final node in vpnNodes) {
-        if (node.name == highlighted) return node;
-      }
-    }
-
-    if (vpnNodes.isNotEmpty) return vpnNodes.first;
-    return null;
+    return vpnNodes.isNotEmpty ? vpnNodes.first : null;
   }
 
-  Future<void> _openFloatingHomeMenu() async {
-    final node = _resolveFloatingMenuNode();
+  void _selectNode(VpnNode node) {
+    setState(() {
+      _selectedNode = node.name;
+      _highlightNode = node.name;
+      GlobalState.lastImportedNodeName.value = node.name;
+    });
+    _scheduleClearHighlight();
+  }
+
+  Future<void> _toggleFromFloatingButton() async {
+    final node = _resolveActionNode();
     if (node == null) {
       _showMessage(context.l10n.get('noNodes'));
       return;
     }
-    await _openNodeMenu(node);
+    await _toggleNode(node);
   }
 
   Future<void> _toggleNode(VpnNode node) async {
@@ -213,12 +203,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _activeNode = '';
+        _selectedNode = nodeName;
       });
       GlobalState.activeNodeName.value = '';
-      _connectedAt = null;
-      _connectedDuration = Duration.zero;
-      _durationTimer?.cancel();
-      _durationTimer = null;
+      _syncConnectedMeta();
       _showMessage(msg);
     } else {
       if (_activeNode.isNotEmpty) {
@@ -230,8 +218,13 @@ class _HomeScreenState extends State<HomeScreen> {
       final isRunning = await NativeBridge.checkNodeStatus(nodeName);
       if (!mounted) return;
       if (isRunning) {
-        setState(() => _activeNode = nodeName);
+        setState(() {
+          _activeNode = nodeName;
+          _selectedNode = nodeName;
+          _highlightNode = nodeName;
+        });
         GlobalState.activeNodeName.value = nodeName;
+        _syncConnectedMeta();
         _showMessage(context.l10n.get('serviceRunning'));
         return;
       }
@@ -241,12 +234,11 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _activeNode = nodeName;
+        _selectedNode = nodeName;
         _highlightNode = nodeName;
-        _connectedAt = DateTime.now();
-        _connectedDuration = Duration.zero;
-        _connectedLocation = node.countryCode.toUpperCase();
       });
       GlobalState.activeNodeName.value = nodeName;
+      _syncConnectedMeta();
       _showMessage(msg);
       _scheduleClearHighlight();
 
@@ -272,17 +264,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ? Center(child: Text(context.l10n.get('noNodes')))
             : ListView.separated(
                 itemCount: vpnNodes.length,
-                padding: EdgeInsets.fromLTRB(
-                  0,
-                  0,
-                  0,
-                  _activeNode.isEmpty ? 12 : 100,
-                ),
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 72),
                 separatorBuilder: (_, __) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final node = vpnNodes[index];
                   final isActive = _activeNode == node.name;
-                  final isHighlighted = _highlightNode == node.name;
+                  final isSelected = _selectedNode == node.name;
+                  final isHighlighted =
+                      _highlightNode == node.name || isSelected;
                   final bgColor = isActive
                       ? const Color(0xFFC8E6C9)
                       : (isHighlighted
@@ -295,72 +284,81 @@ class _HomeScreenState extends State<HomeScreen> {
                     node.security.trim().toLowerCase(),
                   ].where((e) => e.isNotEmpty).toList();
 
-                  return InkWell(
-                    onTap: isUnlocked ? () => _toggleNode(node) : null,
-                    child: Container(
-                      color: bgColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  node.name,
-                                  style: const TextStyle(
-                                    fontSize: 40 / 1.6,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF222222),
+                  return MouseRegion(
+                    onEnter: (_) => setState(() => _hoveredNode = node.name),
+                    onExit: (_) => setState(() => _hoveredNode = ''),
+                    child: InkWell(
+                      onTap: isUnlocked ? () => _selectNode(node) : null,
+                      child: Container(
+                        color: bgColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    node.name,
+                                    style: const TextStyle(
+                                      fontSize: 40 / 1.6,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF222222),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 10),
-                                if (tags.isNotEmpty || latency != null)
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      ...tags.map(_buildTag),
-                                      if (latency != null)
-                                        _buildTag('${latency}ms'),
-                                    ],
-                                  ),
-                              ],
+                                  const SizedBox(height: 10),
+                                  if (tags.isNotEmpty || latency != null)
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children: [
+                                        ...tags.map(_buildTag),
+                                        if (latency != null)
+                                          _buildTag('${latency}ms'),
+                                      ],
+                                    ),
+                                ],
+                              ),
                             ),
-                          ),
-                          const SizedBox.shrink(),
-                        ],
+                            const SizedBox.shrink(),
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
               );
 
+        final hoverHint = _hoveredNode.isNotEmpty
+            ? '${context.l10n.get('hoverHintSelected')}: $_hoveredNode，'
+                '${context.l10n.get('hoverHintClickToStart')}'
+            : '';
+
         final showStatusBar = _activeNode.isNotEmpty;
-        final latency = _latencyByNode[_activeNode];
+        final activeLatency = _latencyByNode[_activeNode];
         return Stack(
           children: [
             content,
             if (showStatusBar)
               Positioned(
                 left: 16,
-                right: 16,
-                bottom: 12,
+                right: 86,
+                bottom: 16,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.95),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white.withValues(alpha: 0.96),
+                    borderRadius: BorderRadius.circular(14),
                     boxShadow: const [
                       BoxShadow(
                         color: Color(0x22000000),
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       )
                     ],
                   ),
@@ -369,29 +367,51 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           '${context.l10n.get('homeStatusDuration')}: '
-                          '${_formatDuration(_connectedDuration)}  '
+                          '${_formatDuration(_connectedDuration)} '
                           '${context.l10n.get('homeStatusLatency')}: '
-                          '${latency == null ? "--" : "${latency}ms"}  '
+                          '${activeLatency == null ? "--" : "${activeLatency}ms"} '
                           '${context.l10n.get('homeStatusLocation')}: '
                           '$_connectedLocation',
                           style: const TextStyle(
-                            fontSize: 15,
+                            fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
-                      const Icon(Icons.chevron_right),
+                      const Icon(Icons.chevron_right, size: 22),
                     ],
+                  ),
+                ),
+              ),
+            if (hoverHint.isNotEmpty)
+              Positioned(
+                left: 16,
+                right: 76,
+                bottom: showStatusBar ? 76 : 16,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    hoverHint,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),
               ),
             if (vpnNodes.isNotEmpty)
               Positioned(
                 right: 16,
-                bottom: showStatusBar ? 92 : 16,
-                child: FloatingActionButton(
-                  onPressed: _openFloatingHomeMenu,
-                  child: const Icon(Icons.more_horiz),
+                bottom: 16,
+                child: FloatingActionButton.small(
+                  onPressed: _toggleFromFloatingButton,
+                  child: Icon(
+                    _activeNode.isNotEmpty
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_fill,
+                  ),
                 ),
               ),
           ],

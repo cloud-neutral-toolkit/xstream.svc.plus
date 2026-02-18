@@ -731,6 +731,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     addAppLog('DNS over TLS: ${enabled ? "开启" : "关闭"}');
   }
 
+  void _onToggleTunnelProxyMode(bool tunnelMode) {
+    final isUnlocked = GlobalState.isUnlocked.value;
+    if (!isUnlocked) {
+      addAppLog('请先解锁以切换连接模式', level: LogLevel.warning);
+      return;
+    }
+    GlobalState.connectionMode.value = tunnelMode ? 'VPN' : '仅代理';
+    if (tunnelMode) {
+      _onToggleGlobalProxy(false);
+      if (!GlobalState.tunSettingsEnabled.value) {
+        _onToggleTunSettings(true);
+      }
+      addAppLog('模式切换: 隧道模式');
+    } else {
+      if (GlobalState.tunSettingsEnabled.value) {
+        _onToggleTunSettings(false);
+      }
+      _onToggleGlobalProxy(true);
+      addAppLog('模式切换: 代理模式');
+    }
+  }
+
   Future<void> _togglePacketTunnel(bool enabled) async {
     setState(() => _tunBusy = true);
     final msg = enabled
@@ -876,27 +898,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         label: context.l10n.get('dnsConfig'),
                         onPressed: _showDnsDialog,
                       ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SwitchListTile(
-                          value: GlobalState.globalProxy.value,
-                          onChanged: _onToggleGlobalProxy,
-                          title: Text(
-                            context.l10n.get('globalProxy'),
-                            style: _menuTextStyle,
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        child: SwitchListTile(
-                          value: GlobalState.tunSettingsEnabled.value,
-                          onChanged: _tunBusy ? null : _onToggleTunSettings,
-                          title: Text(
-                            context.l10n.get('tunSettings'),
-                            style: _menuTextStyle,
-                          ),
-                        ),
+                      ValueListenableBuilder<String>(
+                        valueListenable: GlobalState.connectionMode,
+                        builder: (context, mode, _) {
+                          final vpnMode = mode == 'VPN';
+                          return SizedBox(
+                            width: double.infinity,
+                            child: SwitchListTile(
+                              secondary: const Icon(Icons.science),
+                              title: Text(
+                                context.l10n.get('tunnelProxyMode'),
+                                style: _menuTextStyle,
+                              ),
+                              subtitle: Text(
+                                vpnMode
+                                    ? context.l10n.get('vpn')
+                                    : context.l10n.get('proxyOnly'),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              value: vpnMode,
+                              onChanged: _tunBusy || !isUnlocked
+                                  ? null
+                                  : _onToggleTunnelProxyMode,
+                            ),
+                          );
+                        },
                       ),
                       SizedBox(
                         width: double.infinity,
@@ -966,33 +992,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 },
                               );
                             },
-                          );
-                        },
-                      ),
-                    ]),
-                    _buildSection(context.l10n.get('experimentalFeatures'), [
-                      ValueListenableBuilder<String>(
-                        valueListenable: GlobalState.connectionMode,
-                        builder: (context, mode, _) {
-                          final vpnMode = mode == 'VPN';
-                          return SizedBox(
-                            width: double.infinity,
-                            child: SwitchListTile(
-                              secondary: const Icon(Icons.science),
-                              title: Text(context.l10n.get('tunnelProxyMode'),
-                                  style: _menuTextStyle),
-                              subtitle: Text(
-                                vpnMode
-                                    ? context.l10n.get('vpn')
-                                    : context.l10n.get('proxyOnly'),
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              value: vpnMode,
-                              onChanged: (v) {
-                                GlobalState.connectionMode.value =
-                                    v ? 'VPN' : '仅代理';
-                              },
-                            ),
                           );
                         },
                       ),

@@ -57,3 +57,7 @@ windows/runner/resources/iconset/
 # Local MCP server dependencies
 tools/xstream-mcp-server/node_modules/
 tools/xstream-mcp-server/xstream-mcp-server
+
+# Xray dat files are downloaded during macOS packaging
+macos/Resources/xray/geoip.dat
+macos/Resources/xray/geosite.dat

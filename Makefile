@@ -28,7 +28,7 @@ DMG_NAME := $(shell \
 		echo "xstream-dev-$(BUILD_ID).dmg"; \
 	fi)
 
-.PHONY: all macos-intel macos-arm64 macos-debug-run windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 ios-install-debug ios-install-release xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
+.PHONY: all macos-intel macos-arm64 macos-debug-run macos-vendor-xray windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 ios-install-debug ios-install-release xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -95,6 +95,7 @@ macos-intel:
 			echo "❌ CocoaPods command exists but failed. Reinstall with: brew reinstall cocoapods"; \
 			exit 1; \
 		fi; \
+		./build_scripts/build_macos_xray_from_vendor.sh; \
 		$(FLUTTER) build macos --release \
 			--dart-define=BRANCH_NAME=$(BRANCH) \
 			--dart-define=BUILD_ID=$(BUILD_ID) \
@@ -159,6 +160,7 @@ macos-arm64:
 			echo "❌ CocoaPods command exists but failed. Reinstall with: brew reinstall cocoapods"; \
 			exit 1; \
 		fi; \
+		./build_scripts/build_macos_xray_from_vendor.sh; \
 		$(FLUTTER) build macos --release \
 			--dart-define=BRANCH_NAME=$(BRANCH) \
 			--dart-define=BUILD_ID=$(BUILD_ID) \
@@ -195,6 +197,9 @@ macos-debug-run:
 	else \
 		echo "macOS debug run is only supported on macOS"; \
 	fi
+
+macos-vendor-xray:
+	./build_scripts/build_macos_xray_from_vendor.sh
 
 windows-x64:
 @if [ "$(UNAME_S)" = "Windows_NT" ] || [ "$(OS)" = "Windows_NT" ]; then \
