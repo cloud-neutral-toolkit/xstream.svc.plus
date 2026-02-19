@@ -277,28 +277,21 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       context: context,
       builder: (context) {
         final current = GlobalState.locale.value;
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<Locale>(
-              value: const Locale('zh'),
-              groupValue: current,
-              title: const Text('中文'),
-              onChanged: (loc) {
-                if (loc != null) GlobalState.locale.value = loc;
-                Navigator.pop(context);
-              },
-            ),
-            RadioListTile<Locale>(
-              value: const Locale('en'),
-              groupValue: current,
-              title: const Text('English'),
-              onChanged: (loc) {
-                if (loc != null) GlobalState.locale.value = loc;
-                Navigator.pop(context);
-              },
-            ),
-          ],
+        return RadioGroup<Locale>(
+          groupValue: current,
+          onChanged: (loc) {
+            if (loc == null) return;
+            GlobalState.locale.value = loc;
+            Navigator.pop(context);
+          },
+          child: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              RadioListTile<Locale>(value: Locale('zh'), title: Text('中文')),
+              RadioListTile<Locale>(
+                  value: Locale('en'), title: Text('English')),
+            ],
+          ),
         );
       },
     );

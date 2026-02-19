@@ -137,6 +137,7 @@ macos-intel:
 			fi; \
 			rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
 			create-dmg \
+				--filesystem APFS \
 				--no-internet-enable \
 				--skip-jenkins \
 				--hdiutil-retries 10 \
@@ -233,12 +234,13 @@ macos-arm64:
 					echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
 					exit 1; \
 				fi; \
-			rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
-			create-dmg \
-				--no-internet-enable \
-				--skip-jenkins \
-				--hdiutil-retries 10 \
-				--volname "XStream Installer" \
+				rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
+				create-dmg \
+					--filesystem APFS \
+					--no-internet-enable \
+					--skip-jenkins \
+					--hdiutil-retries 10 \
+					--volname "XStream Installer" \
 				--window-pos 200 120 \
 				--window-size 800 400 \
 			--icon-size 100 \
