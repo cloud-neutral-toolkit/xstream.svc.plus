@@ -56,6 +56,11 @@ const String defaultXrayJsonTemplate = r'''
           "quic"
         ]
       }
+    },
+    {
+      "name": "xray0",
+      "MTU": 1500,
+      "UserLevel": 0
     }
   ],
   "outbounds": [
