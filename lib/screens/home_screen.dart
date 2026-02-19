@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedNode = '';
   String _hoveredNode = '';
   String _highlightNode = '';
+  bool _isSwitchingNode = false;
   List<VpnNode> vpnNodes = [];
   final Map<String, int> _latencyByNode = {};
   DateTime? _connectedAt;
@@ -184,6 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleFromFloatingButton() async {
+    if (_isSwitchingNode) return;
     final node = _resolveActionNode();
     if (node == null) {
       _showMessage(context.l10n.get('noNodes'));
@@ -193,31 +195,61 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleNode(VpnNode node) async {
+    if (_isSwitchingNode) return;
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
+    setState(() => _isSwitchingNode = true);
+    try {
+      // start or stop node service
 
-    // start or stop node service
-
-    if (_activeNode == nodeName) {
-      final msg = await NativeBridge.stopNodeService(nodeName);
-      if (!mounted) return;
-      setState(() {
-        _activeNode = '';
-        _selectedNode = nodeName;
-      });
-      GlobalState.activeNodeName.value = '';
-      _syncConnectedMeta();
-      _showMessage(msg);
-    } else {
-      if (_activeNode.isNotEmpty) {
-        await NativeBridge.stopNodeService(_activeNode);
+      if (_activeNode == nodeName) {
+        final msg = await NativeBridge.stopNodeService(nodeName);
         if (!mounted) return;
+        setState(() {
+          _activeNode = '';
+          _selectedNode = nodeName;
+        });
         GlobalState.activeNodeName.value = '';
-      }
+        _syncConnectedMeta();
+        _showMessage(msg);
+      } else {
+        if (_activeNode.isNotEmpty) {
+          await NativeBridge.stopNodeService(_activeNode);
+          if (!mounted) return;
+          GlobalState.activeNodeName.value = '';
+        }
 
-      final isRunning = await NativeBridge.checkNodeStatus(nodeName);
-      if (!mounted) return;
-      if (isRunning) {
+        final isRunning = await NativeBridge.checkNodeStatus(nodeName);
+        if (!mounted) return;
+        if (isRunning) {
+          setState(() {
+            _activeNode = nodeName;
+            _selectedNode = nodeName;
+            _highlightNode = nodeName;
+          });
+          GlobalState.activeNodeName.value = nodeName;
+          _syncConnectedMeta();
+          _showMessage(context.l10n.get('serviceRunning'));
+          return;
+        }
+
+        final startedAt = DateTime.now();
+        final msg = await NativeBridge.startNodeService(nodeName);
+        if (!mounted) return;
+        final runningAfterStart = await NativeBridge.checkNodeStatus(nodeName);
+        if (!mounted) return;
+        if (!runningAfterStart) {
+          setState(() {
+            _selectedNode = nodeName;
+            _highlightNode = nodeName;
+          });
+          GlobalState.activeNodeName.value = '';
+          _syncConnectedMeta();
+          _showMessage(msg);
+          _scheduleClearHighlight();
+          return;
+        }
+
         setState(() {
           _activeNode = nodeName;
           _selectedNode = nodeName;
@@ -225,33 +257,26 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         GlobalState.activeNodeName.value = nodeName;
         _syncConnectedMeta();
-        _showMessage(context.l10n.get('serviceRunning'));
-        return;
-      }
+        _showMessage(msg);
+        _scheduleClearHighlight();
 
-      final startedAt = DateTime.now();
-      final msg = await NativeBridge.startNodeService(nodeName);
-      if (!mounted) return;
-      setState(() {
-        _activeNode = nodeName;
-        _selectedNode = nodeName;
-        _highlightNode = nodeName;
-      });
-      GlobalState.activeNodeName.value = nodeName;
-      _syncConnectedMeta();
-      _showMessage(msg);
-      _scheduleClearHighlight();
-
-      final verifyMsg = await NativeBridge.verifySocks5Proxy();
-      final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
-      if (verifyMsg.startsWith('success:')) {
-        _latencyByNode[nodeName] = elapsed;
+        final verifyMsg = await NativeBridge.verifySocks5Proxy();
+        final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
+        if (verifyMsg.startsWith('success:')) {
+          _latencyByNode[nodeName] = elapsed;
+        }
+        addAppLog('[socks5] $verifyMsg',
+            level: verifyMsg.startsWith('success:')
+                ? LogLevel.info
+                : LogLevel.error);
+        _showMessage(verifyMsg);
       }
-      addAppLog('[socks5] $verifyMsg',
-          level: verifyMsg.startsWith('success:')
-              ? LogLevel.info
-              : LogLevel.error);
-      _showMessage(verifyMsg);
+    } finally {
+      if (mounted) {
+        setState(() => _isSwitchingNode = false);
+      } else {
+        _isSwitchingNode = false;
+      }
     }
   }
 
@@ -285,10 +310,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ].where((e) => e.isNotEmpty).toList();
 
                   return MouseRegion(
-                    onEnter: (_) => setState(() => _hoveredNode = node.name),
+                    onEnter: (_) => setState(() {
+                      _hoveredNode = node.name;
+                      _selectedNode = node.name;
+                      _highlightNode = node.name;
+                    }),
                     onExit: (_) => setState(() => _hoveredNode = ''),
                     child: InkWell(
-                      onTap: isUnlocked ? () => _selectNode(node) : null,
+                      onTap: (isUnlocked && !_isSwitchingNode)
+                          ? () => _selectNode(node)
+                          : null,
                       child: Container(
                         color: bgColor,
                         padding: const EdgeInsets.symmetric(
@@ -406,7 +437,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 16,
                 bottom: 16,
                 child: FloatingActionButton.small(
-                  onPressed: _toggleFromFloatingButton,
+                  onPressed:
+                      _isSwitchingNode ? null : _toggleFromFloatingButton,
                   child: Icon(
                     _activeNode.isNotEmpty
                         ? Icons.pause_circle_filled

@@ -14,8 +14,6 @@ extension AppDelegate {
     }
 
     switch action {
-    case "initXray":
-      self.runInitXray(bundleId: bundleId, result: result)
     case "updateXrayCore":
       self.runUpdateXrayCore(result: result)
     case "isXrayDownloading":
@@ -28,84 +26,6 @@ extension AppDelegate {
       self.runResetXray(bundleId: bundleId, password: password, result: result)
     default:
       result(FlutterError(code: "UNKNOWN_ACTION", message: "Unsupported action", details: action))
-    }
-  }
-
-  func runInitXray(bundleId: String, result: @escaping FlutterResult) {
-    guard let resourcePath = Bundle.main.resourcePath else {
-      result("❌ 无法获取 Resources 路径")
-      return
-    }
-
-    guard let root = resolveAppSupportRoot(bundleId: bundleId) else {
-      result("❌ 无法定位 Application Support 目录")
-      return
-    }
-
-    do {
-      let fm = FileManager.default
-      let binDir = root.appendingPathComponent("bin", isDirectory: true)
-      try fm.createDirectory(at: binDir, withIntermediateDirectories: true)
-
-      let archProcess = Process()
-      archProcess.launchPath = "/usr/bin/uname"
-      archProcess.arguments = ["-m"]
-      let archPipe = Pipe()
-      archProcess.standardOutput = archPipe
-      try archProcess.run()
-      archProcess.waitUntilExit()
-      let archData = archPipe.fileHandleForReading.readDataToEndOfFile()
-      let arch = String(data: archData, encoding: .utf8)?
-        .trimmingCharacters(in: .whitespacesAndNewlines) ?? "arm64"
-      let sourceCandidates: [String]
-      if arch == "x86_64" {
-        sourceCandidates = [
-          "\(resourcePath)/xray-x86_64",
-          "\(resourcePath)/xray.x86_64",
-          "\(resourcePath)/xray",
-        ]
-      } else {
-        sourceCandidates = [
-          "\(resourcePath)/xray",
-          "\(resourcePath)/xray-arm64",
-        ]
-      }
-
-      guard let source = sourceCandidates.first(where: { fm.fileExists(atPath: $0) }) else {
-        result("❌ Resources 中未找到 xray 可执行文件")
-        return
-      }
-
-      let target = binDir.appendingPathComponent("xray")
-      if fm.fileExists(atPath: target.path) {
-        try fm.removeItem(at: target)
-      }
-      try fm.copyItem(atPath: source, toPath: target.path)
-      try copyOptionalResource(
-        fileName: "geoip.dat",
-        resourcePath: resourcePath,
-        destinationDir: binDir)
-      try copyOptionalResource(
-        fileName: "geosite.dat",
-        resourcePath: resourcePath,
-        destinationDir: binDir)
-
-      let chmod = Process()
-      chmod.launchPath = "/bin/chmod"
-      chmod.arguments = ["755", target.path]
-      try chmod.run()
-      chmod.waitUntilExit()
-
-      if chmod.terminationStatus != 0 {
-        result("❌ xray 权限设置失败")
-        return
-      }
-
-      result("✅ Xray 初始化完成: \(target.path)")
-      logToFlutter("info", "Xray 初始化完成: \(target.path)")
-    } catch {
-      result("❌ Xray 初始化失败: \(error.localizedDescription)")
-      logToFlutter("error", "Xray 初始化失败: \(error.localizedDescription)")
     }
   }
 
@@ -210,10 +130,9 @@ extension AppDelegate {
     }
 
     let runtimeConfig = root.appendingPathComponent("configs/config.json").path
-    let xrayBin = root.appendingPathComponent("bin/xray").path
     let stop = Process()
     stop.launchPath = "/bin/zsh"
-    stop.arguments = ["-c", "pkill -f \"\(xrayBin) run -c \(runtimeConfig)\" || true"]
+    stop.arguments = ["-c", "pkill -f \"run -c \(runtimeConfig)\" || true"]
     try? stop.run()
     stop.waitUntilExit()
 

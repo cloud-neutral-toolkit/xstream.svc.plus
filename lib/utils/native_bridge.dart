@@ -252,6 +252,7 @@ class NativeBridge {
           'checkNodeStatus',
           {
             'serviceName': node.serviceName,
+            'nodeName': node.name,
             'configPath': node.configPath,
           },
         );
@@ -315,33 +316,6 @@ class NativeBridge {
         'proxyMode': proxyMode,
       });
     } catch (_) {}
-  }
-
-  // 初始化 Xray：会触发原生 performAction:initXray
-  static Future<String> initXray() async {
-    if (!_isDesktop) return '当前平台暂不支持';
-    if (_useFfi) {
-      final actionPtr = 'initXray'.toNativeUtf8();
-      final empty = ''.toNativeUtf8();
-      final resPtr = _ffi.performAction(actionPtr.cast(), empty.cast());
-      final result = resPtr.cast<Utf8>().toDartString();
-      _ffi.freeCString(resPtr);
-      malloc.free(actionPtr);
-      malloc.free(empty);
-      return result;
-    } else {
-      try {
-        final result = await _channel.invokeMethod<String>(
-          'performAction',
-          {'action': 'initXray'},
-        );
-        return result ?? '初始化完成，但无返回内容';
-      } on MissingPluginException {
-        return '插件未实现';
-      } catch (e) {
-        return '初始化失败: $e';
-      }
-    }
   }
 
   /// 更新 Xray Core：触发 performAction:updateXrayCore

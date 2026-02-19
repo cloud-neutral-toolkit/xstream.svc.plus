@@ -7,6 +7,7 @@ ICON_SRC := assets/logo.png
 ICON_DST := macos/Runner/Assets.xcassets/AppIcon.appiconset
 MACOS_APP_BUNDLE := build/macos/Build/Products/Release/xstream.app
 MACOS_BUILD_LOCK_DIR := build/.macos-build.lock
+MACOS_BUILD_LOCK_PID_FILE := $(MACOS_BUILD_LOCK_DIR)/pid
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -82,11 +83,36 @@ macos-intel:
 			exec sudo -H -u "$$SUDO_USER" env XSTREAM_SUDO_DELEGATED=1 PATH="$$PATH" make macos-intel; \
 		fi; \
 		if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
-			echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
-			echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
-			exit 1; \
+			lock_pid=""; \
+			stale_lock=0; \
+			if [ -f "$(MACOS_BUILD_LOCK_PID_FILE)" ]; then \
+				lock_pid="$$(cat "$(MACOS_BUILD_LOCK_PID_FILE)" 2>/dev/null || true)"; \
+				if [ -n "$$lock_pid" ] && ! kill -0 "$$lock_pid" 2>/dev/null; then \
+					stale_lock=1; \
+				fi; \
+			else \
+				stale_lock=1; \
+			fi; \
+			if [ "$$stale_lock" = "1" ]; then \
+				echo "⚠️ Detected stale macOS build lock. Auto-cleaning: $(MACOS_BUILD_LOCK_DIR)"; \
+				rm -f "$(MACOS_BUILD_LOCK_PID_FILE)" >/dev/null 2>&1 || true; \
+				rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true; \
+				if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
+					echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+					echo "   Wait for it to finish, then retry."; \
+					exit 1; \
+				fi; \
+			else \
+				echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+				if [ -n "$$lock_pid" ]; then \
+					echo "   Active build PID: $$lock_pid"; \
+				fi; \
+				echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
+				exit 1; \
+			fi; \
 		fi; \
-		trap 'rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
+		echo "$$$$" > "$(MACOS_BUILD_LOCK_PID_FILE)"; \
+		trap 'rm -f "$(MACOS_BUILD_LOCK_PID_FILE)" >/dev/null 2>&1 || true; rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
 		if ! command -v pod >/dev/null 2>&1; then \
 			echo "❌ CocoaPods not installed or not in a valid state. Install with: brew install cocoapods"; \
 			exit 1; \
@@ -147,11 +173,36 @@ macos-arm64:
 			exec sudo -H -u "$$SUDO_USER" env XSTREAM_SUDO_DELEGATED=1 PATH="$$PATH" make macos-arm64; \
 		fi; \
 		if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
-			echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
-			echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
-			exit 1; \
+			lock_pid=""; \
+			stale_lock=0; \
+			if [ -f "$(MACOS_BUILD_LOCK_PID_FILE)" ]; then \
+				lock_pid="$$(cat "$(MACOS_BUILD_LOCK_PID_FILE)" 2>/dev/null || true)"; \
+				if [ -n "$$lock_pid" ] && ! kill -0 "$$lock_pid" 2>/dev/null; then \
+					stale_lock=1; \
+				fi; \
+			else \
+				stale_lock=1; \
+			fi; \
+			if [ "$$stale_lock" = "1" ]; then \
+				echo "⚠️ Detected stale macOS build lock. Auto-cleaning: $(MACOS_BUILD_LOCK_DIR)"; \
+				rm -f "$(MACOS_BUILD_LOCK_PID_FILE)" >/dev/null 2>&1 || true; \
+				rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true; \
+				if ! mkdir "$(MACOS_BUILD_LOCK_DIR)" 2>/dev/null; then \
+					echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+					echo "   Wait for it to finish, then retry."; \
+					exit 1; \
+				fi; \
+			else \
+				echo "❌ Another macOS build is already running (lock: $(MACOS_BUILD_LOCK_DIR))."; \
+				if [ -n "$$lock_pid" ]; then \
+					echo "   Active build PID: $$lock_pid"; \
+				fi; \
+				echo "   Wait for it to finish, or remove lock after confirming no build process is active."; \
+				exit 1; \
+			fi; \
 		fi; \
-		trap 'rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
+		echo "$$$$" > "$(MACOS_BUILD_LOCK_PID_FILE)"; \
+		trap 'rm -f "$(MACOS_BUILD_LOCK_PID_FILE)" >/dev/null 2>&1 || true; rmdir "$(MACOS_BUILD_LOCK_DIR)" >/dev/null 2>&1 || true' EXIT INT TERM; \
 		if ! command -v pod >/dev/null 2>&1; then \
 			echo "❌ CocoaPods not installed or not in a valid state. Install with: brew install cocoapods"; \
 			exit 1; \
@@ -165,15 +216,23 @@ macos-arm64:
 			--dart-define=BRANCH_NAME=$(BRANCH) \
 			--dart-define=BUILD_ID=$(BUILD_ID) \
 			--dart-define=BUILD_DATE=$(BUILD_DATE); \
-		if [ ! -d "$(MACOS_APP_BUNDLE)" ]; then \
-			echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
-			exit 1; \
-		fi; \
-		./scripts/install-runtime-mcp.sh "$(MACOS_APP_BUNDLE)" arm64; \
-			if ! command -v create-dmg >/dev/null 2>&1; then \
-				echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
+			if [ ! -d "$(MACOS_APP_BUNDLE)" ]; then \
+				echo "❌ Build finished but app bundle was not found: $(MACOS_APP_BUNDLE)"; \
 				exit 1; \
 			fi; \
+			if [ -f "$(MACOS_APP_BUNDLE)/Contents/Resources/xray-x86_64" ]; then \
+				echo "Pruning non-target xray binary from ARM64 package: xray-x86_64"; \
+				rm -f "$(MACOS_APP_BUNDLE)/Contents/Resources/xray-x86_64"; \
+			fi; \
+			if [ -f "$(MACOS_APP_BUNDLE)/Contents/Resources/xray.x86_64" ]; then \
+				echo "Pruning non-target xray binary from ARM64 package: xray.x86_64"; \
+				rm -f "$(MACOS_APP_BUNDLE)/Contents/Resources/xray.x86_64"; \
+			fi; \
+			./scripts/install-runtime-mcp.sh "$(MACOS_APP_BUNDLE)" arm64; \
+				if ! command -v create-dmg >/dev/null 2>&1; then \
+					echo "❌ create-dmg not found. Install with: brew install create-dmg"; \
+					exit 1; \
+				fi; \
 			rm -f "build/macos/$(DMG_NAME)" "build/macos"/rw.*."$(DMG_NAME)" || true; \
 			create-dmg \
 				--no-internet-enable \

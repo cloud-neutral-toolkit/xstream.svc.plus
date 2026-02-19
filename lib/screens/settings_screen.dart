@@ -637,23 +637,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onInitXray() async {
-    final isUnlocked = GlobalState.isUnlocked.value;
-
-    if (!isUnlocked) {
-      addAppLog('请先解锁以初始化 Xray', level: LogLevel.warning);
-      return;
-    }
-
-    addAppLog('开始初始化 Xray...');
-    try {
-      final output = await NativeBridge.initXray();
-      addAppLog(output);
-    } catch (e) {
-      addAppLog('[错误] $e', level: LogLevel.error);
-    }
-  }
-
   void _onUpdateXray() async {
     final isUnlocked = GlobalState.isUnlocked.value;
 
@@ -825,11 +808,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildSection(context.l10n.get('xrayMgmt'), [
-                      _buildButton(
-                        icon: Icons.build,
-                        label: context.l10n.get('initXray'),
-                        onPressed: isUnlocked ? _onInitXray : null,
-                      ),
                       _buildButton(
                         icon: Icons.update,
                         label: context.l10n.get('updateXray'),
@@ -1187,8 +1165,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       return;
     }
 
-    const text =
-        '''1. 允许 ~/Library/Application Support/<bundle-id>/ 目录读写
+    const text = '''1. 允许 ~/Library/Application Support/<bundle-id>/ 目录读写
 2. 允许启动和停止 plist 服务
 3. 允许修改系统代理与 DNS 设置''';
 
