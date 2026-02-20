@@ -7,7 +7,7 @@ class XrayConfigWriter {
   static const _configFileName = 'desktop_sync.json';
   static const _defaultNodeName = 'Desktop Sync';
   static const _defaultServiceName = 'xstream.desktop.sync';
-  static const _defaultCountryCode = 'CN';
+  static const _defaultCountryCode = 'SYNC';
 
   static Future<String> writeConfig(String json) async {
     final path =
@@ -18,13 +18,42 @@ class XrayConfigWriter {
     return path;
   }
 
-  static Future<void> registerNode(String configPath) async {
-    final existing = VpnConfig.getNodeByName(_defaultNodeName);
+  static Future<String> registerNode({
+    required String configPath,
+    String? nodeName,
+    String? countryCode,
+    String? protocol,
+    String? transport,
+    String? security,
+  }) async {
+    final normalizedName = (nodeName ?? '').trim().isNotEmpty
+        ? nodeName!.trim()
+        : _defaultNodeName;
+    final existing = VpnConfig.getNodeByName(normalizedName);
+
+    if (existing == null) {
+      final stale = VpnConfig.nodes
+          .where((node) =>
+              node.serviceName == _defaultServiceName &&
+              node.name != normalizedName)
+          .map((node) => node.name)
+          .toList();
+      for (final name in stale) {
+        VpnConfig.removeNode(name);
+      }
+    }
+
     final node = VpnNode(
-      name: _defaultNodeName,
-      countryCode: existing?.countryCode ?? _defaultCountryCode,
+      name: normalizedName,
+      countryCode: _normalizeCountryCode(
+        countryCode,
+        existing?.countryCode ?? _defaultCountryCode,
+      ),
       configPath: configPath,
       serviceName: existing?.serviceName ?? _defaultServiceName,
+      protocol: _pickValue(protocol, existing?.protocol),
+      transport: _pickValue(transport, existing?.transport),
+      security: _pickValue(security, existing?.security),
       enabled: existing?.enabled ?? true,
     );
     if (existing == null) {
@@ -33,5 +62,21 @@ class XrayConfigWriter {
       VpnConfig.updateNode(node);
     }
     await VpnConfig.saveToFile();
+    return node.name;
+  }
+
+  static String _normalizeCountryCode(String? value, String fallback) {
+    final raw = (value ?? '').trim();
+    if (raw.isEmpty) return fallback;
+    if (raw.length > 12) return raw.substring(0, 12).toUpperCase();
+    return raw.toUpperCase();
+  }
+
+  static String _pickValue(String? preferred, String? fallback) {
+    final primary = (preferred ?? '').trim();
+    if (primary.isNotEmpty) return primary.toLowerCase();
+    final secondary = (fallback ?? '').trim();
+    if (secondary.isNotEmpty) return secondary.toLowerCase();
+    return '';
   }
 }

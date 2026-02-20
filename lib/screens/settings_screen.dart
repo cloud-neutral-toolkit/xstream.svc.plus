@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:archive/archive_io.dart';
 import '../../utils/global_config.dart'
     show
@@ -149,9 +150,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       result = await _sessionManager.verifyMfaCode(mfaCode);
     } else {
       final baseUrl = _baseUrlController.text.trim();
-      final username = _usernameController.text.trim();
+      final identifier = _usernameController.text.trim();
       final password = _passwordController.text;
-      if (baseUrl.isEmpty || username.isEmpty || password.isEmpty) {
+      if (baseUrl.isEmpty || identifier.isEmpty || password.isEmpty) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.get('loginMissingFields'))),
@@ -160,7 +161,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
       await _sessionManager.setBaseUrl(baseUrl);
       result = await _sessionManager.login(
-        username: username,
+        identifier: identifier,
         password: password,
       );
     }
@@ -237,8 +238,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           TextField(
                             controller: _usernameController,
                             enabled: !loading && !isLoggedIn && !isMfaRequired,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [
+                              AutofillHints.username,
+                              AutofillHints.email,
+                            ],
                             decoration: InputDecoration(
-                              labelText: context.l10n.get('username'),
+                              labelText: context.l10n.get('accountOrEmail'),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -246,6 +252,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             controller: _passwordController,
                             obscureText: true,
                             enabled: !loading && !isLoggedIn && !isMfaRequired,
+                            autofillHints: const [AutofillHints.password],
                             decoration: InputDecoration(
                               labelText: context.l10n.get('password'),
                             ),
@@ -255,6 +262,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             TextField(
                               controller: _mfaCodeController,
                               enabled: !loading && !isLoggedIn,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(6),
+                              ],
                               decoration: InputDecoration(
                                 labelText: context.l10n.get('mfaCode'),
                                 helperText: context.l10n.get('mfaRequiredHint'),

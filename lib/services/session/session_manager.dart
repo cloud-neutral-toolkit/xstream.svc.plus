@@ -90,7 +90,7 @@ class SessionManager {
   }
 
   Future<LoginResult> login({
-    required String username,
+    required String identifier,
     required String password,
   }) async {
     loading.value = true;
@@ -99,7 +99,12 @@ class SessionManager {
       final response = await http.post(
         buildEndpoint('/api/auth/login'),
         headers: const {'Content-Type': 'application/json'},
-        body: jsonEncode({'username': username, 'password': password}),
+        body: jsonEncode({
+          'identifier': identifier,
+          'username': identifier,
+          'email': identifier,
+          'password': password,
+        }),
       );
 
       if (response.statusCode >= 500) {
@@ -119,7 +124,7 @@ class SessionManager {
           return LoginResult(success: false, message: lastError.value!);
         }
         _mfaTicket = ticket;
-        currentUser.value = username;
+        currentUser.value = identifier;
         status.value = SessionStatus.mfaRequired;
         return const LoginResult(
           success: false,
@@ -137,7 +142,7 @@ class SessionManager {
       return await _completeLogin(
         payload: payload,
         responseHeaders: response.headers,
-        fallbackUsername: username,
+        fallbackUsername: identifier,
       );
     } catch (e) {
       final message = '登录失败: $e';
@@ -209,7 +214,8 @@ class SessionManager {
     _sessionToken = token;
     _cookie = cookie ?? _cookie;
     _mfaTicket = null;
-    currentUser.value = fallbackUsername;
+    final savedUser = _extractLoginIdentity(payload, fallbackUsername);
+    currentUser.value = savedUser;
     status.value = SessionStatus.loggedIn;
 
     final prefs = await SharedPreferences.getInstance();
@@ -223,7 +229,7 @@ class SessionManager {
     } else {
       await prefs.remove(_prefsTokenKey);
     }
-    await prefs.setString(_prefsUserKey, fallbackUsername);
+    await prefs.setString(_prefsUserKey, savedUser);
 
     return const LoginResult(success: true, message: '登录成功');
   }
@@ -289,13 +295,29 @@ class SessionManager {
     final setCookie = headers['set-cookie'];
     if (setCookie == null) return null;
 
-    final cookies = setCookie.split(',');
-    for (final cookie in cookies) {
-      final match = RegExp(r'xc_session=([^;]+)').firstMatch(cookie);
-      if (match != null) {
-        return 'xc_session=${match.group(1)}';
+    final match = RegExp(r'xc_session=([^;\s,]+)').firstMatch(setCookie);
+    if (match != null) return 'xc_session=${match.group(1)}';
+    return null;
+  }
+
+  String _extractLoginIdentity(
+    Map<String, dynamic> payload,
+    String fallbackUsername,
+  ) {
+    final user = payload['user'];
+    if (user is Map) {
+      final normalized = user.cast<Object?, Object?>();
+      final candidates = [
+        normalized['email'],
+        normalized['username'],
+        normalized['name'],
+      ];
+      for (final candidate in candidates) {
+        if (candidate is String && candidate.trim().isNotEmpty) {
+          return candidate.trim();
+        }
       }
     }
-    return null;
+    return fallbackUsername;
   }
 }

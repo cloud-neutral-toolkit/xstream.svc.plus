@@ -23,6 +23,22 @@ class DesktopSyncResult {
   });
 }
 
+class SyncedNodeMetadata {
+  final String name;
+  final String? countryCode;
+  final String? protocol;
+  final String? transport;
+  final String? security;
+
+  const SyncedNodeMetadata({
+    required this.name,
+    this.countryCode,
+    this.protocol,
+    this.transport,
+    this.security,
+  });
+}
+
 class DesktopSyncService {
   DesktopSyncService._();
 
@@ -31,7 +47,7 @@ class DesktopSyncService {
   static const _syncPath = '/api/auth/sync/config';
   static const _ackPath = '/api/auth/sync/ack';
   static const _autoInterval = Duration(minutes: 10);
-  static const _nodeName = 'Desktop Sync';
+  static const _fallbackNodeName = 'Desktop Sync';
 
   final ValueNotifier<bool> syncing = ValueNotifier<bool>(false);
 
@@ -148,6 +164,7 @@ class DesktopSyncService {
       final changed = payload['changed'] == true;
       final configVersion = (payload['version'] as num?)?.toInt() ?? 0;
       final metadata = _extractMetadata(payload);
+      final nodeMetadata = _extractNodeMetadata(payload);
 
       if (!changed ||
           configVersion <= SyncStateStore.instance.lastConfigVersion) {
@@ -160,7 +177,15 @@ class DesktopSyncService {
 
       final configJson = (payload['rendered_json'] as String?)?.trim() ?? '{}';
       final configPath = await XrayConfigWriter.writeConfig(configJson);
-      await XrayConfigWriter.registerNode(configPath);
+      final syncedNodeName = await XrayConfigWriter.registerNode(
+        configPath: configPath,
+        nodeName: nodeMetadata.name,
+        countryCode: nodeMetadata.countryCode,
+        protocol: nodeMetadata.protocol,
+        transport: nodeMetadata.transport,
+        security: nodeMetadata.security,
+      );
+      GlobalState.nodeListRevision.value++;
 
       await _sendAck(
         session: session,
@@ -173,8 +198,8 @@ class DesktopSyncService {
         configVersion: configVersion,
         metadata: metadata,
       );
-      addAppLog('桌面配置已同步至 $configPath (版本 $configVersion)');
-      await _restartNodeIfPossible();
+      addAppLog('桌面配置已同步至 $configPath (节点 $syncedNodeName, 版本 $configVersion)');
+      await _restartNodeIfPossible(syncedNodeName);
       return DesktopSyncResult(
         success: true,
         message: '同步成功 (版本 $configVersion)',
@@ -215,18 +240,18 @@ class DesktopSyncService {
     );
   }
 
-  Future<void> _restartNodeIfPossible() async {
+  Future<void> _restartNodeIfPossible(String nodeName) async {
     try {
       if (!GlobalState.isUnlocked.value) {
         addAppLog('同步成功，等待解锁后手动重启服务');
         return;
       }
-      await NativeBridge.stopNodeService(_nodeName);
+      await NativeBridge.stopNodeService(nodeName);
       await Future.delayed(const Duration(seconds: 1));
-      await NativeBridge.startNodeService(_nodeName);
-      addAppLog('已重启 $_nodeName 服务');
+      await NativeBridge.startNodeService(nodeName);
+      addAppLog('已重启 $nodeName 服务');
     } catch (e) {
-      addAppLog('重启 $_nodeName 失败: $e');
+      addAppLog('重启 $nodeName 失败: $e');
     }
   }
 
@@ -243,6 +268,47 @@ class DesktopSyncService {
       return digest;
     }
     return null;
+  }
+
+  SyncedNodeMetadata _extractNodeMetadata(Map<String, dynamic> payload) {
+    final nodes = payload['nodes'];
+    if (nodes is List) {
+      for (final item in nodes) {
+        if (item is! Map) continue;
+        final node = item.cast<Object?, Object?>();
+        final name = _firstNonEmptyString([
+          node['name'],
+          node['remark'],
+          node['id'],
+        ]);
+        if (name.isEmpty) continue;
+        return SyncedNodeMetadata(
+          name: name,
+          protocol: _nullableString(_firstNonEmptyString([node['protocol']])),
+          transport: _nullableString(
+            _firstNonEmptyString([node['transport'], node['network']]),
+          ),
+          security: _nullableString(_firstNonEmptyString([node['security']])),
+        );
+      }
+    }
+
+    return const SyncedNodeMetadata(name: _fallbackNodeName);
+  }
+
+  String _firstNonEmptyString(List<Object?> candidates) {
+    for (final candidate in candidates) {
+      if (candidate is String && candidate.trim().isNotEmpty) {
+        return candidate.trim();
+      }
+    }
+    return '';
+  }
+
+  String? _nullableString(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    return trimmed;
   }
 
   String _hexEncode(List<int> bytes) {
