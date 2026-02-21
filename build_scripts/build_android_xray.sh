@@ -4,14 +4,64 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 GO_CORE_DIR="$ROOT_DIR/go_core"
 JNI_LIBS_DIR="$ROOT_DIR/android/app/src/main/jniLibs"
+LIBXRAY_DIR="$ROOT_DIR/libXray"
+
+if [[ ! -d "$LIBXRAY_DIR" || ! -f "$LIBXRAY_DIR/go.mod" ]]; then
+  echo "libXray submodule is missing. Run:"
+  echo "  git submodule update --init --recursive libXray"
+  exit 1
+fi
+
+resolve_android_sdk_root() {
+  local local_props="$ROOT_DIR/android/local.properties"
+  local candidates=()
+
+  if [[ -n "${ANDROID_SDK_ROOT:-}" ]]; then
+    candidates+=("${ANDROID_SDK_ROOT}")
+  fi
+  if [[ -n "${ANDROID_HOME:-}" ]]; then
+    candidates+=("${ANDROID_HOME}")
+  fi
+
+  if [[ -f "$local_props" ]]; then
+    local raw_sdk_dir
+    raw_sdk_dir="$(grep '^sdk.dir=' "$local_props" | head -n1 | cut -d'=' -f2- || true)"
+    raw_sdk_dir="${raw_sdk_dir//\\:/:}"
+    raw_sdk_dir="${raw_sdk_dir//\\=/=}"
+    raw_sdk_dir="${raw_sdk_dir//$'\r'/}"
+    if [[ -n "$raw_sdk_dir" ]]; then
+      candidates+=("$raw_sdk_dir")
+    fi
+  fi
+
+  candidates+=(
+    "$HOME/Library/Android/sdk"
+    "$HOME/Android/Sdk"
+    "/opt/homebrew/share/android-commandlinetools"
+  )
+
+  local c
+  for c in "${candidates[@]}"; do
+    if [[ -n "$c" && -d "$c" ]]; then
+      echo "$c"
+      return 0
+    fi
+  done
+  return 1
+}
+
+ANDROID_SDK_ROOT_RESOLVED="$(resolve_android_sdk_root || true)"
 
 ANDROID_NDK_ROOT="${ANDROID_NDK_HOME:-}"
-if [[ -z "$ANDROID_NDK_ROOT" && -n "${ANDROID_HOME:-}" && -d "${ANDROID_HOME}/ndk" ]]; then
-  ANDROID_NDK_ROOT="$(ls -1d "${ANDROID_HOME}"/ndk/* 2>/dev/null | sort -V | tail -n1 || true)"
+if [[ -z "$ANDROID_NDK_ROOT" && -n "${ANDROID_SDK_ROOT_RESOLVED}" && -d "${ANDROID_SDK_ROOT_RESOLVED}/ndk" ]]; then
+  ANDROID_NDK_ROOT="$(ls -1d "${ANDROID_SDK_ROOT_RESOLVED}"/ndk/* 2>/dev/null | sort -V | tail -n1 || true)"
 fi
 
 if [[ -z "$ANDROID_NDK_ROOT" || ! -d "$ANDROID_NDK_ROOT" ]]; then
-  echo "ANDROID_NDK_HOME is not configured and no NDK was found under ANDROID_HOME/ndk."
+  echo "ANDROID NDK not found."
+  echo "Resolved Android SDK root: ${ANDROID_SDK_ROOT_RESOLVED:-<none>}"
+  echo "Please install NDK (for example: sdkmanager 'ndk;27.1.12297006')"
+  echo "or set ANDROID_NDK_HOME explicitly."
   exit 1
 fi
 
