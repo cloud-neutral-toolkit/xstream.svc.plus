@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -32,8 +31,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Timer? _xrayMonitorTimer;
-  bool _tunBusy = false;
   PacketTunnelStatus _tunStatus =
       const PacketTunnelStatus(status: 'unknown', utunInterfaces: []);
 
@@ -649,38 +646,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onUpdateXray() async {
-    final isUnlocked = GlobalState.isUnlocked.value;
-
-    if (!isUnlocked) {
-      addAppLog('请先解锁以更新 Xray', level: LogLevel.warning);
-      return;
-    }
-
-    addAppLog('开始更新 Xray Core...');
-    try {
-      final output = await NativeBridge.updateXrayCore();
-      addAppLog(output);
-      if (output.startsWith('info:')) {
-        GlobalState.xrayUpdating.value = true;
-        _startMonitorXrayProgress();
-      }
-    } catch (e) {
-      addAppLog('[错误] $e', level: LogLevel.error);
-    }
-  }
-
-  void _startMonitorXrayProgress() {
-    _xrayMonitorTimer?.cancel();
-    _xrayMonitorTimer = Timer.periodic(const Duration(seconds: 1), (_) async {
-      final running = await NativeBridge.isXrayDownloading();
-      GlobalState.xrayUpdating.value = running;
-      if (!running) {
-        _xrayMonitorTimer?.cancel();
-      }
-    });
-  }
-
   void _onResetAll() async {
     final isUnlocked = GlobalState.isUnlocked.value;
     final password = GlobalState.sudoPassword.value;
@@ -699,64 +664,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onToggleGlobalProxy(bool enabled) async {
-    final isUnlocked = GlobalState.isUnlocked.value;
-    final password = GlobalState.sudoPassword.value;
-    if (!isUnlocked) {
-      addAppLog('请先解锁以切换全局代理', level: LogLevel.warning);
-      return;
-    }
-    setState(() => GlobalState.globalProxy.value = enabled);
-    final msg = await NativeBridge.setSystemProxy(enabled, password);
-    addAppLog('全局代理: ${enabled ? "开启" : "关闭"}');
-    addAppLog('[system proxy] $msg');
-  }
-
-  void _onToggleTunSettings(bool enabled) {
-    final isUnlocked = GlobalState.isUnlocked.value;
-    if (!isUnlocked) {
-      addAppLog('请先解锁以切换 TUN 设置', level: LogLevel.warning);
-      return;
-    }
-    _togglePacketTunnel(enabled);
-  }
-
   void _onToggleDnsOverTls(bool enabled) {
     setState(() => TunDnsConfig.dotEnabled.value = enabled);
     addAppLog('DNS over TLS: ${enabled ? "开启" : "关闭"}');
-  }
-
-  void _onToggleTunnelProxyMode(bool tunnelMode) {
-    final isUnlocked = GlobalState.isUnlocked.value;
-    if (!isUnlocked) {
-      addAppLog('请先解锁以切换连接模式', level: LogLevel.warning);
-      return;
-    }
-    GlobalState.connectionMode.value = tunnelMode ? 'VPN' : '仅代理';
-    if (tunnelMode) {
-      _onToggleGlobalProxy(false);
-      if (!GlobalState.tunSettingsEnabled.value) {
-        _onToggleTunSettings(true);
-      }
-      addAppLog('模式切换: 隧道模式');
-    } else {
-      if (GlobalState.tunSettingsEnabled.value) {
-        _onToggleTunSettings(false);
-      }
-      _onToggleGlobalProxy(true);
-      addAppLog('模式切换: 代理模式');
-    }
-  }
-
-  Future<void> _togglePacketTunnel(bool enabled) async {
-    setState(() => _tunBusy = true);
-    final msg = enabled
-        ? await NativeBridge.startPacketTunnel()
-        : await NativeBridge.stopPacketTunnel();
-    addAppLog('[packet tunnel] $msg');
-    await _refreshTunStatus();
-    if (!mounted) return;
-    setState(() => _tunBusy = false);
   }
 
   Future<void> _refreshTunStatus() async {
@@ -821,22 +731,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     _buildSection(context.l10n.get('xrayMgmt'), [
                       _buildButton(
-                        icon: Icons.update,
-                        label: context.l10n.get('updateXray'),
-                        onPressed: isUnlocked ? _onUpdateXray : null,
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: GlobalState.xrayUpdating,
-                        builder: (context, downloading, _) {
-                          return downloading
-                              ? const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 4),
-                                  child: LinearProgressIndicator(),
-                                )
-                              : const SizedBox.shrink();
-                        },
-                      ),
-                      _buildButton(
                         icon: Icons.sync,
                         label: context.l10n.get('syncConfig'),
                         onPressed: isUnlocked ? _onSyncConfig : null,
@@ -887,32 +781,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         icon: Icons.dns,
                         label: context.l10n.get('dnsConfig'),
                         onPressed: _showDnsDialog,
-                      ),
-                      ValueListenableBuilder<String>(
-                        valueListenable: GlobalState.connectionMode,
-                        builder: (context, mode, _) {
-                          final vpnMode = mode == 'VPN';
-                          return SizedBox(
-                            width: double.infinity,
-                            child: SwitchListTile(
-                              secondary: const Icon(Icons.science),
-                              title: Text(
-                                context.l10n.get('tunnelProxyMode'),
-                                style: _menuTextStyle,
-                              ),
-                              subtitle: Text(
-                                vpnMode
-                                    ? context.l10n.get('vpn')
-                                    : context.l10n.get('proxyOnly'),
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              value: vpnMode,
-                              onChanged: _tunBusy || !isUnlocked
-                                  ? null
-                                  : _onToggleTunnelProxyMode,
-                            ),
-                          );
-                        },
                       ),
                       SizedBox(
                         width: double.infinity,
@@ -1109,7 +977,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   void dispose() {
-    _xrayMonitorTimer?.cancel();
     _sessionManager.baseUrl.removeListener(_syncBaseUrlFromSession);
     _sessionManager.currentUser.removeListener(_syncUsernameFromSession);
     _baseUrlController.dispose();
