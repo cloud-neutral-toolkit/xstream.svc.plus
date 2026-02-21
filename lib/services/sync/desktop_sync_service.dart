@@ -29,6 +29,7 @@ class SyncedNodeMetadata {
   final String? protocol;
   final String? transport;
   final String? security;
+  final String? vlessUri;
 
   const SyncedNodeMetadata({
     required this.name,
@@ -36,6 +37,7 @@ class SyncedNodeMetadata {
     this.protocol,
     this.transport,
     this.security,
+    this.vlessUri,
   });
 }
 
@@ -271,29 +273,74 @@ class DesktopSyncService {
   }
 
   SyncedNodeMetadata _extractNodeMetadata(Map<String, dynamic> payload) {
+    final candidates = _extractNodeCandidates(payload);
+    if (candidates.isEmpty) {
+      return const SyncedNodeMetadata(name: _fallbackNodeName);
+    }
+
+    final runningNodeName = GlobalState.activeNodeName.value.trim();
+    if (runningNodeName.isNotEmpty) {
+      final normalizedRunning = runningNodeName.toLowerCase();
+      for (final candidate in candidates) {
+        if (candidate.name.toLowerCase() == normalizedRunning) {
+          return candidate;
+        }
+      }
+
+      final preferred = candidates.first;
+      return SyncedNodeMetadata(
+        name: runningNodeName,
+        countryCode: preferred.countryCode,
+        protocol: preferred.protocol,
+        transport: preferred.transport,
+        security: preferred.security,
+        vlessUri: preferred.vlessUri,
+      );
+    }
+
+    return candidates.first;
+  }
+
+  List<SyncedNodeMetadata> _extractNodeCandidates(
+      Map<String, dynamic> payload) {
+    final candidates = <SyncedNodeMetadata>[];
     final nodes = payload['nodes'];
     if (nodes is List) {
       for (final item in nodes) {
         if (item is! Map) continue;
         final node = item.cast<Object?, Object?>();
+        final vlessUri = _nullableString(
+          _firstNonEmptyString([
+            node['vless_uri'],
+            node['vlessUri'],
+            node['uri_scheme_tcp'],
+            node['uri'],
+            node['link'],
+          ]),
+        );
         final name = _firstNonEmptyString([
           node['name'],
           node['remark'],
+          _extractNodeNameFromVlessUri(vlessUri),
           node['id'],
         ]);
         if (name.isEmpty) continue;
-        return SyncedNodeMetadata(
+        candidates.add(SyncedNodeMetadata(
           name: name,
+          countryCode: _nullableString(
+            _firstNonEmptyString([node['countryCode'], node['country_code']]),
+          ),
           protocol: _nullableString(_firstNonEmptyString([node['protocol']])),
           transport: _nullableString(
             _firstNonEmptyString([node['transport'], node['network']]),
           ),
           security: _nullableString(_firstNonEmptyString([node['security']])),
-        );
+          vlessUri: vlessUri,
+        ));
       }
     }
 
-    return const SyncedNodeMetadata(name: _fallbackNodeName);
+    return candidates;
   }
 
   String _firstNonEmptyString(List<Object?> candidates) {
@@ -309,6 +356,23 @@ class DesktopSyncService {
     final trimmed = value.trim();
     if (trimmed.isEmpty) return null;
     return trimmed;
+  }
+
+  String? _extractNodeNameFromVlessUri(String? uriText) {
+    final raw = (uriText ?? '').trim();
+    if (raw.isEmpty || !raw.toLowerCase().startsWith('vless://')) {
+      return null;
+    }
+    try {
+      final parsed = Uri.parse(raw);
+      final fragment = Uri.decodeComponent(parsed.fragment).trim();
+      if (fragment.isNotEmpty) {
+        return fragment;
+      }
+    } catch (_) {
+      // Ignore parsing failure and fall back to other fields.
+    }
+    return null;
   }
 
   String _hexEncode(List<int> bytes) {
