@@ -4,6 +4,7 @@ go 1.25.7
 
 require (
 	github.com/getlantern/systray v1.2.2
+	github.com/xtls/libxray v0.0.0
 	github.com/xtls/xray-core v1.260206.0
 	golang.org/x/sys v0.40.0
 )
@@ -21,3 +22,5 @@ require (
 	github.com/sagernet/sing v0.5.1 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+replace github.com/xtls/libxray => ../libXray

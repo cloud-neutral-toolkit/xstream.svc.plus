@@ -26,11 +26,18 @@
 
 ## xray-core 集成
 
-1. 在项目根目录运行 `./build_scripts/build_ios_xray.sh` 生成 `libxray.a` 与 `libxray.h`。脚本会在 `build/ios` 目录输出编译结果，并使用 `GOOS=ios GOARCH=arm64` 进行构建。
-2. 将生成的静态库放入 Xcode 的 `Frameworks` 目录并链接，随后即可通过 `StartXray`/`StopXray` 在原生层控制代理实例。
-3. PacketTunnel 直接处理隧道流量，不依赖用户态 TUN + SOCKS 转发。
-4. Flutter 端直接使用 Dart FFI 调用上述接口，无需额外 Swift 桥接代码。
-5. 若需要调试，可在模拟器上使用 `GOARCH=arm64` 构建并运行。
+1. 确保仓库已初始化 `libXray` 子模块：`git submodule update --init --recursive libXray`。
+2. 在项目根目录运行 `./build_scripts/build_ios_xray.sh` 生成 `libxray.a` 与 `libxray.h`。脚本会在 `build/ios` 目录输出编译结果，并使用 `GOOS=ios GOARCH=arm64` 进行构建。
+3. `go_core/bridge_ios.go` 通过 `github.com/xtls/libxray/xray` 提供的 `RunXrayFromJSON/StopXray/GetXrayState` 完成移动端内置运行控制。
+4. 将生成的静态库放入 Xcode 的 `Frameworks` 目录并链接，随后即可通过 `StartXray`/`StopXray` 在原生层控制代理实例。
+5. PacketTunnel 直接处理隧道流量，不依赖用户态 TUN + SOCKS 转发。
+6. Flutter 端直接使用 Dart FFI 调用上述接口，无需额外 Swift 桥接代码。
+7. 若需要调试，可在模拟器上使用 `GOARCH=arm64` 构建并运行。
+
+## Android 对齐说明
+
+- Android 端 `go_core/bridge_android.go` 同样接入 `libXray` wrapper 作为内置运行层，并保留 `StartXrayTunnelWithFd` 用于 Packet Tunnel 文件描述符接入。
+- 构建前同样需要初始化 `libXray` 子模块，再执行 `./build_scripts/build_android_xray.sh` 生成各 ABI 的 `libgo_native_bridge.so`。
 
 ## 配置能力
 

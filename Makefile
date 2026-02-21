@@ -29,7 +29,7 @@ DMG_NAME := $(shell \
 		echo "xstream-dev-$(BUILD_ID).dmg"; \
 	fi)
 
-.PHONY: all macos-intel macos-arm64 macos-debug-run macos-vendor-xray windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray ios-arm64 ios-install-debug ios-install-release xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
+.PHONY: all macos-intel macos-arm64 macos-debug-run macos-vendor-xray windows-x64 linux-x64 linux-arm64 android-arm64 android-libxray android-apk ios-arm64 ios-ipa ios-install-debug ios-install-release ios-deploy-device xcode-debug-bootstrap xcode-mcp-doctor xstream-mcp-install xstream-mcp-start xstream-mcp-start-dev xstream-mcp-start-runtime clean
 
 all: macos-intel macos-arm64 windows-x64 linux-x64 linux-arm64 android-arm64 ios-arm64
 
@@ -307,6 +307,9 @@ android-arm64:
 android-libxray:
 	./build_scripts/build_android_xray.sh
 
+android-apk:
+	./build_scripts/build_android_apk.sh
+
 ios-arm64:
 	@if [ "$(UNAME_S)" = "Darwin" ]; then \
 		echo "Building for iOS arm64..."; \
@@ -315,6 +318,9 @@ ios-arm64:
 	else \
 		echo "iOS build only supported on macOS"; \
 	fi
+
+ios-ipa:
+	./build_scripts/build_ios_ipa.sh
 
 ios-install-debug:
 	@if [ "$(UNAME_S)" = "Darwin" ]; then \
@@ -345,6 +351,9 @@ ios-install-release:
 	else \
 		echo "iOS install is only supported on macOS"; \
 	fi
+
+ios-deploy-device:
+	./build_scripts/deploy_ios_device.sh
 
 xcode-debug-bootstrap:
 	./scripts/xcode-debug-bootstrap.sh

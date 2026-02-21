@@ -7,7 +7,6 @@ package main
 */
 import "C"
 import (
-	"bytes"
 	"errors"
 	"os"
 	"path/filepath"
@@ -16,48 +15,34 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"github.com/xtls/libxray/xray"
 	"github.com/xtls/xray-core/common/platform"
-	"github.com/xtls/xray-core/core"
 )
 
 var androidProcMap sync.Map
-var androidSingleInstance *xrayInstance
 var androidInstMu sync.Mutex
 var androidTunnelSeq atomic.Int64
 var androidTunnelSession sync.Map
 
-type xrayInstance struct {
-	server core.Server
-}
-
 func androidStartXrayInternal(cfgData []byte) error {
-	if androidSingleInstance != nil {
+	if xray.GetXrayState() {
 		return errors.New("already running")
 	}
-	cfg, err := core.LoadConfig("json", bytes.NewReader(cfgData))
-	if err != nil {
-		return err
-	}
-	srv, err := core.New(cfg)
-	if err != nil {
-		return err
-	}
-	if err := srv.Start(); err != nil {
-		return err
-	}
-	androidSingleInstance = &xrayInstance{server: srv}
-	return nil
+	return xray.RunXrayFromJSON("", "", string(cfgData))
 }
 
 func androidStopXrayInternal() error {
-	if androidSingleInstance == nil {
+	if !xray.GetXrayState() {
 		return errors.New("not running")
 	}
-	if err := androidSingleInstance.server.Close(); err != nil {
-		return err
-	}
-	androidSingleInstance = nil
-	return nil
+	return xray.StopXray()
+}
+
+func clearAndroidNodeRegistry() {
+	androidProcMap.Range(func(key, value any) bool {
+		androidProcMap.Delete(key)
+		return true
+	})
 }
 
 //export WriteConfigFiles
@@ -93,44 +78,57 @@ func WriteConfigFiles(xrayPathC, xrayContentC, servicePathC, serviceContentC, vp
 
 //export StartNodeService
 func StartNodeService(name *C.char) *C.char {
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
+
 	node := C.GoString(name)
+	if _, ok := androidProcMap.Load(node); ok && xray.GetXrayState() {
+		return C.CString("success")
+	}
+	if xray.GetXrayState() {
+		return C.CString("error:already running")
+	}
+
 	configPath := filepath.Join(os.TempDir(), node+".json")
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	cfg, err := core.LoadConfig("json", bytes.NewReader(data))
-	if err != nil {
+	if err := androidStartXrayInternal(data); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	srv, err := core.New(cfg)
-	if err != nil {
-		return C.CString("error:" + err.Error())
-	}
-	if err := srv.Start(); err != nil {
-		return C.CString("error:" + err.Error())
-	}
-	androidProcMap.Store(node, &xrayInstance{server: srv})
+	androidProcMap.Store(node, true)
 	return C.CString("success")
 }
 
 //export StopNodeService
 func StopNodeService(name *C.char) *C.char {
+	androidInstMu.Lock()
+	defer androidInstMu.Unlock()
+
 	node := C.GoString(name)
-	if v, ok := androidProcMap.Load(node); ok {
-		inst := v.(*xrayInstance)
-		if err := inst.server.Close(); err != nil {
-			return C.CString("error:" + err.Error())
+	if _, ok := androidProcMap.Load(node); ok {
+		if xray.GetXrayState() {
+			if err := androidStopXrayInternal(); err != nil {
+				return C.CString("error:" + err.Error())
+			}
 		}
 		androidProcMap.Delete(node)
+		return C.CString("success")
 	}
+	if xray.GetXrayState() {
+		if err := androidStopXrayInternal(); err != nil {
+			return C.CString("error:" + err.Error())
+		}
+	}
+	clearAndroidNodeRegistry()
 	return C.CString("success")
 }
 
 //export CheckNodeStatus
 func CheckNodeStatus(name *C.char) C.int {
 	node := C.GoString(name)
-	if _, ok := androidProcMap.Load(node); ok {
+	if _, ok := androidProcMap.Load(node); ok && xray.GetXrayState() {
 		return 1
 	}
 	return 0
@@ -141,23 +139,13 @@ func StartXray(configC *C.char) *C.char {
 	androidInstMu.Lock()
 	defer androidInstMu.Unlock()
 
-	if androidSingleInstance != nil {
+	if xray.GetXrayState() {
 		return C.CString("error:already running")
 	}
 	cfgData := []byte(C.GoString(configC))
-	cfg, err := core.LoadConfig("json", bytes.NewReader(cfgData))
-	if err != nil {
+	if err := androidStartXrayInternal(cfgData); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	srv, err := core.New(cfg)
-	if err != nil {
-		return C.CString("error:" + err.Error())
-	}
-	if err := srv.Start(); err != nil {
-		return C.CString("error:" + err.Error())
-	}
-	androidSingleInstance = &xrayInstance{server: srv}
-
 	return C.CString("success")
 }
 
@@ -166,14 +154,15 @@ func StopXray() *C.char {
 	androidInstMu.Lock()
 	defer androidInstMu.Unlock()
 
-	if androidSingleInstance == nil {
+	if !xray.GetXrayState() {
 		return C.CString("error:not running")
 	}
-	if err := androidSingleInstance.server.Close(); err != nil {
+	if err := androidStopXrayInternal(); err != nil {
 		return C.CString("error:" + err.Error())
 	}
-	androidSingleInstance = nil
-
+	_ = os.Unsetenv(platform.TunFdKey)
+	_ = os.Unsetenv(platform.NormalizeEnvName(platform.TunFdKey))
+	clearAndroidNodeRegistry()
 	return C.CString("success")
 }
 
@@ -182,7 +171,7 @@ func StartXrayTunnel(configC *C.char) C.longlong {
 	androidInstMu.Lock()
 	defer androidInstMu.Unlock()
 
-	if androidSingleInstance != nil {
+	if xray.GetXrayState() {
 		return C.longlong(-1)
 	}
 
@@ -206,7 +195,7 @@ func StartXrayTunnelWithFd(configC *C.char, tunFd C.int32_t) C.longlong {
 	androidInstMu.Lock()
 	defer androidInstMu.Unlock()
 
-	if androidSingleInstance != nil {
+	if xray.GetXrayState() {
 		return C.longlong(-1)
 	}
 
@@ -238,8 +227,11 @@ func SubmitInboundPacket(handle C.longlong, data *C.uint8_t, length C.int32_t, p
 	if _, ok := androidTunnelSession.Load(id); !ok {
 		return C.int32_t(-1)
 	}
+	if !xray.GetXrayState() {
+		return C.int32_t(-1)
+	}
 
-	// Android Packet Tunnel entry point: packet forwarding to xray-core Tun session.
+	// Packet forwarding happens in VpnService Packet Tunnel pipeline.
 	return C.int32_t(0)
 }
 
@@ -257,12 +249,14 @@ func StopXrayTunnel(handle C.longlong) *C.char {
 	}
 	androidTunnelSession.Delete(id)
 
-	if err := androidStopXrayInternal(); err != nil {
-		return C.CString("error:" + err.Error())
+	if xray.GetXrayState() {
+		if err := androidStopXrayInternal(); err != nil {
+			return C.CString("error:" + err.Error())
+		}
 	}
 	_ = os.Unsetenv(platform.TunFdKey)
 	_ = os.Unsetenv(platform.NormalizeEnvName(platform.TunFdKey))
-
+	clearAndroidNodeRegistry()
 	return C.CString("success")
 }
 
