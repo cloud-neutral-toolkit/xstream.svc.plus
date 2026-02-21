@@ -929,6 +929,78 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         ),
                       ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: GlobalState.socksProxyEnabled,
+                        builder: (context, enabled, _) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: SwitchListTile(
+                              value: enabled,
+                              onChanged: (value) {
+                                setState(() => GlobalState
+                                    .socksProxyEnabled.value = value);
+                                addAppLog('SOCKS 代理: ${value ? "开启" : "关闭"}');
+                              },
+                              title: Text(
+                                'SOCKS 代理',
+                                style: _menuTextStyle,
+                              ),
+                              subtitle: const Text(
+                                '启用 SOCKS 代理服务 (127.0.0.1:1080)',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: GlobalState.httpProxyEnabled,
+                        builder: (context, enabled, _) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: SwitchListTile(
+                              value: enabled,
+                              onChanged: (value) {
+                                setState(() =>
+                                    GlobalState.httpProxyEnabled.value = value);
+                                addAppLog('HTTP 代理: ${value ? "开启" : "关闭"}');
+                              },
+                              title: Text(
+                                'HTTP 代理',
+                                style: _menuTextStyle,
+                              ),
+                              subtitle: const Text(
+                                '启用 HTTP 代理服务 (127.0.0.1:1081)',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: GlobalState.tunnelProxyEnabled,
+                        builder: (context, enabled, _) {
+                          return SizedBox(
+                            width: double.infinity,
+                            child: SwitchListTile(
+                              value: enabled,
+                              onChanged: (value) {
+                                setState(() => GlobalState
+                                    .tunnelProxyEnabled.value = value);
+                                addAppLog('隧道模式: ${value ? "开启" : "关闭"}');
+                              },
+                              title: Text(
+                                '隧道模式',
+                                style: _menuTextStyle,
+                              ),
+                              subtitle: const Text(
+                                '启用系统级网络隧道',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                       _buildButton(
                         icon: Icons.dns_outlined,
                         label: context.l10n.get('tunDnsConfig'),

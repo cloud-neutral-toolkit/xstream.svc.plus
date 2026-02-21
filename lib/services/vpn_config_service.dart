@@ -298,6 +298,9 @@ class VpnConfig {
     String? path,
     String? mode,
     List<String> alpn = const [],
+    bool enableSocksProxy = true,
+    bool enableHttpProxy = true,
+    bool enableTunnelMode = true,
   }) async {
     checkNotEmpty(nodeName, 'nodeName');
     checkNotEmpty(domain, 'domain');
@@ -333,6 +336,9 @@ class VpnConfig {
       path: path,
       mode: mode,
       alpn: alpn,
+      enableSocksProxy: enableSocksProxy,
+      enableHttpProxy: enableHttpProxy,
+      enableTunnelMode: enableTunnelMode,
     );
     if (xrayConfigContent.isEmpty) return;
 
@@ -451,6 +457,9 @@ class VpnConfig {
     required String bundleId,
     required Function(String) setMessage,
     required Function(String) logMessage,
+    bool enableSocksProxy = true,
+    bool enableHttpProxy = true,
+    bool enableTunnelMode = true,
   }) async {
     final profile = parseVlessUri(
       vlessUri,
@@ -475,6 +484,9 @@ class VpnConfig {
       path: profile.path,
       mode: profile.mode,
       alpn: profile.alpn,
+      enableSocksProxy: enableSocksProxy,
+      enableHttpProxy: enableHttpProxy,
+      enableTunnelMode: enableTunnelMode,
     );
   }
 
@@ -494,19 +506,31 @@ class VpnConfig {
     String? path,
     String? mode,
     List<String> alpn = const [],
+    bool enableSocksProxy = true,
+    bool enableHttpProxy = true,
+    bool enableTunnelMode = true,
   }) async {
     checkNotEmpty(domain, 'domain');
     checkNotEmpty(port, 'port');
     checkNotEmpty(uuid, 'uuid');
     checkNotNull(setMessage, 'setMessage');
     checkNotNull(logMessage, 'logMessage');
+
+    // Generate inbounds configuration based on proxy and tunnel settings
+    final inboundsConfig = _generateInboundsConfig(
+      enableSocksProxy: enableSocksProxy,
+      enableHttpProxy: enableHttpProxy,
+      enableTunnelMode: enableTunnelMode,
+    );
+
     try {
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
           .replaceAll('<UUID>', uuid)
           .replaceAll('<DNS1>', DnsConfig.dns1.value)
-          .replaceAll('<DNS2>', DnsConfig.dns2.value);
+          .replaceAll('<DNS2>', DnsConfig.dns2.value)
+          .replaceAll('<INBOUNDS_CONFIG>', inboundsConfig);
 
       final jsonObj = Map<String, dynamic>.from(jsonDecode(replaced));
       final outbounds = List<dynamic>.from(
@@ -733,5 +757,48 @@ class VpnConfig {
     final normalized = value.trim();
     if (normalized.startsWith('/')) return normalized;
     return '/$normalized';
+  }
+
+  /// Generate inbounds configuration based on proxy and tunnel settings
+  static String _generateInboundsConfig({
+    bool enableSocksProxy = true,
+    bool enableHttpProxy = true,
+    bool enableTunnelMode = true,
+  }) {
+    final inbounds = <Map<String, dynamic>>[];
+
+    // SOCKS proxy configuration
+    if (enableSocksProxy) {
+      inbounds.add({
+        "listen": "127.0.0.1",
+        "port": 1080,
+        "protocol": "socks",
+        "settings": {"udp": true},
+        "sniffing": {
+          "enabled": true,
+          "destOverride": ["http", "tls", "quic"]
+        }
+      });
+    }
+
+    // HTTP proxy configuration
+    if (enableHttpProxy) {
+      inbounds.add({
+        "listen": "127.0.0.1",
+        "port": 1081,
+        "protocol": "http",
+        "sniffing": {
+          "enabled": true,
+          "destOverride": ["http", "tls", "quic"]
+        }
+      });
+    }
+
+    // Tunnel mode configuration
+    if (enableTunnelMode) {
+      inbounds.add({"name": "xray0", "MTU": 1500, "UserLevel": 0});
+    }
+
+    return const JsonEncoder.withIndent('  ').convert(inbounds);
   }
 }

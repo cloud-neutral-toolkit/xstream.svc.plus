@@ -27,42 +27,7 @@ const String defaultXrayJsonTemplate = r'''
     "queryStrategy": "UseIPv4",
     "disableFallbackIfMatch": true
   },
-  "inbounds": [
-    {
-      "listen": "0.0.0.0",
-      "port": 1080,
-      "protocol": "socks",
-      "settings": {
-        "udp": true
-      },
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls",
-          "quic"
-        ]
-      }
-    },
-    {
-      "listen": "0.0.0.0",
-      "port": 1081,
-      "protocol": "http",
-      "sniffing": {
-        "enabled": true,
-        "destOverride": [
-          "http",
-          "tls",
-          "quic"
-        ]
-      }
-    },
-    {
-      "name": "xray0",
-      "MTU": 1500,
-      "UserLevel": 0
-    }
-  ],
+  "inbounds": <INBOUNDS_CONFIG>,
   "outbounds": [
     {
       "protocol": "vless",

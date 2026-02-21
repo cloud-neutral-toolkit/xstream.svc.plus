@@ -88,6 +88,13 @@ class GlobalState {
   /// 当前语言环境，默认中文
   static final ValueNotifier<Locale> locale =
       ValueNotifier<Locale>(const Locale('zh'));
+
+  /// SOCKS 代理模式开关（默认开启）
+  static final ValueNotifier<bool> socksProxyEnabled =
+      ValueNotifier<bool>(true);
+
+  /// HTTP 代理模式开关（默认开启）
+  static final ValueNotifier<bool> httpProxyEnabled = ValueNotifier<bool>(true);
 }
 
 /// 管理 DNS 配置，支持保存到本地
