@@ -37,7 +37,8 @@ class _LockButtonState extends State<LockButton> {
               child: Text(context.l10n.get('cancel')),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(passwordController.text),
+              onPressed: () =>
+                  Navigator.of(context).pop(passwordController.text),
               child: Text(context.l10n.get('confirm')),
             ),
           ],

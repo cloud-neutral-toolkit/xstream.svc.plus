@@ -19,4 +19,3 @@ class LogStore {
 
   static List<LogEntry> getAll() => List.unmodifiable(_logs);
 }
-

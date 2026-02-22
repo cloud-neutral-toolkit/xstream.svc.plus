@@ -609,7 +609,6 @@ class NativeBridge {
       '$configsPath/node-$code-config.json',
       if (nameToken.isNotEmpty) '$configsPath/node-$nameToken-config.json',
       '$configsPath/config.json',
-      '$configsPath/desktop_sync.json',
     ];
 
     for (final file in candidates) {

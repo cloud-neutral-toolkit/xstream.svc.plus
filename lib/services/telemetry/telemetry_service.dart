@@ -4,8 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// stores data locally only and does **not** send it anywhere, complying with
 /// the project's telemetry policy in `AGENTS.md`.
 
-import '../../utils/global_config.dart'
-    show GlobalState, collectSystemInfo;
+import '../../utils/global_config.dart' show GlobalState, collectSystemInfo;
 
 class TelemetryService {
   static const _prefsKey = 'telemetryEnabled';

@@ -4,14 +4,14 @@ import '../../services/vpn_config_service.dart';
 import '../../utils/global_config.dart';
 
 class XrayConfigWriter {
-  static const _configFileName = 'desktop_sync.json';
   static const _defaultNodeName = 'Desktop Sync';
   static const _defaultServiceName = 'xstream.desktop.sync';
   static const _defaultCountryCode = 'SYNC';
 
   static Future<String> writeConfig(String json) async {
-    final path =
-        await GlobalApplicationConfig.getXrayConfigFilePath(_configFileName);
+    final code = _normalizeNodeCode(_defaultCountryCode);
+    final fileName = 'node-$code-config.json';
+    final path = await GlobalApplicationConfig.getXrayConfigFilePath(fileName);
     final file = File(path);
     await file.create(recursive: true);
     await file.writeAsString(json);

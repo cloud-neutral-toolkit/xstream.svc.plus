@@ -27,7 +27,8 @@ class UpdateChecker {
     required String currentVersion,
     required UpdateChannel channel,
   }) async {
-    await _check(context, currentVersion: currentVersion, channel: channel, manual: true);
+    await _check(context,
+        currentVersion: currentVersion, channel: channel, manual: true);
   }
 
   static Future<void> _check(

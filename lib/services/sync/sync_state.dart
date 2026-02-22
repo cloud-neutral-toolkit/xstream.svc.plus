@@ -59,8 +59,9 @@ class SyncStateStore {
 
     summary.value = SyncSummary(
       configVersion: configVersion,
-      lastSuccessAt:
-          lastSuccessMillis != null ? DateTime.fromMillisecondsSinceEpoch(lastSuccessMillis) : null,
+      lastSuccessAt: lastSuccessMillis != null
+          ? DateTime.fromMillisecondsSinceEpoch(lastSuccessMillis)
+          : null,
       lastError: lastError,
       subscriptionMetadata: metadata,
     );

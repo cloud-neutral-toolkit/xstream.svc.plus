@@ -93,7 +93,8 @@ SyncResponse parseSyncResponse(Uint8List bytes) {
   if (bytes.length < offset + configLength) {
     throw StateError('xray config truncated');
   }
-  final xrayConfig = Uint8List.sublistView(bytes, offset, offset + configLength);
+  final xrayConfig =
+      Uint8List.sublistView(bytes, offset, offset + configLength);
   offset += configLength;
 
   String? metadata;

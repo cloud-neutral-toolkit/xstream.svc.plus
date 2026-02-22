@@ -15,7 +15,8 @@ PlatformException _createConnectionError(String channelName) {
   );
 }
 
-List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
+List<Object?> wrapResponse(
+    {Object? result, PlatformException? error, bool empty = false}) {
   if (empty) {
     return <Object?>[];
   }
@@ -24,20 +25,21 @@ List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty
   }
   return <Object?>[error.code, error.message, error.details];
 }
+
 bool _deepEquals(Object? a, Object? b) {
   if (a is List && b is List) {
     return a.length == b.length &&
         a.indexed
-        .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
+            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
   }
   if (a is Map && b is Map) {
-    return a.length == b.length && a.entries.every((MapEntry<Object?, Object?> entry) =>
-        (b as Map<Object?, Object?>).containsKey(entry.key) &&
-        _deepEquals(entry.value, b[entry.key]));
+    return a.length == b.length &&
+        a.entries.every((MapEntry<Object?, Object?> entry) =>
+            (b as Map<Object?, Object?>).containsKey(entry.key) &&
+            _deepEquals(entry.value, b[entry.key]));
   }
   return a == b;
 }
-
 
 class TunnelRouteV4 {
   TunnelRouteV4({
@@ -57,7 +59,8 @@ class TunnelRouteV4 {
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static TunnelRouteV4 decode(Object result) {
     result as List<Object?>;
@@ -81,8 +84,7 @@ class TunnelRouteV4 {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => Object.hashAll(_toList())
-;
+  int get hashCode => Object.hashAll(_toList());
 }
 
 class TunnelRouteV6 {
@@ -103,7 +105,8 @@ class TunnelRouteV6 {
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static TunnelRouteV6 decode(Object result) {
     result as List<Object?>;
@@ -127,8 +130,7 @@ class TunnelRouteV6 {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => Object.hashAll(_toList())
-;
+  int get hashCode => Object.hashAll(_toList());
 }
 
 class TunnelProfile {
@@ -197,7 +199,8 @@ class TunnelProfile {
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static TunnelProfile decode(Object result) {
     result as List<Object?>;
@@ -233,8 +236,7 @@ class TunnelProfile {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => Object.hashAll(_toList())
-;
+  int get hashCode => Object.hashAll(_toList());
 }
 
 class TunnelStatus {
@@ -263,7 +265,8 @@ class TunnelStatus {
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
   static TunnelStatus decode(Object result) {
     result as List<Object?>;
@@ -289,10 +292,8 @@ class TunnelStatus {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => Object.hashAll(_toList())
-;
+  int get hashCode => Object.hashAll(_toList());
 }
-
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -301,16 +302,16 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is TunnelRouteV4) {
+    } else if (value is TunnelRouteV4) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    }    else if (value is TunnelRouteV6) {
+    } else if (value is TunnelRouteV6) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    }    else if (value is TunnelProfile) {
+    } else if (value is TunnelProfile) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    }    else if (value is TunnelStatus) {
+    } else if (value is TunnelStatus) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
     } else {
@@ -321,13 +322,13 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
-      case 129: 
+      case 129:
         return TunnelRouteV4.decode(readValue(buffer)!);
-      case 130: 
+      case 130:
         return TunnelRouteV6.decode(readValue(buffer)!);
-      case 131: 
+      case 131:
         return TunnelProfile.decode(readValue(buffer)!);
-      case 132: 
+      case 132:
         return TunnelStatus.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -339,9 +340,11 @@ class DarwinHostApi {
   /// Constructor for [DarwinHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  DarwinHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+  DarwinHostApi(
+      {BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
       : pigeonVar_binaryMessenger = binaryMessenger,
-        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+        pigeonVar_messageChannelSuffix =
+            messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -349,8 +352,10 @@ class DarwinHostApi {
   final String pigeonVar_messageChannelSuffix;
 
   Future<String> appGroupPath() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.appGroupPath$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.appGroupPath$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -377,13 +382,16 @@ class DarwinHostApi {
   }
 
   Future<void> startXApiServer(Uint8List config) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.startXApiServer$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.startXApiServer$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[config]);
+    final Future<Object?> pigeonVar_sendFuture =
+        pigeonVar_channel.send(<Object?>[config]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -400,13 +408,16 @@ class DarwinHostApi {
   }
 
   Future<void> redirectStdErr(String path) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.redirectStdErr$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.redirectStdErr$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[path]);
+    final Future<Object?> pigeonVar_sendFuture =
+        pigeonVar_channel.send(<Object?>[path]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -423,8 +434,10 @@ class DarwinHostApi {
   }
 
   Future<Uint8List> generateTls() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.generateTls$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.generateTls$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -451,8 +464,10 @@ class DarwinHostApi {
   }
 
   Future<void> setupShutdownNotification() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.setupShutdownNotification$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.setupShutdownNotification$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -474,13 +489,16 @@ class DarwinHostApi {
   }
 
   Future<String> savePacketTunnelProfile(TunnelProfile profile) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.savePacketTunnelProfile$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.savePacketTunnelProfile$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[profile]);
+    final Future<Object?> pigeonVar_sendFuture =
+        pigeonVar_channel.send(<Object?>[profile]);
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_sendFuture as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -502,8 +520,10 @@ class DarwinHostApi {
   }
 
   Future<void> startPacketTunnel() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.startPacketTunnel$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.startPacketTunnel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -525,8 +545,10 @@ class DarwinHostApi {
   }
 
   Future<void> stopPacketTunnel() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.stopPacketTunnel$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.stopPacketTunnel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -548,8 +570,10 @@ class DarwinHostApi {
   }
 
   Future<TunnelStatus> getPacketTunnelStatus() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.xstream.DarwinHostApi.getPacketTunnelStatus$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+    final String pigeonVar_channelName =
+        'dev.flutter.pigeon.xstream.DarwinHostApi.getPacketTunnelStatus$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel =
+        BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
@@ -589,11 +613,19 @@ abstract class DarwinFlutterApi {
 
   void onPacketTunnelError(String code, String message);
 
-  static void setUp(DarwinFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  static void setUp(
+    DarwinFlutterApi? api, {
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) {
+    messageChannelSuffix =
+        messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
-      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillShutdown$messageChannelSuffix', pigeonChannelCodec,
+      final BasicMessageChannel<
+          Object?> pigeonVar_channel = BasicMessageChannel<
+              Object?>(
+          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillShutdown$messageChannelSuffix',
+          pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -604,15 +636,19 @@ abstract class DarwinFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
-      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillRestart$messageChannelSuffix', pigeonChannelCodec,
+      final BasicMessageChannel<
+          Object?> pigeonVar_channel = BasicMessageChannel<
+              Object?>(
+          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillRestart$messageChannelSuffix',
+          pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -623,15 +659,19 @@ abstract class DarwinFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
-      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillSleep$messageChannelSuffix', pigeonChannelCodec,
+      final BasicMessageChannel<
+          Object?> pigeonVar_channel = BasicMessageChannel<
+              Object?>(
+          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onSystemWillSleep$messageChannelSuffix',
+          pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -642,22 +682,26 @@ abstract class DarwinFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
-      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelStateChanged$messageChannelSuffix', pigeonChannelCodec,
+      final BasicMessageChannel<
+          Object?> pigeonVar_channel = BasicMessageChannel<
+              Object?>(
+          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelStateChanged$messageChannelSuffix',
+          pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           assert(message != null,
-          'Argument for dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelStateChanged was null.');
+              'Argument for dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelStateChanged was null.');
           final List<Object?> args = (message as List<Object?>?)!;
           final TunnelStatus? arg_status = (args[0] as TunnelStatus?);
           assert(arg_status != null,
@@ -667,22 +711,26 @@ abstract class DarwinFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
-      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelError$messageChannelSuffix', pigeonChannelCodec,
+      final BasicMessageChannel<
+          Object?> pigeonVar_channel = BasicMessageChannel<
+              Object?>(
+          'dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelError$messageChannelSuffix',
+          pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
           assert(message != null,
-          'Argument for dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelError was null.');
+              'Argument for dev.flutter.pigeon.xstream.DarwinFlutterApi.onPacketTunnelError was null.');
           final List<Object?> args = (message as List<Object?>?)!;
           final String? arg_code = (args[0] as String?);
           assert(arg_code != null,
@@ -695,8 +743,9 @@ abstract class DarwinFlutterApi {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          }          catch (e) {
-            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          } catch (e) {
+            return wrapResponse(
+                error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }

@@ -6,7 +6,8 @@ class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
 
   Future<void> _openManual() async {
-    const url = 'https://github.com/svc-design/Xstream/blob/main/docs/user-manual.md';
+    const url =
+        'https://github.com/svc-design/Xstream/blob/main/docs/user-manual.md';
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

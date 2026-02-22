@@ -827,9 +827,7 @@ class VpnConfig {
     if (enableTunnelMode) {
       inbounds.add({
         "protocol": "tun",
-        "settings": {
-          "mtu": 1500
-        }
+        "settings": {"mtu": 1500}
       });
     }
 
