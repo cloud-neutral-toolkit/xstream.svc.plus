@@ -583,7 +583,9 @@ class NativeBridge {
       } else if (linkType == FileSystemEntityType.directory) {
         await Directory(canonicalPath).delete(recursive: true);
       }
-      await Link(canonicalPath).create(normalized, recursive: true);
+      // Create a relative symlink so it's less fragile
+      final linkTarget = normalized.split(Platform.pathSeparator).last;
+      await Link(canonicalPath).create(linkTarget, recursive: true);
       return canonicalPath;
     } catch (_) {
       return normalized;
