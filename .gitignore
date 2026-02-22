@@ -13,7 +13,9 @@ pubspec.lock
 doc/api/
 
 # dotenv environment variables file
-.env*
+.env
+.env.*
+!.env.example
 
 # Avoid committing generated Javascript files:
 *.dart.js
@@ -61,3 +63,6 @@ tools/xstream-mcp-server/xstream-mcp-server
 # Xray dat files are downloaded during macOS packaging
 macos/Resources/xray/geoip.dat
 macos/Resources/xray/geosite.dat
+# Xray binaries are generated during macOS packaging
+macos/Resources/xray/xray
+macos/Resources/xray/xray-x86_64
