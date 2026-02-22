@@ -853,9 +853,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: SwitchListTile(
                               value: enabled,
                               onChanged: (value) {
-                                setState(() => GlobalState
-                                    .tunnelProxyEnabled.value = value);
-                                addAppLog('隧道模式: ${value ? "开启" : "关闭"}');
+                                setState(() {
+                                  GlobalState.tunnelProxyEnabled.value = value;
+                                  GlobalState.connectionMode.value =
+                                      value ? 'VPN' : '仅代理';
+                                });
+                                addAppLog(
+                                  '系统级网络隧道: ${value ? "开启" : "关闭"}',
+                                );
+                                _refreshTunStatus();
                               },
                               title: Text(
                                 '隧道模式',

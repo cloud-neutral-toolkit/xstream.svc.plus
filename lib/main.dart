@@ -300,6 +300,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   Future<void> _onConnectionModeChanged() async {
     if (!GlobalState.isUnlocked.value) return;
     final mode = GlobalState.connectionMode.value;
+    final tunnelEnabled = mode == 'VPN';
+    if (GlobalState.tunnelProxyEnabled.value != tunnelEnabled) {
+      GlobalState.tunnelProxyEnabled.value = tunnelEnabled;
+    }
     addAppLog('切换模式为 $mode');
     String msg;
     if (mode == 'VPN') {

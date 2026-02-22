@@ -430,8 +430,9 @@ class NativeBridge {
     }
   }
 
-  static Future<darwin_host.TunnelProfile> _buildDefaultTunnelProfile() async {
-    final appGroupPath = await _darwinHostApi.appGroupPath();
+  static Future<darwin_host.TunnelProfile> _buildDefaultTunnelProfile({
+    required String configPath,
+  }) async {
     final dns4 = <String>[
       TunDnsConfig.dns1.value.trim(),
       TunDnsConfig.dns2.value.trim(),
@@ -461,7 +462,7 @@ class NativeBridge {
         ),
       ],
       ipv6ExcludedRoutes: <darwin_host.TunnelRouteV6>[],
-      configPath: '$appGroupPath/config.json',
+      configPath: configPath,
     );
   }
 
@@ -501,7 +502,7 @@ class NativeBridge {
     };
   }
 
-  static Future<String?> _resolveMobileTunnelConfigPath() async {
+  static Future<String?> _resolveTunnelConfigPath() async {
     try {
       await VpnConfig.load();
     } catch (_) {}
@@ -533,6 +534,39 @@ class NativeBridge {
       }
     }
     return null;
+  }
+
+  static Future<String> _prepareCanonicalTunnelConfigPath(
+    String sourcePath,
+  ) async {
+    final normalized = sourcePath.trim();
+    if (normalized.isEmpty) return sourcePath;
+    final sourceFile = File(normalized);
+    if (!await sourceFile.exists()) return sourcePath;
+
+    final configsPath = await GlobalApplicationConfig.getConfigsPath();
+    final canonicalPath = '$configsPath/config.json';
+    if (canonicalPath == normalized) {
+      return normalized;
+    }
+
+    try {
+      final linkType = await FileSystemEntity.type(
+        canonicalPath,
+        followLinks: false,
+      );
+      if (linkType == FileSystemEntityType.link) {
+        await Link(canonicalPath).delete();
+      } else if (linkType == FileSystemEntityType.file) {
+        await File(canonicalPath).delete();
+      } else if (linkType == FileSystemEntityType.directory) {
+        await Directory(canonicalPath).delete(recursive: true);
+      }
+      await Link(canonicalPath).create(normalized, recursive: true);
+      return canonicalPath;
+    } catch (_) {
+      return normalized;
+    }
   }
 
   static Future<bool> _ensureNodeConfigReady(VpnNode node) async {
@@ -614,14 +648,16 @@ class NativeBridge {
   static Future<String> startPacketTunnel() async {
     if (Platform.isAndroid) {
       try {
-        final configPath = await _resolveMobileTunnelConfigPath();
+        final configPath = await _resolveTunnelConfigPath();
         if (configPath == null) {
           return '未找到可用的节点配置';
         }
+        final canonicalPath =
+            await _prepareCanonicalTunnelConfigPath(configPath);
         stopXray();
         _mobileActiveNodeName = null;
         final profile = await _buildDefaultTunnelProfileMap(
-          configPath: configPath,
+          configPath: canonicalPath,
         );
         await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
         final result =
@@ -639,7 +675,14 @@ class NativeBridge {
     if (!_isDarwin) return '当前平台暂不支持';
     _ensureDarwinFlutterApiReady();
     try {
-      final profile = await _buildDefaultTunnelProfile();
+      final configPath = await _resolveTunnelConfigPath();
+      if (configPath == null) {
+        return '未找到可用的节点配置';
+      }
+      final canonicalPath = await _prepareCanonicalTunnelConfigPath(configPath);
+      final profile = await _buildDefaultTunnelProfile(
+        configPath: canonicalPath,
+      );
       final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
       await _darwinHostApi.startPacketTunnel();
       return saveResult == 'profile_saved'
