@@ -318,7 +318,7 @@ class VpnConfig {
     final normalizedSecurity = security.trim().toLowerCase();
     final code = nodeName.split('-').first.toLowerCase();
     final prefix = await GlobalApplicationConfig.getXrayConfigPath();
-    final xrayConfigPath = '${prefix}xray-vpn-node-$code.json';
+    final xrayConfigPath = '${prefix}node-$code-config.json';
 
     final xrayConfigContent = await _generateXrayJsonConfig(
       domain,
@@ -825,7 +825,12 @@ class VpnConfig {
 
     // Tunnel mode configuration
     if (enableTunnelMode) {
-      inbounds.add({"name": "xray0", "MTU": 1500, "UserLevel": 0});
+      inbounds.add({
+        "protocol": "tun",
+        "settings": {
+          "mtu": 1500
+        }
+      });
     }
 
     return const JsonEncoder.withIndent('  ').convert(inbounds);

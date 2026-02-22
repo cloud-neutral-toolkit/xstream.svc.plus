@@ -986,7 +986,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_MODULE_VERIFIER_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -1017,7 +1017,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_MODULE_VERIFIER_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
@@ -1048,7 +1048,7 @@
 				OTHER_LDFLAGS = "";
 				OTHER_MODULE_VERIFIER_FLAGS = "";
 				OTHER_SWIFT_FLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = xstream.svc.plus.PacketTunnel;
+				PRODUCT_BUNDLE_IDENTIFIER = plus.svc.xstream.PacketTunnel;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;

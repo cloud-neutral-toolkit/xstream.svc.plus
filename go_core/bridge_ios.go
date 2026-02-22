@@ -10,6 +10,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"unsafe"
@@ -151,14 +152,17 @@ func StopXray() *C.char {
 	return C.CString("success")
 }
 
-//export StartXrayTunnel
-func StartXrayTunnel(configC *C.char) C.longlong {
+//export StartXrayTunnelWithFd
+func StartXrayTunnelWithFd(configC *C.char, fd C.int) C.longlong {
 	instMu.Lock()
 	defer instMu.Unlock()
 
 	if xray.GetXrayState() {
 		return C.longlong(-1)
 	}
+
+	// Set Xray TUN file descriptor environment variable natively supported by libxray's Darwin TUN implementation
+	os.Setenv("xray.tun.fd", strconv.Itoa(int(fd)))
 
 	cfgData := []byte(C.GoString(configC))
 	if err := startXrayInternal(cfgData); err != nil {
@@ -168,27 +172,6 @@ func StartXrayTunnel(configC *C.char) C.longlong {
 	handle := tunnelSeq.Add(1)
 	tunnelSession.Store(handle, true)
 	return C.longlong(handle)
-}
-
-//export SubmitInboundPacket
-func SubmitInboundPacket(handle C.longlong, data *C.uint8_t, length C.int32_t, protocol C.int32_t) C.int32_t {
-	_ = data
-	_ = length
-	_ = protocol
-
-	id := int64(handle)
-	if id <= 0 {
-		return C.int32_t(-1)
-	}
-	if _, ok := tunnelSession.Load(id); !ok {
-		return C.int32_t(-1)
-	}
-	if !xray.GetXrayState() {
-		return C.int32_t(-1)
-	}
-
-	// Packet forwarding happens in Packet Tunnel provider.
-	return C.int32_t(0)
 }
 
 //export StopXrayTunnel

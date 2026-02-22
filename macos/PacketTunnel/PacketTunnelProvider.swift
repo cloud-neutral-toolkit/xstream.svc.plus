@@ -8,7 +8,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
   private let monitor = NWPathMonitor(prohibitedInterfaceTypes: [NWInterface.InterfaceType.other])
   private let statusStore = PacketTunnelStatusStore()
   private let engine: SecureTunnelEngine = XrayTunnelEngine()
-  private var adapter: NEPacketFlowAdapter?
 
   override func startTunnel(
     options: [String: NSObject]?,
@@ -34,12 +33,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         self.activeSettings = settings
         self.startPathMonitor()
 
-        let adapter = NEPacketFlowAdapter(packetFlow: self.packetFlow)
-        self.adapter = adapter
+        let fd = self.packetFlow.value(forKeyPath: "socket.fileDescriptor") as? Int32 ?? -1
 
         do {
           let configData = self.resolveConfigData(options: map)
-          try self.engine.start(config: configData, packetFlow: adapter)
+          try self.engine.start(config: configData, fd: fd)
           self.statusStore.markConnected()
           completionHandler(nil)
         } catch {
@@ -54,7 +52,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
   override func stopTunnel(with _: NEProviderStopReason, completionHandler: @escaping () -> Void) {
     monitor.cancel()
-    adapter?.stop()
     engine.stop()
     statusStore.markDisconnected()
     completionHandler()
@@ -218,8 +215,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     error: Error,
     completionHandler: @escaping (Error?) -> Void
   ) {
-    adapter?.stop()
-    adapter = nil
     engine.stop()
     monitor.cancel()
     activeSettings = nil
@@ -228,72 +223,16 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
   }
 }
 
-private protocol PacketFlowAdapter: AnyObject {
-  func startReadLoop(onPacket: @escaping (_ packet: Data, _ protocolNumber: NSNumber) -> Void)
-  func writePackets(_ packets: [Data], protocols: [NSNumber])
-  func stop()
-}
-
-private final class NEPacketFlowAdapter: PacketFlowAdapter {
-  private let packetFlow: NEPacketTunnelFlow
-  private var isRunning = false
-
-  init(packetFlow: NEPacketTunnelFlow) {
-    self.packetFlow = packetFlow
-  }
-
-  func startReadLoop(onPacket: @escaping (_ packet: Data, _ protocolNumber: NSNumber) -> Void) {
-    guard !isRunning else {
-      return
-    }
-    isRunning = true
-    readNext(onPacket: onPacket)
-  }
-
-  func writePackets(_ packets: [Data], protocols: [NSNumber]) {
-    guard isRunning, packets.count == protocols.count, !packets.isEmpty else {
-      return
-    }
-    packetFlow.writePackets(packets, withProtocols: protocols)
-  }
-
-  func stop() {
-    isRunning = false
-  }
-
-  private func readNext(onPacket: @escaping (_ packet: Data, _ protocolNumber: NSNumber) -> Void) {
-    guard isRunning else {
-      return
-    }
-
-    packetFlow.readPackets { [weak self] packets, protocols in
-      guard let self, self.isRunning else {
-        return
-      }
-
-      let count = min(packets.count, protocols.count)
-      if count > 0 {
-        for index in 0 ..< count {
-          onPacket(packets[index], protocols[index])
-        }
-      }
-
-      self.readNext(onPacket: onPacket)
-    }
-  }
-}
-
 private protocol SecureTunnelEngine {
-  func start(config: Data, packetFlow: PacketFlowAdapter) throws
+  func start(config: Data, fd: Int32) throws
   func stop()
 }
 
 private final class XrayTunnelEngine: SecureTunnelEngine {
   private let bridge = XrayTunnelBridge()
-  private var packetFlow: PacketFlowAdapter?
   private var tunnelHandle: Int64?
 
-  func start(config: Data, packetFlow: PacketFlowAdapter) throws {
+  func start(config: Data, fd: Int32) throws {
     stop()
     guard !config.isEmpty else {
       throw NSError(
@@ -303,44 +242,26 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
       )
     }
 
-    let handle = try bridge.start(configData: config)
+    let handle = try bridge.start(configData: config, fd: fd)
     tunnelHandle = handle
-    self.packetFlow = packetFlow
-    packetFlow.startReadLoop { [weak self] packet, protocolNumber in
-      self?.handleInboundPacket(packet: packet, protocolNumber: protocolNumber, handle: handle)
-    }
   }
 
   func stop() {
-    packetFlow?.stop()
     if let handle = tunnelHandle {
       bridge.stop(handle: handle)
       bridge.free(handle: handle)
       tunnelHandle = nil
     }
-    packetFlow = nil
-  }
-
-  private func handleInboundPacket(packet: Data, protocolNumber: NSNumber, handle: Int64) {
-    let proto = Int32(truncating: protocolNumber)
-    _ = bridge.submitInboundPacket(handle: handle, packet: packet, protocol: proto)
   }
 }
 
 private final class XrayTunnelBridge {
-  private typealias StartXrayTunnelFn = @convention(c) (UnsafePointer<CChar>?) -> Int64
-  private typealias SubmitInboundPacketFn = @convention(c) (
-    Int64,
-    UnsafePointer<UInt8>?,
-    Int32,
-    Int32
-  ) -> Int32
+  private typealias StartXrayTunnelWithFdFn = @convention(c) (UnsafePointer<CChar>?, Int32) -> Int64
   private typealias StopXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeCStringFn = @convention(c) (UnsafeMutablePointer<CChar>?) -> Void
 
-  private let startFn: StartXrayTunnelFn?
-  private let submitFn: SubmitInboundPacketFn?
+  private let startFn: StartXrayTunnelWithFdFn?
   private let stopFn: StopXrayTunnelFn?
   private let freeTunnelFn: FreeXrayTunnelFn?
   private let freeCStringFn: FreeCStringFn?
@@ -348,8 +269,7 @@ private final class XrayTunnelBridge {
 
   init() {
     dlHandle = dlopen(nil, RTLD_NOW)
-    startFn = XrayTunnelBridge.loadSymbol("StartXrayTunnel", from: dlHandle)
-    submitFn = XrayTunnelBridge.loadSymbol("SubmitInboundPacket", from: dlHandle)
+    startFn = XrayTunnelBridge.loadSymbol("StartXrayTunnelWithFd", from: dlHandle)
     stopFn = XrayTunnelBridge.loadSymbol("StopXrayTunnel", from: dlHandle)
     freeTunnelFn = XrayTunnelBridge.loadSymbol("FreeXrayTunnel", from: dlHandle)
     freeCStringFn = XrayTunnelBridge.loadSymbol("FreeCString", from: dlHandle)
@@ -361,35 +281,25 @@ private final class XrayTunnelBridge {
     }
   }
 
-  func start(configData: Data) throws -> Int64 {
+  func start(configData: Data, fd: Int32) throws -> Int64 {
     guard let startFn else {
       throw NSError(
         domain: "Xstream.PacketTunnel",
         code: -11,
-        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel symbol is unavailable"]
+        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd symbol is unavailable"]
       )
     }
     let json = String(data: configData, encoding: .utf8) ?? "{}"
     return try json.withCString { cstr in
-      let handle = startFn(cstr)
+      let handle = startFn(cstr, fd)
       if handle <= 0 {
         throw NSError(
           domain: "Xstream.PacketTunnel",
           code: -12,
-          userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel returned invalid handle"]
+          userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd returned invalid handle"]
         )
       }
       return handle
-    }
-  }
-
-  func submitInboundPacket(handle: Int64, packet: Data, protocol: Int32) -> Int32 {
-    guard let submitFn else {
-      return -1
-    }
-    return packet.withUnsafeBytes { raw in
-      let ptr = raw.bindMemory(to: UInt8.self).baseAddress
-      return submitFn(handle, ptr, Int32(packet.count), `protocol`)
     }
   }
 

@@ -113,3 +113,70 @@ Key components:
 
 - `PacketTunnel` targets compile on iOS and macOS.
 - Runner full build requires writable Flutter workspace metadata (`.dart_tool` and generated artifacts).
+
+## 8) App Architecture Update (UI Unchanged)
+
+The current migration target keeps all existing UI entry points unchanged and upgrades only native networking internals.
+
+### 8.1 Unified control plane (no UI change)
+
+Existing UI actions remain:
+
+1. `startNodeService` / `stopNodeService` for local proxy mode.
+2. `startPacketTunnel` / `stopPacketTunnel` for System VPN mode.
+
+No Flutter page layout or user workflow changes are required.
+
+### 8.2 Runtime modes
+
+Mode A: `Proxy Mode`
+
+1. Dart triggers local engine start.
+2. `xray-core` runs local SOCKS/HTTP inbounds.
+3. App traffic enters local proxy and goes to encrypted outbounds.
+
+Mode B: `Tunnel Mode` (System VPN)
+
+1. Dart triggers `NETunnelProviderManager`.
+2. `PacketTunnelProvider` applies network settings and owns `utun`.
+3. Data plane inside extension bridges packet flow to the tunnel engine.
+
+### 8.3 Target data-plane shape in Tunnel Mode
+
+```mermaid
+flowchart LR
+  A["Flutter (existing UI)"] --> B["DarwinHostApi / NETunnelProviderManager"]
+  B --> C["PacketTunnelProvider"]
+  C --> D["NEPacketFlowAdapter"]
+  D --> E["Extension Data Bridge"]
+  E --> F["libXray Engine"]
+  F --> G["Encrypted Outbound"]
+```
+
+## 9) OneXray-to-Xstream mapping
+
+For step-by-step migration mapping and ownership, see:
+
+- `docs/onexray-xstream-migration-matrix.md`
+
+This mapping is used to migrate implementation details while preserving current UI behavior.
+
+## 10) Implementation decision for Darwin data plane
+
+Given the current repository state:
+
+1. Control plane is already stable.
+2. `SubmitInboundPacket` in `go_core/bridge_ios.go` is still a placeholder.
+
+Recommended sequence:
+
+1. First close data path with extension-local proxy bridge (SOCKS/HTTP to libXray) while keeping `PacketTunnelProvider` as the sole system entry.
+2. Then iterate toward deeper packet bridge integration once Darwin adapter capabilities are verified in `go_core`.
+
+## 11) Loop prevention baseline
+
+To avoid tunnel loop (`TUN -> TUN`), enforce:
+
+1. Explicit egress binding on key outbounds (`streamSettings.sockopt.interface` when available).
+2. Managed `excludedRoutes` in Packet Tunnel profile.
+3. Startup/runtime checks for route table, active interface, and connection matrix consistency.

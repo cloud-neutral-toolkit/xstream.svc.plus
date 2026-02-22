@@ -26,7 +26,7 @@ class XrayConfigWriter {
     final code = _normalizeNodeCode(
       (countryCode ?? '').trim().isNotEmpty ? countryCode! : nodeName,
     );
-    final fileName = 'xray-vpn-node-$code.json';
+    final fileName = 'node-$code-config.json';
     final path = await GlobalApplicationConfig.getXrayConfigFilePath(fileName);
     final file = File(path);
     await file.create(recursive: true);

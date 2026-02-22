@@ -10,7 +10,7 @@ import NetworkExtension
 import Darwin
 
 class DarwinHostApiImpl: DarwinHostApi {
-  private let groupId = "group.com.xstream"
+  private let groupId = "group.plus.svc.xstream"
   private let profileOptionsKey = "packet_tunnel_profile_options"
   private let statusErrorKey = "packet_tunnel_last_error"
   private let statusStartedAtKey = "packet_tunnel_started_at"

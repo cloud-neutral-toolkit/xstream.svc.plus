@@ -127,10 +127,17 @@ class NativeBridge {
   static Future<String> startNodeService(String nodeName) async {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
-    final configOk = await _ensureNodeConfigReady(node);
-    if (!configOk) {
-      return '启动失败: 节点配置文件不存在 (${node.configPath})';
+    final sourceConfigPath = await _resolveNodeConfigSource(node);
+    if (sourceConfigPath == null) {
+      return '启动失败: 节点配置文件不存在（预期: node-<code>-config.json）';
     }
+    if (node.configPath != sourceConfigPath) {
+      node.configPath = sourceConfigPath;
+      VpnConfig.updateNode(node);
+      await VpnConfig.saveToFile();
+    }
+    final runtimeConfigPath =
+        await _prepareCanonicalTunnelConfigPath(sourceConfigPath);
 
     if (_isMobile) {
       if (Platform.isAndroid) {
@@ -149,7 +156,7 @@ class NativeBridge {
           _mobileActiveNodeName = null;
         }
 
-        final configJson = await File(node.configPath).readAsString();
+        final configJson = await File(runtimeConfigPath).readAsString();
         final result = startXray(configJson);
         if (result.toLowerCase().startsWith('success')) {
           _mobileActiveNodeName = nodeName;
@@ -181,7 +188,7 @@ class NativeBridge {
           {
             'serviceName': node.serviceName,
             'nodeName': node.name,
-            'configPath': node.configPath,
+            'configPath': runtimeConfigPath,
           },
         );
         return result ?? '启动成功';
@@ -510,27 +517,41 @@ class NativeBridge {
     final active = _mobileActiveNodeName;
     if (active != null && active.trim().isNotEmpty) {
       final node = VpnConfig.getNodeByName(active);
-      if (node != null && await _ensureNodeConfigReady(node)) {
-        final path = node.configPath.trim();
-        if (path.isNotEmpty) {
-          return path;
+      if (node != null) {
+        final resolved = await _resolveNodeConfigSource(node);
+        if (resolved != null) {
+          if (node.configPath != resolved) {
+            node.configPath = resolved;
+            VpnConfig.updateNode(node);
+            await VpnConfig.saveToFile();
+          }
+          return resolved;
         }
       }
     }
 
     for (final node in VpnConfig.nodes) {
-      final path = node.configPath.trim();
-      if (node.enabled &&
-          path.isNotEmpty &&
-          await _ensureNodeConfigReady(node)) {
-        return path;
+      if (!node.enabled) continue;
+      final resolved = await _resolveNodeConfigSource(node);
+      if (resolved != null) {
+        if (node.configPath != resolved) {
+          node.configPath = resolved;
+          VpnConfig.updateNode(node);
+          await VpnConfig.saveToFile();
+        }
+        return resolved;
       }
     }
 
     for (final node in VpnConfig.nodes) {
-      final path = node.configPath.trim();
-      if (path.isNotEmpty && await _ensureNodeConfigReady(node)) {
-        return path;
+      final resolved = await _resolveNodeConfigSource(node);
+      if (resolved != null) {
+        if (node.configPath != resolved) {
+          node.configPath = resolved;
+          VpnConfig.updateNode(node);
+          await VpnConfig.saveToFile();
+        }
+        return resolved;
       }
     }
     return null;
@@ -569,25 +590,12 @@ class NativeBridge {
     }
   }
 
-  static Future<bool> _ensureNodeConfigReady(VpnNode node) async {
+  static Future<String?> _resolveNodeConfigSource(VpnNode node) async {
     final rawPath = node.configPath.trim();
-    if (rawPath.isEmpty) {
-      return false;
+    if (rawPath.isNotEmpty && await File(rawPath).exists()) {
+      return rawPath;
     }
-    if (await File(rawPath).exists()) {
-      return true;
-    }
-
-    final repairedPath = await _findFallbackConfigPath(node);
-    if (repairedPath == null) {
-      return false;
-    }
-
-    node.configPath = repairedPath;
-    VpnConfig.updateNode(node);
-    await VpnConfig.saveToFile();
-    addAppLog('已自动修复节点配置路径: ${node.name} -> $repairedPath');
-    return true;
+    return _findFallbackConfigPath(node);
   }
 
   static Future<String?> _findFallbackConfigPath(VpnNode node) async {
@@ -595,10 +603,12 @@ class NativeBridge {
     final dir = Directory(configsPath);
     if (!await dir.exists()) return null;
 
+    final code = _normalizeConfigToken(node.countryCode);
+    final nameToken = _normalizeConfigToken(node.name);
     final candidates = <String>[
-      '$configsPath/xray-vpn-node-${node.countryCode.toLowerCase()}.json',
+      '$configsPath/node-$code-config.json',
+      if (nameToken.isNotEmpty) '$configsPath/node-$nameToken-config.json',
       '$configsPath/config.json',
-      '$configsPath/xray_config.json',
       '$configsPath/desktop_sync.json',
     ];
 
@@ -608,27 +618,24 @@ class NativeBridge {
       }
     }
 
-    final slug = node.name
+    await for (final entity in dir.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final name = entity.path.split(Platform.pathSeparator).last;
+      if (RegExp(r'^node-[a-z0-9-]+-config\.json$').hasMatch(name)) {
+        return entity.path;
+      }
+    }
+    return null;
+  }
+
+  static String _normalizeConfigToken(String raw) {
+    final token = raw
         .trim()
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'-+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    if (slug.isNotEmpty) {
-      final file = '$configsPath/xray-vpn-node-$slug.json';
-      if (await File(file).exists()) {
-        return file;
-      }
-    }
-
-    await for (final entity in dir.list(followLinks: false)) {
-      if (entity is! File) continue;
-      final name = entity.path.split(Platform.pathSeparator).last;
-      if (name.startsWith('xray-vpn-node-') && name.endsWith('.json')) {
-        return entity.path;
-      }
-    }
-    return null;
+    return token.isEmpty ? 'node' : token;
   }
 
   static Future<void> _stopOtherRunningNodes(String targetNodeName) async {
