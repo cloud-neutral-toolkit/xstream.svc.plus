@@ -84,10 +84,14 @@ run_macos_build() {
 
     if [[ "$stale_lock" == "1" ]]; then
       echo "⚠️ Detected stale macOS build lock. Auto-cleaning: ${macos_build_lock_dir}"
-      rm -f "$macos_build_lock_pid_file" >/dev/null 2>&1 || true
-      rmdir "$macos_build_lock_dir" >/dev/null 2>&1 || true
+      # Use recursive cleanup to handle unexpected leftover files in lock dir.
+      rm -rf "$macos_build_lock_dir" >/dev/null 2>&1 || true
       if ! mkdir "$macos_build_lock_dir" 2>/dev/null; then
         echo "❌ Another macOS build is already running (lock: ${macos_build_lock_dir})."
+        if [[ -e "$macos_build_lock_dir" && ! -w "$macos_build_lock_dir" ]]; then
+          echo "   Lock exists but is not writable by current user: $(id -un)"
+          echo "   Fix permissions, then retry."
+        fi
         echo "   Wait for it to finish, then retry."
         return 1
       fi
