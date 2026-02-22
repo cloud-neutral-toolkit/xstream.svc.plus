@@ -597,6 +597,8 @@ class NativeBridge {
 
     final candidates = <String>[
       '$configsPath/xray-vpn-node-${node.countryCode.toLowerCase()}.json',
+      '$configsPath/config.json',
+      '$configsPath/xray_config.json',
       '$configsPath/desktop_sync.json',
     ];
 
