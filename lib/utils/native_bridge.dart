@@ -127,6 +127,10 @@ class NativeBridge {
   static Future<String> startNodeService(String nodeName) async {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
+    final configOk = await _ensureNodeConfigReady(node);
+    if (!configOk) {
+      return '启动失败: 节点配置文件不存在 (${node.configPath})';
+    }
 
     if (_isMobile) {
       if (Platform.isAndroid) {
@@ -138,6 +142,7 @@ class NativeBridge {
       }
       if (await checkNodeStatus(nodeName)) return '服务已在运行';
       try {
+        await _stopOtherRunningNodes(nodeName);
         if (_mobileActiveNodeName != null &&
             _mobileActiveNodeName != nodeName) {
           stopXray();
@@ -160,6 +165,7 @@ class NativeBridge {
     // ✅ 新增：避免重复启动
     final isRunning = await checkNodeStatus(nodeName);
     if (isRunning) return '服务已在运行';
+    await _stopOtherRunningNodes(nodeName);
 
     if (_useFfi) {
       final namePtr = node.serviceName.toNativeUtf8();
@@ -455,7 +461,7 @@ class NativeBridge {
         ),
       ],
       ipv6ExcludedRoutes: <darwin_host.TunnelRouteV6>[],
-      configPath: '$appGroupPath/xray_config.json',
+      configPath: '$appGroupPath/config.json',
     );
   }
 
@@ -503,26 +509,99 @@ class NativeBridge {
     final active = _mobileActiveNodeName;
     if (active != null && active.trim().isNotEmpty) {
       final node = VpnConfig.getNodeByName(active);
-      final path = node?.configPath.trim();
-      if (path != null && path.isNotEmpty) {
+      if (node != null && await _ensureNodeConfigReady(node)) {
+        final path = node.configPath.trim();
+        if (path.isNotEmpty) {
+          return path;
+        }
+      }
+    }
+
+    for (final node in VpnConfig.nodes) {
+      final path = node.configPath.trim();
+      if (node.enabled &&
+          path.isNotEmpty &&
+          await _ensureNodeConfigReady(node)) {
         return path;
       }
     }
 
     for (final node in VpnConfig.nodes) {
       final path = node.configPath.trim();
-      if (node.enabled && path.isNotEmpty) {
-        return path;
-      }
-    }
-
-    for (final node in VpnConfig.nodes) {
-      final path = node.configPath.trim();
-      if (path.isNotEmpty) {
+      if (path.isNotEmpty && await _ensureNodeConfigReady(node)) {
         return path;
       }
     }
     return null;
+  }
+
+  static Future<bool> _ensureNodeConfigReady(VpnNode node) async {
+    final rawPath = node.configPath.trim();
+    if (rawPath.isEmpty) {
+      return false;
+    }
+    if (await File(rawPath).exists()) {
+      return true;
+    }
+
+    final repairedPath = await _findFallbackConfigPath(node);
+    if (repairedPath == null) {
+      return false;
+    }
+
+    node.configPath = repairedPath;
+    VpnConfig.updateNode(node);
+    await VpnConfig.saveToFile();
+    addAppLog('已自动修复节点配置路径: ${node.name} -> $repairedPath');
+    return true;
+  }
+
+  static Future<String?> _findFallbackConfigPath(VpnNode node) async {
+    final configsPath = await GlobalApplicationConfig.getConfigsPath();
+    final dir = Directory(configsPath);
+    if (!await dir.exists()) return null;
+
+    final candidates = <String>[
+      '$configsPath/xray-vpn-node-${node.countryCode.toLowerCase()}.json',
+      '$configsPath/desktop_sync.json',
+    ];
+
+    for (final file in candidates) {
+      if (await File(file).exists()) {
+        return file;
+      }
+    }
+
+    final slug = node.name
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    if (slug.isNotEmpty) {
+      final file = '$configsPath/xray-vpn-node-$slug.json';
+      if (await File(file).exists()) {
+        return file;
+      }
+    }
+
+    await for (final entity in dir.list(followLinks: false)) {
+      if (entity is! File) continue;
+      final name = entity.path.split(Platform.pathSeparator).last;
+      if (name.startsWith('xray-vpn-node-') && name.endsWith('.json')) {
+        return entity.path;
+      }
+    }
+    return null;
+  }
+
+  static Future<void> _stopOtherRunningNodes(String targetNodeName) async {
+    for (final candidate in VpnConfig.nodes) {
+      if (candidate.name == targetNodeName) continue;
+      final running = await checkNodeStatus(candidate.name);
+      if (!running) continue;
+      await stopNodeService(candidate.name);
+    }
   }
 
   static void _ensureDarwinFlutterApiReady() {

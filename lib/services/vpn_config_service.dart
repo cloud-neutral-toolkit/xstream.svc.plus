@@ -490,6 +490,35 @@ class VpnConfig {
     );
   }
 
+  static Future<String?> tryGenerateXrayJsonFromVlessUri(
+      String vlessUri) async {
+    try {
+      final profile = parseVlessUri(vlessUri);
+      final logs = <String>[];
+      final json = await _generateXrayJsonConfig(
+        profile.domain,
+        profile.port,
+        profile.uuid,
+        (_) {},
+        (msg) => logs.add(msg),
+        protocol: profile.protocol,
+        network: profile.network,
+        security: profile.security,
+        sni: profile.sni,
+        fingerprint: profile.fingerprint,
+        flow: profile.flow,
+        host: profile.host,
+        path: profile.path,
+        mode: profile.mode,
+        alpn: profile.alpn,
+      );
+      if (json.trim().isEmpty) return null;
+      return json;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<String> _generateXrayJsonConfig(
     String domain,
     String port,

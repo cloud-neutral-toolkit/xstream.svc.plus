@@ -155,13 +155,13 @@ extension AppDelegate {
     let escapedXray = shellEscaped(xrayExecutable)
     logToFlutter("info", "starting xray executable=\(xrayExecutable), runtimeConfig=\(runtimeConfigPath), runtimeLog=\(runtimeLogPath)")
 
-    let prepareCommand = """
+let prepareCommand = """
 XRAY_CFG=\(escapedRuntimeConfig)
 XRAY_LOG=\(escapedRuntimeLog)
 SRC_CFG=\(escapedSourceConfig)
 mkdir -p "$(dirname "$XRAY_CFG")"
 mkdir -p "$(dirname "$XRAY_LOG")"
-cp -f "$SRC_CFG" "$XRAY_CFG"
+ln -sfn "$SRC_CFG" "$XRAY_CFG"
 : > "$XRAY_LOG"
 """
     let (prepareOK, prepareOutput) = runCommandAndCapture(command: prepareCommand)

@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../../utils/app_logger.dart';
 import '../../utils/global_config.dart' show GlobalState;
 import '../../utils/native_bridge.dart';
+import '../vpn_config_service.dart';
 import '../session/session_manager.dart';
 import 'device_fingerprint.dart';
 import 'sync_state.dart';
@@ -30,6 +31,7 @@ class SyncedNodeMetadata {
   final String? transport;
   final String? security;
   final String? vlessUri;
+  final String? renderedJson;
 
   const SyncedNodeMetadata({
     required this.name,
@@ -38,6 +40,7 @@ class SyncedNodeMetadata {
     this.transport,
     this.security,
     this.vlessUri,
+    this.renderedJson,
   });
 }
 
@@ -177,15 +180,12 @@ class DesktopSyncService {
         return const DesktopSyncResult(success: true, message: '配置已是最新版本');
       }
 
-      final configJson = (payload['rendered_json'] as String?)?.trim() ?? '{}';
-      final configPath = await XrayConfigWriter.writeConfig(configJson);
-      final syncedNodeName = await XrayConfigWriter.registerNode(
-        configPath: configPath,
-        nodeName: nodeMetadata.name,
-        countryCode: nodeMetadata.countryCode,
-        protocol: nodeMetadata.protocol,
-        transport: nodeMetadata.transport,
-        security: nodeMetadata.security,
+      final fallbackConfigJson =
+          (payload['rendered_json'] as String?)?.trim() ?? '{}';
+      final syncedNodeName = await _renderAndRegisterSyncedNodes(
+        candidates: _extractNodeCandidates(payload),
+        preferredNode: nodeMetadata,
+        fallbackConfigJson: fallbackConfigJson,
       );
       GlobalState.nodeListRevision.value++;
 
@@ -200,7 +200,7 @@ class DesktopSyncService {
         configVersion: configVersion,
         metadata: metadata,
       );
-      addAppLog('桌面配置已同步至 $configPath (节点 $syncedNodeName, 版本 $configVersion)');
+      addAppLog('桌面配置已同步 (节点 $syncedNodeName, 版本 $configVersion)');
       await _restartNodeIfPossible(syncedNodeName);
       return DesktopSyncResult(
         success: true,
@@ -211,6 +211,57 @@ class DesktopSyncService {
       await SyncStateStore.instance.recordError(message);
       return DesktopSyncResult(success: false, message: message);
     }
+  }
+
+  Future<String> _renderAndRegisterSyncedNodes({
+    required List<SyncedNodeMetadata> candidates,
+    required SyncedNodeMetadata preferredNode,
+    required String fallbackConfigJson,
+  }) async {
+    if (candidates.isEmpty) {
+      final configPath = await XrayConfigWriter.writeConfig(fallbackConfigJson);
+      return await XrayConfigWriter.registerNode(
+        configPath: configPath,
+        nodeName: preferredNode.name,
+        countryCode: preferredNode.countryCode,
+        protocol: preferredNode.protocol,
+        transport: preferredNode.transport,
+        security: preferredNode.security,
+      );
+    }
+
+    String activeNodeName = preferredNode.name;
+    for (final node in candidates) {
+      String? configJson = _nullableString(node.renderedJson ?? '');
+      configJson ??= _nullableString(
+        node.name == preferredNode.name ? fallbackConfigJson : '',
+      );
+      if (configJson == null && node.vlessUri != null) {
+        configJson = await VpnConfig.tryGenerateXrayJsonFromVlessUri(
+          node.vlessUri!,
+        );
+      }
+      if (configJson == null) continue;
+
+      final configPath = await XrayConfigWriter.writeConfigForNode(
+        json: configJson,
+        nodeName: node.name,
+        countryCode: node.countryCode,
+      );
+      final nodeName = await XrayConfigWriter.registerNode(
+        configPath: configPath,
+        nodeName: node.name,
+        countryCode: node.countryCode,
+        protocol: node.protocol,
+        transport: node.transport,
+        security: node.security,
+      );
+      if (node.name == preferredNode.name) {
+        activeNodeName = nodeName;
+      }
+    }
+
+    return activeNodeName;
   }
 
   Future<void> _sendAck({
@@ -336,6 +387,16 @@ class DesktopSyncService {
           ),
           security: _nullableString(_firstNonEmptyString([node['security']])),
           vlessUri: vlessUri,
+          renderedJson: _nullableString(
+            _firstNonEmptyString([
+              node['rendered_json'],
+              node['renderedJson'],
+              node['xray_json'],
+              node['xrayJson'],
+              node['config_json'],
+              node['configJson'],
+            ]),
+          ),
         ));
       }
     }

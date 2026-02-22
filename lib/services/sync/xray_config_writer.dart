@@ -18,6 +18,22 @@ class XrayConfigWriter {
     return path;
   }
 
+  static Future<String> writeConfigForNode({
+    required String json,
+    required String nodeName,
+    String? countryCode,
+  }) async {
+    final code = _normalizeNodeCode(
+      (countryCode ?? '').trim().isNotEmpty ? countryCode! : nodeName,
+    );
+    final fileName = 'xray-vpn-node-$code.json';
+    final path = await GlobalApplicationConfig.getXrayConfigFilePath(fileName);
+    final file = File(path);
+    await file.create(recursive: true);
+    await file.writeAsString(json);
+    return path;
+  }
+
   static Future<String> registerNode({
     required String configPath,
     String? nodeName,
@@ -78,5 +94,15 @@ class XrayConfigWriter {
     final secondary = (fallback ?? '').trim();
     if (secondary.isNotEmpty) return secondary.toLowerCase();
     return '';
+  }
+
+  static String _normalizeNodeCode(String raw) {
+    final lower = raw.trim().toLowerCase();
+    final normalized = lower.replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    final compact = normalized.replaceAll(RegExp(r'-+'), '-');
+    final trimmed = compact.replaceAll(RegExp(r'^-+|-+$'), '');
+    if (trimmed.isEmpty) return 'node';
+    if (trimmed.length > 24) return trimmed.substring(0, 24);
+    return trimmed;
   }
 }
