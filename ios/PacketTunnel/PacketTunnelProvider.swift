@@ -34,10 +34,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         self.startPathMonitor()
 
         let fd = self.packetFlow.value(forKeyPath: "socket.fileDescriptor") as? Int32 ?? -1
+        let egressInterface = self.monitor.currentPath.availableInterfaces.first(where: { !$0.name.contains("utun") })?.name ?? ""
 
         do {
           let configData = self.resolveConfigData(options: map)
-          try self.engine.start(config: configData, fd: fd)
+          try self.engine.start(config: configData, fd: fd, egressInterface: egressInterface)
           self.statusStore.markConnected()
           completionHandler(nil)
         } catch {
@@ -224,7 +225,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 }
 
 private protocol SecureTunnelEngine {
-  func start(config: Data, fd: Int32) throws
+  func start(config: Data, fd: Int32, egressInterface: String) throws
   func stop()
 }
 
@@ -232,7 +233,7 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
   private let bridge = XrayTunnelBridge()
   private var tunnelHandle: Int64?
 
-  func start(config: Data, fd: Int32) throws {
+  func start(config: Data, fd: Int32, egressInterface: String) throws {
     stop()
     guard !config.isEmpty else {
       throw NSError(
@@ -242,7 +243,7 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
       )
     }
 
-    let handle = try bridge.start(configData: config, fd: fd)
+    let handle = try bridge.start(configData: config, fd: fd, egressInterface: egressInterface)
     tunnelHandle = handle
   }
 
@@ -256,7 +257,7 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
 }
 
 private final class XrayTunnelBridge {
-  private typealias StartXrayTunnelWithFdFn = @convention(c) (UnsafePointer<CChar>?, Int32) -> Int64
+  private typealias StartXrayTunnelWithFdFn = @convention(c) (UnsafePointer<CChar>?, Int32, UnsafePointer<CChar>?) -> Int64
   private typealias StopXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeCStringFn = @convention(c) (UnsafeMutablePointer<CChar>?) -> Void
@@ -281,7 +282,7 @@ private final class XrayTunnelBridge {
     }
   }
 
-  func start(configData: Data, fd: Int32) throws -> Int64 {
+  func start(configData: Data, fd: Int32, egressInterface: String) throws -> Int64 {
     guard let startFn else {
       throw NSError(
         domain: "Xstream.PacketTunnel",
@@ -291,15 +292,17 @@ private final class XrayTunnelBridge {
     }
     let json = String(data: configData, encoding: .utf8) ?? "{}"
     return try json.withCString { cstr in
-      let handle = startFn(cstr, fd)
-      if handle <= 0 {
-        throw NSError(
-          domain: "Xstream.PacketTunnel",
-          code: -12,
-          userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd returned invalid handle"]
-        )
+      return try egressInterface.withCString { ifaceCstr in
+        let handle = startFn(cstr, fd, ifaceCstr)
+        if handle <= 0 {
+          throw NSError(
+            domain: "Xstream.PacketTunnel",
+            code: -12,
+            userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd returned invalid handle"]
+          )
+        }
+        return handle
       }
-      return handle
     }
   }
 

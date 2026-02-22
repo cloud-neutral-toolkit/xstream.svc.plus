@@ -7,6 +7,7 @@ package main
 */
 import "C"
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -22,6 +23,43 @@ var procMap sync.Map
 var instMu sync.Mutex
 var tunnelSeq atomic.Int64
 var tunnelSession sync.Map
+
+func injectSockoptInterface(cfgData []byte, iface string) []byte {
+	if iface == "" {
+		return cfgData
+	}
+	var doc map[string]interface{}
+	if err := json.Unmarshal(cfgData, &doc); err != nil {
+		return cfgData
+	}
+
+	outbounds, ok := doc["outbounds"].([]interface{})
+	if !ok {
+		return cfgData
+	}
+	for i, ob := range outbounds {
+		obMap, ok := ob.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		streamSettings, ok := obMap["streamSettings"].(map[string]interface{})
+		if !ok {
+			streamSettings = make(map[string]interface{})
+			obMap["streamSettings"] = streamSettings
+		}
+		sockopt, ok := streamSettings["sockopt"].(map[string]interface{})
+		if !ok {
+			sockopt = make(map[string]interface{})
+			streamSettings["sockopt"] = sockopt
+		}
+		sockopt["interface"] = iface
+		outbounds[i] = obMap
+	}
+	if modifiedBytes, err := json.Marshal(doc); err == nil {
+		return modifiedBytes
+	}
+	return cfgData
+}
 
 func startXrayInternal(cfgData []byte) error {
 	if xray.GetXrayState() {
@@ -153,7 +191,7 @@ func StopXray() *C.char {
 }
 
 //export StartXrayTunnelWithFd
-func StartXrayTunnelWithFd(configC *C.char, fd C.int) C.longlong {
+func StartXrayTunnelWithFd(configC *C.char, fd C.int, interfaceC *C.char) C.longlong {
 	instMu.Lock()
 	defer instMu.Unlock()
 
@@ -165,6 +203,13 @@ func StartXrayTunnelWithFd(configC *C.char, fd C.int) C.longlong {
 	os.Setenv("xray.tun.fd", strconv.Itoa(int(fd)))
 
 	cfgData := []byte(C.GoString(configC))
+	if interfaceC != nil {
+		ifaceStr := C.GoString(interfaceC)
+		if ifaceStr != "" {
+			cfgData = injectSockoptInterface(cfgData, ifaceStr)
+		}
+	}
+
 	if err := startXrayInternal(cfgData); err != nil {
 		return C.longlong(-1)
 	}
