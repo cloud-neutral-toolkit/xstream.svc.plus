@@ -7,6 +7,7 @@ import 'screens/subscription_screen.dart';
 import 'screens/logs_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/about_screen.dart';
+import 'screens/login_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'l10n/app_localizations.dart';
 import 'utils/app_theme.dart';
@@ -419,6 +420,31 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     ];
   }
 
+  List<_NavigationDestination> _buildMobileDestinations(BuildContext context) {
+    return [
+      _NavigationDestination(
+        icon: const Icon(Icons.home),
+        label: Text(context.l10n.get('home')),
+      ),
+      _NavigationDestination(
+        icon: const Icon(Icons.link),
+        label: Text(context.l10n.get('proxy')),
+      ),
+      _NavigationDestination(
+        icon: const Icon(Icons.article),
+        label: Text(context.l10n.get('logs')),
+      ),
+      _NavigationDestination(
+        icon: const Icon(Icons.account_circle),
+        label: Text(context.l10n.get('accountLogin')),
+      ),
+      _NavigationDestination(
+        icon: const Icon(Icons.settings),
+        label: Text(context.l10n.get('settings')),
+      ),
+    ];
+  }
+
   String _currentPageTitle(BuildContext context) {
     final labels = [
       context.l10n.get('home'),
@@ -431,29 +457,8 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     return labels[_currentIndex.clamp(0, labels.length - 1)];
   }
 
-  Drawer _buildMobileDrawer(BuildContext context) {
-    final destinations = _buildDestinations(context);
-    return Drawer(
-      child: SafeArea(
-        child: ListView.builder(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          itemCount: destinations.length,
-          itemBuilder: (context, index) {
-            final destination = destinations[index];
-            return ListTile(
-              leading: destination.icon,
-              title: destination.label,
-              selected: _currentIndex == index,
-              onTap: () {
-                setState(() => _currentIndex = index);
-                Navigator.of(context).pop();
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }
+  // Drawer removed in favor of NavigationBar
+
 
   PopupMenuItem<_AddNodeMenuAction> _buildAddNodeItem(
     BuildContext context, {
@@ -482,13 +487,21 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
+    final desktopPages = <Widget>[
       const HomeScreen(),
       const SubscriptionScreen(),
       const SettingsScreen(),
       const LogsScreen(),
       const HelpScreen(),
       const AboutScreen(),
+    ];
+
+    final mobilePages = <Widget>[
+      const HomeScreen(),
+      const SubscriptionScreen(),
+      const LogsScreen(),
+      const LoginScreen(),
+      const SettingsScreen(),
     ];
 
     return LayoutBuilder(
@@ -562,13 +575,28 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
               ),
             ],
           ),
-          drawer: isMobile ? _buildMobileDrawer(context) : null,
+          bottomNavigationBar: isMobile
+              ? NavigationBar(
+                  selectedIndex: _clampIndex(isMobile, mobilePages, desktopPages),
+                  labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                  onDestinationSelected: (index) =>
+                      setState(() => _currentIndex = index),
+                  destinations: _buildMobileDestinations(context).map((d) {
+                    return NavigationDestination(
+                      icon: d.icon,
+                      label: (d.label as Text).data ?? '',
+                    );
+                  }).toList(),
+                )
+              : null,
           body: isMobile
-              ? IndexedStack(index: _currentIndex, children: pages)
+              ? IndexedStack(
+                  index: _clampIndex(isMobile, mobilePages, desktopPages),
+                  children: mobilePages)
               : Row(
                   children: [
                     NavigationRail(
-                      selectedIndex: _currentIndex,
+                      selectedIndex: _clampIndex(isMobile, mobilePages, desktopPages),
                       onDestinationSelected: (index) =>
                           setState(() => _currentIndex = index),
                       labelType: NavigationRailLabelType.all,
@@ -576,8 +604,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     ),
                     const VerticalDivider(width: 1),
                     Expanded(
-                      child:
-                          IndexedStack(index: _currentIndex, children: pages),
+                      child: IndexedStack(
+                          index: _clampIndex(isMobile, mobilePages, desktopPages),
+                          children: desktopPages),
                     ),
                   ],
                 ),
@@ -585,6 +614,23 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       },
     );
   }
+
+  int _clampIndex(bool isMobile, List<Widget> mobilePages, List<Widget> desktopPages) {
+    if (isMobile && _currentIndex >= mobilePages.length) {
+      return mobilePages.length - 1;
+    }
+    if (!isMobile && _currentIndex >= desktopPages.length) {
+      return desktopPages.length - 1;
+    }
+    return _currentIndex;
+  }
+}
+
+class _NavigationDestination {
+  final Widget icon;
+  final Widget label;
+
+  _NavigationDestination({required this.icon, required this.label});
 }
 
 enum _AddNodeMenuAction {

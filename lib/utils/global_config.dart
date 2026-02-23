@@ -95,6 +95,25 @@ class GlobalState {
 
   /// HTTP 代理模式开关（默认开启）
   static final ValueNotifier<bool> httpProxyEnabled = ValueNotifier<bool>(true);
+
+  /// 嗅探开关（Sniffing）
+  static final ValueNotifier<bool> sniffingEnabled = ValueNotifier<bool>(true);
+
+  /// 回退到代理（Fallback to Proxy）
+  static final ValueNotifier<bool> fallbackToProxy = ValueNotifier<bool>(false);
+
+  /// 回退到域名（Fallback to Domain）
+  static final ValueNotifier<bool> fallbackToDomain =
+      ValueNotifier<bool>(false);
+
+  /// IPv6 to Domain
+  static final ValueNotifier<bool> ipv6ToDomain = ValueNotifier<bool>(false);
+
+  /// 系统代理 SOCKS 端口
+  static final ValueNotifier<String> socksPort = ValueNotifier<String>('1080');
+
+  /// 系统代理 HTTP 端口
+  static final ValueNotifier<String> httpPort = ValueNotifier<String>('1081');
 }
 
 /// 管理 DNS 配置，支持保存到本地

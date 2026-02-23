@@ -280,12 +280,267 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildMobileHeroCard(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                icon: Icons.arrow_upward,
+                iconColor: Colors.pinkAccent,
+                title: context.l10n.get('homeStatusUpload'),
+                value: '--',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildMetricCard(
+                icon: Icons.arrow_downward,
+                iconColor: Colors.blueAccent,
+                title: context.l10n.get('homeStatusDownload'),
+                value: '--',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricCard(
+                icon: Icons.memory,
+                iconColor: Colors.purpleAccent,
+                title: context.l10n.get('homeStatusMemory'),
+                value: '--',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildMetricCard(
+                icon: Icons.route,
+                iconColor: Colors.greenAccent,
+                title: context.l10n.get('homeStatusConnections'),
+                value: '--',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F7FA),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.explore, size: 20, color: Color(0xFF4A6572)),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.get('selectedNode'),
+                    style: const TextStyle(
+                      color: Color(0xFF4A6572),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (_activeNode.isNotEmpty || _selectedNode.isNotEmpty)
+                Center(
+                  child: Text(
+                    _activeNode.isNotEmpty ? _activeNode : _selectedNode,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF222222),
+                    ),
+                  ),
+                )
+              else
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      // Navigate to node selection or show snackbar
+                    },
+                    icon: const Icon(Icons.add),
+                    label: Text(context.l10n.get('addNode')),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A6572),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF5F7FA),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.recommend,
+                    size: 20,
+                    color: Color(0xFF4A6572),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.get('recommendedNode'),
+                    style: const TextStyle(
+                      color: Color(0xFF4A6572),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    border:
+                        Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFD2E0FB),
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(24),
+                            bottomLeft: Radius.circular(24),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check, size: 16),
+                            const SizedBox(width: 4),
+                            Text(context.l10n.get('speed')),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.speed, size: 16, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.l10n.get('latency'),
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Center(
+                child: Text(
+                  _activeNode.isNotEmpty ? _activeNode : 'No nodes available',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricCard({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F7FA),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, size: 16, color: iconColor),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFF666666),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: iconColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: GlobalState.isUnlocked,
       builder: (context, isUnlocked, _) {
-        final content = vpnNodes.isEmpty
+        final desktopContent = vpnNodes.isEmpty
             ? Center(child: Text(context.l10n.get('noNodes')))
             : ListView.separated(
                 itemCount: vpnNodes.length,
@@ -371,82 +626,123 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final showStatusBar = _activeNode.isNotEmpty;
         final activeLatency = _latencyByNode[_activeNode];
-        return Stack(
-          children: [
-            content,
-            if (showStatusBar)
-              Positioned(
-                left: 16,
-                right: 86,
-                bottom: 16,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.96),
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x22000000),
-                        blurRadius: 10,
-                        offset: Offset(0, 3),
-                      )
-                    ],
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isMobile = constraints.maxWidth < 900;
+            if (isMobile) {
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: _buildMobileHeroCard(context),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          '${context.l10n.get('homeStatusDuration')}: '
-                          '${_formatDuration(_connectedDuration)} '
-                          '${context.l10n.get('homeStatusLatency')}: '
-                          '${activeLatency == null ? "--" : "${activeLatency}ms"} '
-                          '${context.l10n.get('homeStatusLocation')}: '
-                          '$_connectedLocation',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
+                  Positioned(
+                    right: 24,
+                    bottom: 24,
+                    child: FloatingActionButton(
+                      backgroundColor: const Color(0xFFD2E0FB),
+                      elevation: 0,
+                      onPressed:
+                          _isSwitchingNode ? null : _toggleFromFloatingButton,
+                      child: _isSwitchingNode
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Icon(
+                              _activeNode.isNotEmpty
+                                  ? Icons.stop
+                                  : Icons.play_arrow,
+                              color: const Color(0xFF1E2025),
+                              size: 32,
+                            ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return Stack(
+              children: [
+                desktopContent,
+                if (showStatusBar)
+                  Positioned(
+                    left: 16,
+                    right: 86,
+                    bottom: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.96),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x22000000),
+                            blurRadius: 10,
+                            offset: Offset(0, 3),
+                          )
+                        ],
                       ),
-                      const Icon(Icons.chevron_right, size: 22),
-                    ],
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${context.l10n.get('homeStatusDuration')}: '
+                              '${_formatDuration(_connectedDuration)} '
+                              '${context.l10n.get('homeStatusLatency')}: '
+                              '${activeLatency == null ? "--" : "${activeLatency}ms"} '
+                              '${context.l10n.get('homeStatusLocation')}: '
+                              '$_connectedLocation',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, size: 22),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            if (hoverHint.isNotEmpty)
-              Positioned(
-                left: 16,
-                right: 76,
-                bottom: showStatusBar ? 76 : 16,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    borderRadius: BorderRadius.circular(10),
+                if (hoverHint.isNotEmpty)
+                  Positioned(
+                    left: 16,
+                    right: 76,
+                    bottom: showStatusBar ? 76 : 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        hoverHint,
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13),
+                      ),
+                    ),
                   ),
-                  child: Text(
-                    hoverHint,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                if (vpnNodes.isNotEmpty)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    child: FloatingActionButton.small(
+                      onPressed:
+                          _isSwitchingNode ? null : _toggleFromFloatingButton,
+                      child: Icon(
+                        _activeNode.isNotEmpty
+                            ? Icons.pause_circle_filled
+                            : Icons.play_circle_fill,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            if (vpnNodes.isNotEmpty)
-              Positioned(
-                right: 16,
-                bottom: 16,
-                child: FloatingActionButton.small(
-                  onPressed:
-                      _isSwitchingNode ? null : _toggleFromFloatingButton,
-                  child: Icon(
-                    _activeNode.isNotEmpty
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_fill,
-                  ),
-                ),
-              ),
-          ],
+              ],
+            );
+          },
         );
       },
     );

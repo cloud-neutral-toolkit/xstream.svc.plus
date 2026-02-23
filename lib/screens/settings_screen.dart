@@ -706,8 +706,278 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildMobileSettingsView(BuildContext context) {
+    return Container(
+      color: Colors.grey[100],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.get('advancedConfig'),
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            // Sniffing / Fallback toggles card
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.sniffingEnabled,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                              () => GlobalState.sniffingEnabled.value = value);
+                          addAppLog(
+                              '嗅探: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('sniffing')),
+                        subtitle: Text(
+                          context.l10n.get('sniffingHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.fallbackToProxy,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                              () => GlobalState.fallbackToProxy.value = value);
+                          addAppLog(
+                              '回退到代理: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('fallbackProxy')),
+                        subtitle: Text(
+                          context.l10n.get('fallbackProxyHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.fallbackToDomain,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                              () => GlobalState.fallbackToDomain.value = value);
+                          addAppLog(
+                              '回退到域名: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('fallbackDomain')),
+                        subtitle: Text(
+                          context.l10n.get('fallbackDomainHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.ipv6ToDomain,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                              () => GlobalState.ipv6ToDomain.value = value);
+                          addAppLog(
+                              'IPv6 to Domain: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('ipv6ToDomain')),
+                        subtitle: Text(
+                          context.l10n.get('ipv6ToDomainHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // System Proxy Ports card
+            Text(
+              context.l10n.get('proxySettings'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: GlobalState.socksPort.value,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: context.l10n.get('socksPort'),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => GlobalState.socksPort.value = v,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: TextEditingController(
+                            text: GlobalState.httpPort.value,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: context.l10n.get('httpPort'),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          keyboardType: TextInputType.number,
+                          onChanged: (v) => GlobalState.httpPort.value = v,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Config management buttons
+            Text(
+              context.l10n.get('configMgmt'),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+              ),
+              child: ValueListenableBuilder<bool>(
+                valueListenable: GlobalState.isUnlocked,
+                builder: (context, isUnlocked, _) {
+                  return Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.sync),
+                        title: Text(context.l10n.get('syncConfig')),
+                        onTap: isUnlocked ? _onSyncConfig : null,
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      ListTile(
+                        leading: const Icon(Icons.upload_file),
+                        title: Text(context.l10n.get('importConfig')),
+                        onTap: _onImportConfig,
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      ListTile(
+                        leading: const Icon(Icons.download),
+                        title: Text(context.l10n.get('exportConfig')),
+                        onTap: _onExportConfig,
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      ListTile(
+                        leading: Icon(Icons.delete_forever,
+                            color: Colors.red[400]),
+                        title: Text(context.l10n.get('deleteConfig'),
+                            style: TextStyle(color: Colors.red[400])),
+                        onTap: isUnlocked ? _onDeleteConfig : null,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 20),
+            // DNS & Tunnel
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.dns),
+                    title: Text(context.l10n.get('dnsConfig')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showDnsDialog,
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  SwitchListTile(
+                    secondary: const Icon(Icons.vpn_lock),
+                    value: TunDnsConfig.dotEnabled.value,
+                    onChanged: _onToggleDnsOverTls,
+                    title: Text(context.l10n.get('dnsOverTls')),
+                    subtitle: Text(
+                      context.l10n.get('dnsOverTlsHint'),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // About / Updates
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    secondary: const Icon(Icons.bolt),
+                    title: Text(context.l10n.get('upgradeDaily')),
+                    value: GlobalState.useDailyBuild.value,
+                    onChanged: (v) {
+                      setState(() => GlobalState.useDailyBuild.value = v);
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(Icons.system_update),
+                    title: Text(context.l10n.get('checkUpdate')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _onCheckUpdate,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopSettingsView(BuildContext context) {
     return Container(
       color: Colors.grey[100],
       child: SingleChildScrollView(
@@ -810,9 +1080,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     .socksProxyEnabled.value = value);
                                 addAppLog('SOCKS 代理: ${value ? "开启" : "关闭"}');
                               },
-                              title: Text(
+                              title: const Text(
                                 'SOCKS 代理',
-                                style: _menuTextStyle,
+                                style: TextStyle(fontSize: 14),
                               ),
                               subtitle: const Text(
                                 '启用 SOCKS 代理服务 (127.0.0.1:1080)',
@@ -834,9 +1104,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     GlobalState.httpProxyEnabled.value = value);
                                 addAppLog('HTTP 代理: ${value ? "开启" : "关闭"}');
                               },
-                              title: Text(
+                              title: const Text(
                                 'HTTP 代理',
-                                style: _menuTextStyle,
+                                style: TextStyle(fontSize: 14),
                               ),
                               subtitle: const Text(
                                 '启用 HTTP 代理服务 (127.0.0.1:1081)',
@@ -864,9 +1134,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 );
                                 _refreshTunStatus();
                               },
-                              title: Text(
+                              title: const Text(
                                 '隧道模式',
-                                style: _menuTextStyle,
+                                style: TextStyle(fontSize: 14),
                               ),
                               subtitle: const Text(
                                 '启用系统级网络隧道',
@@ -979,6 +1249,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 900;
+        if (isMobile) {
+          return _buildMobileSettingsView(context);
+        }
+        return _buildDesktopSettingsView(context);
+      },
     );
   }
 
