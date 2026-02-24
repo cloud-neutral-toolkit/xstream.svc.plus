@@ -200,7 +200,7 @@ sleep 1
       return
     }
 
-    if isDirectXrayRunning() {
+    if waitForDirectXrayReady(runtimeLogPath: runtimeLogPath, timeoutSeconds: 3.0) {
       writeActiveNodeName(requestedNodeName)
       let suffix = requestedNodeName.isEmpty ? "" : " (\(requestedNodeName))"
       result("success: xray started\(suffix)")
@@ -236,7 +236,16 @@ sleep 1
     let checkCommand = """
 XRAY_BIN=\(escapedXray)
 XRAY_CFG=\(escapedRuntimeConfig)
-pgrep -f "$XRAY_BIN run -c $XRAY_CFG" >/dev/null
+if pgrep -f "$XRAY_BIN run -c $XRAY_CFG" >/dev/null; then
+  exit 0
+fi
+if pgrep -f "$XRAY_BIN run -c" >/dev/null; then
+  exit 0
+fi
+if pgrep -f "xray run -c $XRAY_CFG" >/dev/null; then
+  exit 0
+fi
+exit 1
 """
     let (ok, _) = runCommandAndCapture(command: checkCommand)
     return ok
@@ -253,10 +262,39 @@ pgrep -f "$XRAY_BIN run -c $XRAY_CFG" >/dev/null
 XRAY_BIN=\(escapedXray)
 XRAY_CFG=\(escapedRuntimeConfig)
 pkill -f "$XRAY_BIN run -c $XRAY_CFG" || true
+pkill -f "$XRAY_BIN run -c" || true
+pkill -f "xray run -c $XRAY_CFG" || true
 sleep 1
 """
     _ = runCommandAndCapture(command: stopCommand)
     return !isDirectXrayRunning()
+  }
+
+  private func waitForDirectXrayReady(runtimeLogPath: String, timeoutSeconds: TimeInterval) -> Bool {
+    let started = Date()
+    while Date().timeIntervalSince(started) < timeoutSeconds {
+      if isDirectXrayRunning() {
+        return true
+      }
+      if hasXrayStartedMarker(runtimeLogPath: runtimeLogPath) {
+        return true
+      }
+      Thread.sleep(forTimeInterval: 0.25)
+    }
+    return isDirectXrayRunning() || hasXrayStartedMarker(runtimeLogPath: runtimeLogPath)
+  }
+
+  private func hasXrayStartedMarker(runtimeLogPath: String) -> Bool {
+    let escapedRuntimeLog = shellEscaped(runtimeLogPath)
+    let markerCommand = """
+XRAY_LOG=\(escapedRuntimeLog)
+if [ ! -f "$XRAY_LOG" ]; then
+  exit 1
+fi
+tail -n 120 "$XRAY_LOG" | /usr/bin/grep -E "core: Xray .* started|Xray [0-9]+\\.[0-9]+\\.[0-9]+ started" >/dev/null
+"""
+    let (ok, _) = runCommandAndCapture(command: markerCommand)
+    return ok
   }
 
   private func verifySocks5Proxy(result: @escaping FlutterResult) {
