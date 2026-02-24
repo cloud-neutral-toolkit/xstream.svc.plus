@@ -18,7 +18,7 @@
 		74858FB71ED2DC5600515810 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FB31ED2DC5600515810 /* NativeBridge+XrayInit.swift */; };
 		76AC27D10D29E20D2979088C /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9E9E1B996264BE35CF05F8D7 /* NetworkExtension.framework */; };
 		76C0667FC4F674E8E89DBBAA /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 83AC0C8AADA5D3FFD50B550A /* Pods_RunnerTests.framework */; };
-		7C41BB83412DF6417AC8964F /* PacketTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9069190494C75AA8FBB3DA08 /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C41BB83412DF6417AC8964F /* PacketTunnel.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 9069190494C75AA8FBB3DA08 /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
 		83F62DFD02A625DE38DEC3D7 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F4668A042DECA7227DC40F27 /* Pods_Runner.framework */; };
 		97A8A9022F4AF3F90009251C /* Runner.xcworkspace in Resources */ = {isa = PBXBuildFile; fileRef = 97A8A9012F4AF3F90009251C /* Runner.xcworkspace */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
