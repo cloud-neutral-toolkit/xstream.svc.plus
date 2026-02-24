@@ -125,7 +125,7 @@ class DarwinHostApiImpl: DarwinHostApi {
   }
 
   func startPacketTunnel(completion: @escaping (Result<Void, Error>) -> Void) {
-    guard let options = storedPacketTunnelOptions() else {
+    guard var options = storedPacketTunnelOptions() else {
       let error = PigeonError(
         code: "profile-missing",
         message: "Packet Tunnel profile is missing",
@@ -135,6 +135,23 @@ class DarwinHostApiImpl: DarwinHostApi {
       emitPacketTunnelError(code: "profile-missing", message: error.localizedDescription)
       completion(.failure(error))
       return
+    }
+
+    if let configPath = options["configPath"] as? String {
+      let url = URL(fileURLWithPath: configPath)
+      do {
+        let data = try Data(contentsOf: url)
+        if data.isEmpty {
+          throw NSError(domain: "Xstream", code: -1, userInfo: [NSLocalizedDescriptionKey: "Config file is empty"])
+        }
+        options["config"] = data as NSData
+      } catch {
+        let errorMsg = "Failed to load config file at \(configPath): \(error.localizedDescription)"
+        self.writeLastError(errorMsg)
+        self.emitPacketTunnelError(code: "config-load-failed", message: errorMsg)
+        completion(.failure(PigeonError(code: "config-load-failed", message: errorMsg, details: nil)))
+        return
+      }
     }
 
     loadOrCreateTunnelManager { manager, error in
@@ -296,8 +313,9 @@ class DarwinHostApiImpl: DarwinHostApi {
     if let data = try? Data(contentsOf: configURL), !data.isEmpty {
       options["config"] = data as NSData
     }
+    options["configPath"] = profile.configPath as NSString
 
-    return options
+    return options;
   }
 
   private func packetTunnelProviderBundleId() -> String? {
