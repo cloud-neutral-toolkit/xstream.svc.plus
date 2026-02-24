@@ -768,9 +768,8 @@ class NativeBridge {
       } else if (linkType == FileSystemEntityType.directory) {
         await Directory(canonicalPath).delete(recursive: true);
       }
-      // Create a relative symlink so it's less fragile
-      final linkTarget = normalized.split(Platform.pathSeparator).last;
-      await Link(canonicalPath).create(linkTarget, recursive: true);
+      // 动态复制源文件，避免使用软链接导致 'too many levels of symbolic links'
+      await File(normalized).copy(canonicalPath);
       return canonicalPath;
     } catch (_) {
       return normalized;

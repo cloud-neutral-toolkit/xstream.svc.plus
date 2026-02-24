@@ -161,7 +161,9 @@ XRAY_LOG=\(escapedRuntimeLog)
 SRC_CFG=\(escapedSourceConfig)
 mkdir -p "$(dirname "$XRAY_CFG")"
 mkdir -p "$(dirname "$XRAY_LOG")"
-ln -sfn "$SRC_CFG" "$XRAY_CFG"
+if [ "$SRC_CFG" != "$XRAY_CFG" ]; then
+  cp -f "$SRC_CFG" "$XRAY_CFG"
+fi
 : > "$XRAY_LOG"
 """
     let (prepareOK, prepareOutput) = runCommandAndCapture(command: prepareCommand)
