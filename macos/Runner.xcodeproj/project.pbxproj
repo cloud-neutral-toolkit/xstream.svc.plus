@@ -55,7 +55,7 @@
 		D7829F33E18BCECD82DF1FFB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F66B15F1AD2859BCFD535D63 /* Cocoa.framework */; };
 		DE5B2DE92396BD04D5D98629 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA8AC8FD9AE59650C0B1B284 /* NetworkExtension.framework */; };
 		DE714BB7A3AFD866F9DAECD2 /* PacketTunnelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */; };
-		FBFB14460FA45E3F9E64A22F /* PacketTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, CodeSignOnCopy, ); }; };
+		FBFB14460FA45E3F9E64A22F /* PacketTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -521,13 +521,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
