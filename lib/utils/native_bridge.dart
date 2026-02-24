@@ -123,13 +123,198 @@ class NativeBridge {
     }
   }
 
-  // 启动节点服务（防止重复启动）
+  /// Whether the current connection mode is TUN (VPN / Packet Tunnel).
+  static bool get isTunMode =>
+      GlobalState.connectionMode.value == 'VPN';
+
+  /// Start node via Packet Tunnel (TUN mode).
+  ///
+  /// Platform routing:
+  /// - **iOS**: FFI → `startXray(configJson)` with TUN inbound in config
+  /// - **Android**: MethodChannel → `savePacketTunnelProfile` + `startPacketTunnel`
+  /// - **macOS**: Pigeon → `DarwinHostApi.savePacketTunnelProfile` + `startPacketTunnel`
+  /// - **Windows**: FFI → `startXray(configJson)` (TUN inbound handled by xray-core tun2socks)
+  /// - **Linux**: FFI → `startXray(configJson)` (TUN inbound handled by xray-core tun2socks)
+  static Future<String> startNodeForTunnel(String nodeName) async {
+    final node = VpnConfig.getNodeByName(nodeName);
+    if (node == null) return '未知节点: $nodeName';
+
+    final sourceConfigPath = await _resolveNodeConfigSource(node);
+    if (sourceConfigPath == null) {
+      final configsPath = await GlobalApplicationConfig.getConfigsPath();
+      return '启动失败: 节点配置文件不存在\n'
+          '预期路径: node-${_normalizeConfigToken(node.countryCode)}-config.json\n'
+          '搜索目录: $configsPath';
+    }
+    // Keep node.configPath in sync
+    if (node.configPath != sourceConfigPath) {
+      node.configPath = sourceConfigPath;
+      VpnConfig.updateNode(node);
+      await VpnConfig.saveToFile();
+    }
+    final runtimeConfigPath =
+        await _prepareCanonicalTunnelConfigPath(sourceConfigPath);
+
+    // ── iOS: FFI → startXray(configJson) ────────────────────────────
+    if (Platform.isIOS) {
+      try {
+        if (_mobileActiveNodeName != null &&
+            _mobileActiveNodeName != nodeName) {
+          stopXray();
+          _mobileActiveNodeName = null;
+        }
+        final configJson = await File(runtimeConfigPath).readAsString();
+        final result = startXray(configJson);
+        if (result.toLowerCase().startsWith('success')) {
+          _mobileActiveNodeName = nodeName;
+        }
+        return result;
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    // ── Android: MethodChannel → savePacketTunnelProfile + startPacketTunnel
+    if (Platform.isAndroid) {
+      try {
+        _mobileActiveNodeName = null;
+        final profile = await _buildDefaultTunnelProfileMap(
+          configPath: runtimeConfigPath,
+        );
+        await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
+        final result =
+            await _channel.invokeMethod<String>('startPacketTunnel', profile);
+        if (result != null && !result.toLowerCase().contains('fail')) {
+          _mobileActiveNodeName = nodeName;
+        }
+        return result ?? 'Packet Tunnel 启动请求已提交';
+      } on PlatformException catch (e) {
+        return '启动失败: ${e.message ?? e.code}';
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    // ── macOS: Pigeon → DarwinHostApi.savePacketTunnelProfile + startPacketTunnel
+    if (Platform.isMacOS) {
+      _ensureDarwinFlutterApiReady();
+      try {
+        final profile = await _buildDefaultTunnelProfile(
+          configPath: runtimeConfigPath,
+        );
+        final saveResult =
+            await _darwinHostApi.savePacketTunnelProfile(profile);
+        await _darwinHostApi.startPacketTunnel();
+        return saveResult == 'profile_saved'
+            ? 'Packet Tunnel 启动请求已提交 ($nodeName)'
+            : saveResult;
+      } on PlatformException catch (e) {
+        return '启动失败: ${e.message ?? e.code}';
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    // ── Windows: FFI → startXray with TUN inbound (xray-core tun2socks) ──
+    if (Platform.isWindows) {
+      try {
+        await _stopOtherRunningNodes(nodeName);
+        final configJson = await File(runtimeConfigPath).readAsString();
+        if (_useFfi) {
+          final configPtr = configJson.toNativeUtf8();
+          final resPtr = _ffi.startXray(configPtr.cast());
+          final result = resPtr.cast<Utf8>().toDartString();
+          _ffi.freeCString(resPtr);
+          malloc.free(configPtr);
+          return result.toLowerCase().startsWith('success')
+              ? 'TUN 模式启动成功 ($nodeName)'
+              : '启动失败: $result';
+        }
+        return '启动失败: FFI 不可用';
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    // ── Linux: FFI → startXray with TUN inbound (xray-core tun2socks) ────
+    if (Platform.isLinux) {
+      try {
+        await _stopOtherRunningNodes(nodeName);
+        final configJson = await File(runtimeConfigPath).readAsString();
+        if (_useFfi) {
+          final configPtr = configJson.toNativeUtf8();
+          final resPtr = _ffi.startXray(configPtr.cast());
+          final result = resPtr.cast<Utf8>().toDartString();
+          _ffi.freeCString(resPtr);
+          malloc.free(configPtr);
+          return result.toLowerCase().startsWith('success')
+              ? 'TUN 模式启动成功 ($nodeName)'
+              : '启动失败: $result';
+        }
+        return '启动失败: FFI 不可用';
+      } catch (e) {
+        return '启动失败: $e';
+      }
+    }
+
+    return '当前平台暂不支持 TUN 模式';
+  }
+
+  /// Stop node via Packet Tunnel (TUN mode).
+  ///
+  /// Platform routing:
+  /// - **iOS**: FFI → `stopXray()`
+  /// - **Android**: MethodChannel → `stopPacketTunnel`
+  /// - **macOS**: Pigeon → `DarwinHostApi.stopPacketTunnel`
+  /// - **Windows**: FFI → `stopXray()`
+  /// - **Linux**: FFI → `stopXray()`
+  static Future<String> stopNodeForTunnel() async {
+    // ── iOS: FFI stopXray ───────────────────────────────────────────
+    if (Platform.isIOS) {
+      try {
+        final result = stopXray();
+        if (result.toLowerCase().startsWith('success')) {
+          _mobileActiveNodeName = null;
+        }
+        return result;
+      } catch (e) {
+        return '停止失败: $e';
+      }
+    }
+
+    // ── Windows / Linux: FFI stopXray ───────────────────────────────
+    if (Platform.isWindows || Platform.isLinux) {
+      try {
+        if (_useFfi) {
+          final resPtr = _ffi.stopXray();
+          final result = resPtr.cast<Utf8>().toDartString();
+          _ffi.freeCString(resPtr);
+          return result.toLowerCase().startsWith('success')
+              ? 'TUN 模式已停止'
+              : '停止失败: $result';
+        }
+        return '停止失败: FFI 不可用';
+      } catch (e) {
+        return '停止失败: $e';
+      }
+    }
+
+    // ── Android / macOS: delegate to existing stopPacketTunnel ──────
+    final result = await stopPacketTunnel();
+    _mobileActiveNodeName = null;
+    return result;
+  }
+
+  // 启动节点服务（防止重复启动）— 代理模式
   static Future<String> startNodeService(String nodeName) async {
     final node = VpnConfig.getNodeByName(nodeName);
     if (node == null) return '未知节点: $nodeName';
     final sourceConfigPath = await _resolveNodeConfigSource(node);
     if (sourceConfigPath == null) {
-      return '启动失败: 节点配置文件不存在（预期: node-<code>-config.json）';
+      final configsPath = await GlobalApplicationConfig.getConfigsPath();
+      return '启动失败: 节点配置文件不存在\n'
+          '预期: node-${_normalizeConfigToken(node.countryCode)}-config.json\n'
+          '搜索目录: $configsPath';
     }
     if (node.configPath != sourceConfigPath) {
       node.configPath = sourceConfigPath;

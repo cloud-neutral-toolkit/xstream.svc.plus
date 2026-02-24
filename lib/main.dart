@@ -299,23 +299,35 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
 
   Future<void> _onConnectionModeChanged() async {
-    if (!GlobalState.isUnlocked.value) return;
     final mode = GlobalState.connectionMode.value;
     final tunnelEnabled = mode == 'VPN';
     if (GlobalState.tunnelProxyEnabled.value != tunnelEnabled) {
       GlobalState.tunnelProxyEnabled.value = tunnelEnabled;
     }
-    addAppLog('切换模式为 $mode');
-    String msg;
-    if (mode == 'VPN') {
-      msg = await NativeBridge.startPacketTunnel();
-    } else {
-      msg = await NativeBridge.stopPacketTunnel();
+    addAppLog('切换连接模式为 $mode');
+
+    // Stop the active connection in the old mode so the user re-connects
+    // cleanly in the new mode.
+    final activeNode = GlobalState.activeNodeName.value.trim();
+    if (activeNode.isNotEmpty) {
+      String stopMsg;
+      if (tunnelEnabled) {
+        // Was in proxy mode → stop proxy service
+        stopMsg = await NativeBridge.stopNodeService(activeNode);
+      } else {
+        // Was in TUN mode → stop packet tunnel
+        stopMsg = await NativeBridge.stopNodeForTunnel();
+      }
+      GlobalState.activeNodeName.value = '';
+      addAppLog('[mode switch] $stopMsg');
     }
-    addAppLog('[packet tunnel] $msg');
+
     _syncNativeMenuState();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      final label = tunnelEnabled ? 'TUN 模式' : '代理模式';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('已切换到$label，请重新连接节点')),
+      );
     }
   }
 
@@ -371,8 +383,13 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       }
       nodeName = VpnConfig.nodes.first.name;
     }
-    final message = await NativeBridge.startNodeService(nodeName);
-    final running = await NativeBridge.checkNodeStatus(nodeName);
+    final useTunMode = NativeBridge.isTunMode;
+    final message = useTunMode
+        ? await NativeBridge.startNodeForTunnel(nodeName)
+        : await NativeBridge.startNodeService(nodeName);
+    final running = useTunMode
+        ? !message.contains('失败')
+        : await NativeBridge.checkNodeStatus(nodeName);
     if (running) {
       GlobalState.activeNodeName.value = nodeName;
     }
@@ -383,7 +400,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     String nodeName = (payload['nodeName'] as String?)?.trim() ?? '';
     nodeName = nodeName.isEmpty ? GlobalState.activeNodeName.value : nodeName;
     if (nodeName.isEmpty) return;
-    final message = await NativeBridge.stopNodeService(nodeName);
+    final useTunMode = NativeBridge.isTunMode;
+    final message = useTunMode
+        ? await NativeBridge.stopNodeForTunnel()
+        : await NativeBridge.stopNodeService(nodeName);
     GlobalState.activeNodeName.value = '';
     addAppLog('[menu] $message');
   }
@@ -468,16 +488,27 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }) {
     return PopupMenuItem<_AddNodeMenuAction>(
       value: action,
-      height: 68,
+      height: 52,
       child: SizedBox(
-        width: 220,
+        width: 200,
         child: Row(
           children: [
-            Icon(icon, size: 30, color: const Color(0xFF434A55)),
-            const SizedBox(width: 18),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF5B8DEF).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 20, color: const Color(0xFF5B8DEF)),
+            ),
+            const SizedBox(width: 14),
             Text(
               text,
-              style: const TextStyle(fontSize: 22, color: Color(0xFF1E2025)),
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF1E2025),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
@@ -520,49 +551,86 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                 icon: const Icon(Icons.language),
                 onPressed: _showLanguageSelector,
               ),
-              PopupMenuButton<_AddNodeMenuAction>(
-                tooltip: context.l10n.get('addConfig'),
-                icon: const Icon(Icons.add),
-                position: PopupMenuPosition.under,
-                onSelected: _showAddNodeMenuAction,
-                itemBuilder: (context) => [
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.manualInput,
-                    icon: Icons.edit,
-                    text: context.l10n.get('addNodeManualInput'),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: PopupMenuButton<_AddNodeMenuAction>(
+                  tooltip: context.l10n.get('addConfig'),
+                  position: PopupMenuPosition.under,
+                  offset: const Offset(0, 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.subscriptionLink,
-                    icon: Icons.link,
-                    text: context.l10n.get('addNodeSubscriptionLink'),
+                  elevation: 8,
+                  color: Colors.white,
+                  onSelected: _showAddNodeMenuAction,
+                  itemBuilder: (context) => [
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.manualInput,
+                      icon: Icons.edit,
+                      text: context.l10n.get('addNodeManualInput'),
+                    ),
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.subscriptionLink,
+                      icon: Icons.link,
+                      text: context.l10n.get('addNodeSubscriptionLink'),
+                    ),
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.scanQr,
+                      icon: Icons.qr_code_scanner,
+                      text: context.l10n.get('addNodeScanQr'),
+                    ),
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.pickImage,
+                      icon: Icons.image,
+                      text: context.l10n.get('addNodePickImage'),
+                    ),
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.pickFile,
+                      icon: Icons.file_open,
+                      text: context.l10n.get('addNodePickFile'),
+                    ),
+                    _buildAddNodeItem(
+                      context,
+                      action: _AddNodeMenuAction.readClipboard,
+                      icon: Icons.content_paste,
+                      text: context.l10n.get('addNodeReadClipboard'),
+                    ),
+                  ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF5B8DEF), Color(0xFF6C63FF)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF5B8DEF).withValues(alpha: 0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, color: Colors.white, size: 20),
+                        SizedBox(width: 4),
+                        Icon(Icons.dns_rounded, color: Colors.white, size: 16),
+                      ],
+                    ),
                   ),
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.scanQr,
-                    icon: Icons.qr_code_scanner,
-                    text: context.l10n.get('addNodeScanQr'),
-                  ),
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.pickImage,
-                    icon: Icons.image,
-                    text: context.l10n.get('addNodePickImage'),
-                  ),
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.pickFile,
-                    icon: Icons.file_open,
-                    text: context.l10n.get('addNodePickFile'),
-                  ),
-                  _buildAddNodeItem(
-                    context,
-                    action: _AddNodeMenuAction.readClipboard,
-                    icon: Icons.content_paste,
-                    text: context.l10n.get('addNodeReadClipboard'),
-                  ),
-                ],
+                ),
               ),
               ValueListenableBuilder<bool>(
                 valueListenable: GlobalState.isUnlocked,

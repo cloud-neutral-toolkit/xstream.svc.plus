@@ -199,11 +199,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final nodeName = node.name.trim();
     if (nodeName.isEmpty) return;
     setState(() => _isSwitchingNode = true);
+    final useTunMode = NativeBridge.isTunMode;
     try {
-      // start or stop node service
-
+      // ── Stop active node ──────────────────────────────────────────
       if (_activeNode == nodeName) {
-        final msg = await NativeBridge.stopNodeService(nodeName);
+        final msg = useTunMode
+            ? await NativeBridge.stopNodeForTunnel()
+            : await NativeBridge.stopNodeService(nodeName);
         if (!mounted) return;
         setState(() {
           _activeNode = '';
@@ -212,13 +214,22 @@ class _HomeScreenState extends State<HomeScreen> {
         GlobalState.activeNodeName.value = '';
         _syncConnectedMeta();
         _showMessage(msg);
-      } else {
-        if (_activeNode.isNotEmpty) {
-          await NativeBridge.stopNodeService(_activeNode);
-          if (!mounted) return;
-          GlobalState.activeNodeName.value = '';
-        }
+        return;
+      }
 
+      // ── Stop previous node if switching ───────────────────────────
+      if (_activeNode.isNotEmpty) {
+        if (useTunMode) {
+          await NativeBridge.stopNodeForTunnel();
+        } else {
+          await NativeBridge.stopNodeService(_activeNode);
+        }
+        if (!mounted) return;
+        GlobalState.activeNodeName.value = '';
+      }
+
+      // ── Check if already running (proxy mode only) ────────────────
+      if (!useTunMode) {
         final isRunning = await NativeBridge.checkNodeStatus(nodeName);
         if (!mounted) return;
         if (isRunning) {
@@ -232,34 +243,45 @@ class _HomeScreenState extends State<HomeScreen> {
           _showMessage(context.l10n.get('serviceRunning'));
           return;
         }
+      }
 
-        final startedAt = DateTime.now();
-        final msg = await NativeBridge.startNodeService(nodeName);
-        if (!mounted) return;
-        final runningAfterStart = await NativeBridge.checkNodeStatus(nodeName);
-        if (!mounted) return;
-        if (!runningAfterStart) {
-          setState(() {
-            _selectedNode = nodeName;
-            _highlightNode = nodeName;
-          });
-          GlobalState.activeNodeName.value = '';
-          _syncConnectedMeta();
-          _showMessage(msg);
-          _scheduleClearHighlight();
-          return;
-        }
+      // ── Start node ────────────────────────────────────────────────
+      final startedAt = DateTime.now();
+      final msg = useTunMode
+          ? await NativeBridge.startNodeForTunnel(nodeName)
+          : await NativeBridge.startNodeService(nodeName);
+      if (!mounted) return;
 
+      // Determine if start succeeded
+      final startOk = useTunMode
+          ? !msg.contains('失败')
+          : await NativeBridge.checkNodeStatus(nodeName);
+      if (!mounted) return;
+      if (!startOk) {
         setState(() {
-          _activeNode = nodeName;
           _selectedNode = nodeName;
           _highlightNode = nodeName;
         });
-        GlobalState.activeNodeName.value = nodeName;
+        GlobalState.activeNodeName.value = '';
         _syncConnectedMeta();
         _showMessage(msg);
         _scheduleClearHighlight();
+        return;
+      }
 
+      setState(() {
+        _activeNode = nodeName;
+        _selectedNode = nodeName;
+        _highlightNode = nodeName;
+      });
+      GlobalState.activeNodeName.value = nodeName;
+      _syncConnectedMeta();
+      _showMessage(msg);
+      _scheduleClearHighlight();
+
+      // ── Verify connectivity ───────────────────────────────────────
+      if (!useTunMode) {
+        // Proxy mode: verify SOCKS5 proxy is reachable
         final verifyMsg = await NativeBridge.verifySocks5Proxy();
         final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
         if (verifyMsg.startsWith('success:')) {
@@ -270,6 +292,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? LogLevel.info
                 : LogLevel.error);
         _showMessage(verifyMsg);
+      } else {
+        // TUN mode: log the launch result
+        addAppLog('[tunnel] $msg');
       }
     } finally {
       if (mounted) {
@@ -365,23 +390,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               else
                 Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // Navigate to node selection or show snackbar
-                    },
-                    icon: const Icon(Icons.add),
-                    label: Text(context.l10n.get('addNode')),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4A6572),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.add_circle_outline_rounded,
+                        size: 36,
+                        color: Colors.grey.withValues(alpha: 0.45),
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                      const SizedBox(height: 8),
+                      Text(
+                        context.l10n.get('addNodeHint'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.withValues(alpha: 0.7),
+                          height: 1.5,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
             ],
