@@ -2,6 +2,7 @@ import Foundation
 import Network
 import NetworkExtension
 import Darwin
+import ObjectiveC.runtime
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
   private var activeSettings: NEPacketTunnelNetworkSettings?
@@ -33,12 +34,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         self.activeSettings = settings
         self.startPathMonitor()
 
-        let fd = self.packetFlow.value(forKeyPath: "socket.fileDescriptor") as? Int32 ?? -1
+        let resolvedFd = self.resolvePacketFlowFileDescriptor()
+        let fd = resolvedFd.fd
         let egressInterface = self.monitor.currentPath.availableInterfaces.first(where: { !$0.name.contains("utun") })?.name ?? ""
 
         do {
           let configData = self.sanitizeConfigForDarwinTun(self.resolveConfigData(options: map))
-          try self.engine.start(config: configData, fd: fd, egressInterface: egressInterface)
+          try self.engine.start(config: configData, fd: fd, fdDetail: resolvedFd.detail, egressInterface: egressInterface)
           self.statusStore.markConnected()
           completionHandler(nil)
         } catch {
@@ -258,6 +260,106 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     monitor.start(queue: DispatchQueue.global())
   }
 
+  private func resolvePacketFlowFileDescriptor() -> (fd: Int32, detail: String) {
+    guard let flowObj = packetFlow as? NSObject else {
+      return (-1, "packetFlow is not NSObject")
+    }
+
+    let keyPaths = [
+      "socket.fileDescriptor",
+      "_socket.fileDescriptor",
+      "socket.fd",
+      "_socket.fd",
+      "_packetSocket.fileDescriptor",
+      "_packetSocket.fd",
+    ]
+    for keyPath in keyPaths {
+      if let number = try? flowObj.value(forKeyPath: keyPath) as? NSNumber {
+        let fd = number.int32Value
+        if fd >= 0 {
+          return (fd, "packetFlow.\(keyPath)")
+        }
+      }
+    }
+
+    if let fd = callIntSelector(on: flowObj, selectorName: "fileDescriptor"), fd >= 0 {
+      return (fd, "packetFlow.fileDescriptor")
+    }
+    if let fd = callIntSelector(on: flowObj, selectorName: "fd"), fd >= 0 {
+      return (fd, "packetFlow.fd")
+    }
+
+    let socketSelectors = ["socket", "_socket", "packetSocket", "_packetSocket", "fileHandle"]
+    for selectorName in socketSelectors {
+      guard let child = callObjectSelector(on: flowObj, selectorName: selectorName) else {
+        continue
+      }
+      if let fd = callIntSelector(on: child, selectorName: "fileDescriptor"), fd >= 0 {
+        return (fd, "packetFlow.\(selectorName).fileDescriptor")
+      }
+      if let fd = callIntSelector(on: child, selectorName: "fd"), fd >= 0 {
+        return (fd, "packetFlow.\(selectorName).fd")
+      }
+    }
+
+    if let fd = scanObjectIvarsForFileDescriptor(flowObj), fd >= 0 {
+      return (fd, "packetFlow ivar scan")
+    }
+
+    return (-1, "no accessible fd selector on \(NSStringFromClass(type(of: flowObj)))")
+  }
+
+  private func callIntSelector(on object: NSObject, selectorName: String) -> Int32? {
+    let selector = NSSelectorFromString(selectorName)
+    guard object.responds(to: selector), let method = class_getInstanceMethod(type(of: object), selector) else {
+      return nil
+    }
+    typealias Getter = @convention(c) (AnyObject, Selector) -> Int
+    let impl = method_getImplementation(method)
+    let function = unsafeBitCast(impl, to: Getter.self)
+    let value = function(object, selector)
+    return Int32(value)
+  }
+
+  private func callObjectSelector(on object: NSObject, selectorName: String) -> NSObject? {
+    let selector = NSSelectorFromString(selectorName)
+    guard object.responds(to: selector), let method = class_getInstanceMethod(type(of: object), selector) else {
+      return nil
+    }
+    typealias Getter = @convention(c) (AnyObject, Selector) -> Unmanaged<AnyObject>?
+    let impl = method_getImplementation(method)
+    let function = unsafeBitCast(impl, to: Getter.self)
+    return function(object, selector)?.takeUnretainedValue() as? NSObject
+  }
+
+  private func scanObjectIvarsForFileDescriptor(_ object: NSObject) -> Int32? {
+    var cls: AnyClass? = type(of: object)
+    while let current = cls {
+      var count: UInt32 = 0
+      guard let ivars = class_copyIvarList(current, &count) else {
+        cls = class_getSuperclass(current)
+        continue
+      }
+      defer { free(ivars) }
+      for i in 0 ..< Int(count) {
+        let ivar = ivars[i]
+        guard let name = ivar_getName(ivar) else { continue }
+        let ivarName = String(cString: name)
+        guard ivarName.contains("socket") || ivarName.contains("Socket") else { continue }
+        if let value = object_getIvar(object, ivar) as? NSObject {
+          if let fd = callIntSelector(on: value, selectorName: "fileDescriptor"), fd >= 0 {
+            return fd
+          }
+          if let fd = callIntSelector(on: value, selectorName: "fd"), fd >= 0 {
+            return fd
+          }
+        }
+      }
+      cls = class_getSuperclass(current)
+    }
+    return nil
+  }
+
   private func rollbackStartFailure(
     error: Error,
     completionHandler: @escaping (Error?) -> Void
@@ -271,7 +373,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 }
 
 private protocol SecureTunnelEngine {
-  func start(config: Data, fd: Int32, egressInterface: String) throws
+  func start(config: Data, fd: Int32, fdDetail: String, egressInterface: String) throws
   func stop()
 }
 
@@ -279,7 +381,7 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
   private let bridge = XrayTunnelBridge()
   private var tunnelHandle: Int64?
 
-  func start(config: Data, fd: Int32, egressInterface: String) throws {
+  func start(config: Data, fd: Int32, fdDetail: String, egressInterface: String) throws {
     stop()
     guard !config.isEmpty else {
       throw NSError(
@@ -288,15 +390,7 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
         userInfo: [NSLocalizedDescriptionKey: "Missing Xray config for Packet Tunnel"]
       )
     }
-    guard fd >= 0 else {
-      throw NSError(
-        domain: "Xstream.PacketTunnel",
-        code: -13,
-        userInfo: [NSLocalizedDescriptionKey: "Invalid Packet Tunnel fd: \(fd)"]
-      )
-    }
-
-    let handle = try bridge.start(configData: config, fd: fd, egressInterface: egressInterface)
+    let handle = try bridge.start(configData: config, fd: fd, fdDetail: fdDetail, egressInterface: egressInterface)
     tunnelHandle = handle
   }
 
@@ -310,12 +404,14 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
 }
 
 private final class XrayTunnelBridge {
+  private typealias StartXrayTunnelFn = @convention(c) (UnsafePointer<CChar>?) -> Int64
   private typealias StartXrayTunnelWithFdFn = @convention(c) (UnsafePointer<CChar>?, Int32, UnsafePointer<CChar>?) -> Int64
   private typealias StopXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeCStringFn = @convention(c) (UnsafeMutablePointer<CChar>?) -> Void
   private typealias GetLastXrayTunnelErrorFn = @convention(c) () -> UnsafeMutablePointer<CChar>?
 
+  private let startWithoutFdFn: StartXrayTunnelFn?
   private let startFn: StartXrayTunnelWithFdFn?
   private let stopFn: StopXrayTunnelFn?
   private let freeTunnelFn: FreeXrayTunnelFn?
@@ -328,6 +424,7 @@ private final class XrayTunnelBridge {
     let loaded = XrayTunnelBridge.openBridgeHandle()
     dlHandle = loaded.handle
     loadError = loaded.error
+    startWithoutFdFn = XrayTunnelBridge.loadSymbol("StartXrayTunnel", from: dlHandle)
     startFn = XrayTunnelBridge.loadSymbol("StartXrayTunnelWithFd", from: dlHandle)
     stopFn = XrayTunnelBridge.loadSymbol("StopXrayTunnel", from: dlHandle)
     freeTunnelFn = XrayTunnelBridge.loadSymbol("FreeXrayTunnel", from: dlHandle)
@@ -341,26 +438,37 @@ private final class XrayTunnelBridge {
     }
   }
 
-  func start(configData: Data, fd: Int32, egressInterface: String) throws -> Int64 {
-    guard let startFn else {
+  func start(configData: Data, fd: Int32, fdDetail: String, egressInterface: String) throws -> Int64 {
+    guard startFn != nil || startWithoutFdFn != nil else {
       let message = loadError ?? "failed to load bridge symbols"
       throw NSError(
         domain: "Xstream.PacketTunnel",
         code: -11,
-        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd symbol is unavailable (\(message))"]
+        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel symbols unavailable (\(message))"]
       )
     }
     let json = String(data: configData, encoding: .utf8) ?? "{}"
     return try json.withCString { cstr in
       return try egressInterface.withCString { ifaceCstr in
-        let handle = startFn(cstr, fd, ifaceCstr)
+        let handle: Int64
+        let startPath: String
+        if fd >= 0, let startFn {
+          handle = startFn(cstr, fd, ifaceCstr)
+          startPath = "with-fd"
+        } else if let startWithoutFdFn {
+          handle = startWithoutFdFn(cstr)
+          startPath = "without-fd"
+        } else {
+          handle = -1
+          startPath = "without-fd-unavailable"
+        }
         if handle <= 0 {
           let bridgeError = readBridgeError()
           let summary = summarizeConfig(configData)
           throw NSError(
             domain: "Xstream.PacketTunnel",
             code: -12,
-            userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd returned invalid handle (fd=\(fd), egress=\(egressInterface), bridgeError=\(bridgeError), \(summary))"]
+            userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel failed (\(startPath)) invalid handle (fd=\(fd), fdDetail=\(fdDetail), egress=\(egressInterface), bridgeError=\(bridgeError), \(summary))"]
           )
         }
         return handle
