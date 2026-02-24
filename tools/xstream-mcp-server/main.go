@@ -251,6 +251,30 @@ func main() {
 	)
 
 	s.AddTool(
+		mcp.NewTool("runtime_post_start_inspect",
+			mcp.WithDescription("Fixed post-start inspection pipeline: wait, paths, process, config, log, grep failed, diagnose. Continues checks even if process is not running."),
+			mcp.WithNumber("wait_seconds", mcp.Description("Delay before inspection, default 30")),
+			mcp.WithNumber("log_lines", mcp.Description("Log tail lines for checks, default 300")),
+		),
+		func(ctx context.Context, req mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			waitSeconds := req.GetInt("wait_seconds", 30)
+			if waitSeconds < 0 {
+				waitSeconds = 0
+			}
+			logLines := req.GetInt("log_lines", 300)
+			if logLines <= 0 {
+				logLines = 300
+			}
+
+			res, err := runPostStartInspectFlow(ctx, absRoot, waitSeconds, logLines)
+			if err != nil {
+				return jsonResult(map[string]any{"ok": false, "error": err.Error()}, true)
+			}
+			return jsonResult(res, false)
+		},
+	)
+
+	s.AddTool(
 		mcp.NewTool("auth_login",
 			mcp.WithDescription("Call accounts login endpoint and cache token/cookie for sync debugging."),
 			mcp.WithString("username", mcp.Description("Account username")),
@@ -895,6 +919,131 @@ func checkRuntimeProcess(ctx context.Context, root, overrideExe, overrideConfig 
 		"processes":             matches,
 		"process_query_command": psRes.Command,
 	}, nil
+}
+
+func runPostStartInspectFlow(ctx context.Context, root string, waitSeconds, logLines int) (map[string]any, error) {
+	steps := make([]map[string]any, 0, 7)
+	start := time.Now()
+
+	if waitSeconds > 0 {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(time.Duration(waitSeconds) * time.Second):
+		}
+	}
+	steps = append(steps, map[string]any{
+		"step":         "1_wait",
+		"ok":           true,
+		"wait_seconds": waitSeconds,
+	})
+
+	pathsView := discoverMacOSPaths(root)
+	steps = append(steps, map[string]any{
+		"step": "2_macos_app_paths",
+		"ok":   true,
+		"data": pathsView,
+	})
+
+	paths, pathsErr := discoverRuntimePaths(root)
+	if pathsErr != nil {
+		steps = append(steps, map[string]any{
+			"step":  "path_resolution",
+			"ok":    false,
+			"error": pathsErr.Error(),
+		})
+		return map[string]any{
+			"ok":          false,
+			"duration_ms": time.Since(start).Milliseconds(),
+			"steps":       steps,
+		}, nil
+	}
+
+	processRes, processErr := checkRuntimeProcess(ctx, root, "", paths["runtime_config"])
+	steps = append(steps, map[string]any{
+		"step":  "3_runtime_process_check",
+		"ok":    processErr == nil,
+		"data":  processRes,
+		"error": errString(processErr),
+	})
+
+	configRes, configErr := checkRuntimeConfig(root, paths["runtime_config"])
+	steps = append(steps, map[string]any{
+		"step":  "4_runtime_config_check",
+		"ok":    configErr == nil,
+		"data":  configRes,
+		"error": errString(configErr),
+	})
+
+	logRes, logErr := checkRuntimeLog(root, paths["runtime_log"], logLines, "")
+	steps = append(steps, map[string]any{
+		"step":  "5_runtime_log_check",
+		"ok":    logErr == nil,
+		"data":  logRes,
+		"error": errString(logErr),
+	})
+
+	grepRes, grepErr := checkRuntimeLog(root, paths["runtime_log"], 500, "failed")
+	steps = append(steps, map[string]any{
+		"step":  "6_runtime_log_check_failed",
+		"ok":    grepErr == nil,
+		"data":  grepRes,
+		"error": errString(grepErr),
+	})
+
+	diagRes := map[string]any{
+		"ok":            configErr == nil && logErr == nil && processErr == nil,
+		"paths":         paths,
+		"config_check":  configRes,
+		"log_check":     logRes,
+		"process_check": processRes,
+	}
+	if configErr != nil {
+		diagRes["config_error"] = configErr.Error()
+	}
+	if logErr != nil {
+		diagRes["log_error"] = logErr.Error()
+	}
+	if processErr != nil {
+		diagRes["process_error"] = processErr.Error()
+	}
+
+	steps = append(steps, map[string]any{
+		"step": "7_runtime_diagnose",
+		"ok":   configErr == nil && logErr == nil && processErr == nil,
+		"data": diagRes,
+	})
+
+	return map[string]any{
+		"ok":          true,
+		"duration_ms": time.Since(start).Milliseconds(),
+		"steps":       steps,
+		"summary": map[string]any{
+			"process_check_ok": processErr == nil,
+			"config_check_ok":  configErr == nil,
+			"log_check_ok":     logErr == nil,
+			"running":          readBoolFromMap(processRes, "running"),
+		},
+	}, nil
+}
+
+func errString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
+}
+
+func readBoolFromMap(m map[string]any, key string) bool {
+	if m == nil {
+		return false
+	}
+	v, ok := m[key]
+	if !ok {
+		return false
+	}
+	b, ok := v.(bool)
+	return ok && b
 }
 
 func readSyncArtifacts(root string) (map[string]any, error) {

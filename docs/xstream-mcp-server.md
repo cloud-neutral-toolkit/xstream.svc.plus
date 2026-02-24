@@ -65,6 +65,7 @@ startup_timeout_sec = 30
 - `runtime_log_check`
 - `runtime_process_check`
 - `runtime_diagnose`
+- `runtime_post_start_inspect`
 - `auth_login`
 - `auth_mfa_verify`
 - `auth_sync_pull`
@@ -141,6 +142,7 @@ XSTREAM_MCP_DEBUG=true
 - 日志检查：`runtime_log_check`
 - 进程检查：`runtime_process_check`
 - 一键诊断：`runtime_diagnose`
+- 固定巡检流程（默认等待 30 秒）：`runtime_post_start_inspect`
 
 Makefile 快捷入口：
 
