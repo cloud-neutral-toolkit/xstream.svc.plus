@@ -372,6 +372,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3A5B4457665F1C30307E7A5C /* Build configuration list for PBXNativeTarget "PacketTunnel" */;
 			buildPhases = (
+				A1B2C3D42F7E100100ABCDEF /* Build Xray Bridge */,
 				EF04854776A8BC5765BBED62 /* Sources */,
 				E8C4044A130EED63FECB10BF /* Frameworks */,
 				1728418EB957CB4B3A68F260 /* Resources */,
@@ -475,6 +476,30 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A1B2C3D42F7E100100ABCDEF /* Build Xray Bridge */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../go_core/bridge_ios.go",
+				"$(SRCROOT)/../go_core/go.mod",
+				"$(SRCROOT)/../go_core/go.sum",
+				"$(SRCROOT)/../build_scripts/build_packet_tunnel_bridge_macos.sh",
+			);
+			name = "Build Xray Bridge";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(FRAMEWORKS_FOLDER_PATH)/libxray_bridge.dylib",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/../build_scripts/build_packet_tunnel_bridge_macos.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		3399D490228B24CF009A79C7 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

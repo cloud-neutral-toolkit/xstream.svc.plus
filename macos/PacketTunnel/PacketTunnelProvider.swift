@@ -313,9 +313,12 @@ private final class XrayTunnelBridge {
   private let freeTunnelFn: FreeXrayTunnelFn?
   private let freeCStringFn: FreeCStringFn?
   private let dlHandle: UnsafeMutableRawPointer?
+  private let loadError: String?
 
   init() {
-    dlHandle = dlopen(nil, RTLD_NOW)
+    let loaded = XrayTunnelBridge.openBridgeHandle()
+    dlHandle = loaded.handle
+    loadError = loaded.error
     startFn = XrayTunnelBridge.loadSymbol("StartXrayTunnelWithFd", from: dlHandle)
     stopFn = XrayTunnelBridge.loadSymbol("StopXrayTunnel", from: dlHandle)
     freeTunnelFn = XrayTunnelBridge.loadSymbol("FreeXrayTunnel", from: dlHandle)
@@ -330,10 +333,11 @@ private final class XrayTunnelBridge {
 
   func start(configData: Data, fd: Int32, egressInterface: String) throws -> Int64 {
     guard let startFn else {
+      let message = loadError ?? "failed to load bridge symbols"
       throw NSError(
         domain: "Xstream.PacketTunnel",
         code: -11,
-        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd symbol is unavailable"]
+        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd symbol is unavailable (\(message))"]
       )
     }
     let json = String(data: configData, encoding: .utf8) ?? "{}"
@@ -384,6 +388,30 @@ private final class XrayTunnelBridge {
       return nil
     }
     return unsafeBitCast(symbol, to: T.self)
+  }
+
+  private static func openBridgeHandle() -> (handle: UnsafeMutableRawPointer?, error: String?) {
+    let candidates = [
+      "@rpath/libxray_bridge.dylib",
+      "\(Bundle.main.bundlePath)/Contents/Frameworks/libxray_bridge.dylib",
+      "\(Bundle.main.bundlePath)/Frameworks/libxray_bridge.dylib",
+    ]
+
+    var errors: [String] = []
+    for path in candidates {
+      if let handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL) {
+        return (handle, nil)
+      }
+      let err = dlerror().map { String(cString: $0) } ?? "unknown error"
+      errors.append("\(path): \(err)")
+    }
+
+    if let handle = dlopen(nil, RTLD_NOW | RTLD_GLOBAL) {
+      return (handle, "fallback to process image; explicit bridge dylib not found")
+    }
+    let fallbackErr = dlerror().map { String(cString: $0) } ?? "unknown error"
+    errors.append("dlopen(nil): \(fallbackErr)")
+    return (nil, errors.joined(separator: " | "))
   }
 }
 
