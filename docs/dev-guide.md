@@ -7,6 +7,7 @@
 - [Xcode 在线调试（macOS / iOS）](xcode-online-debug.md)
 - [本机 MCP Server（Codex / Genmini）](xstream-mcp-server.md)
 - [Apple Signing 与 Packet Tunnel 能力申请（macOS / iOS）](apple-network-extension-signing-setup.md)
+- [macOS Packet Tunnel 实现记录](macos-packet-tunnel-implementation.md)
 
 ## 环境准备
 
@@ -74,6 +75,7 @@ flutter run -d macos
 
 ## 文档和资源
 - `docs/` - 项目文档
+  - `macos-packet-tunnel-implementation.md` - macOS Packet Tunnel 的控制面、数据面、进程视角、构建与调用链路记录
 - `assets/` - 静态资源（图标、Logo等）
 - `bindings/` - 原生代码绑定文件
 

@@ -46,6 +46,7 @@ flowchart TD
 Notes:
 - Apple platforms (macOS/iOS) MUST use `NEPacketTunnelProvider` as the system-level networking entry point.
 - On macOS and iOS, the control path is `Flutter UI -> Native Bridge -> DarwinHostApiImpl -> NETunnelProviderManager -> PacketTunnelProvider -> XrayTunnelBridge -> Go Core / Xray`.
+- For the full macOS implementation record, including process-level runtime shape, build artifacts, and file/function ownership, see [docs/macos-packet-tunnel-implementation.md](/Users/shenlan/workspaces/cloud-neutral-toolkit/xstream.svc.plus/docs/macos-packet-tunnel-implementation.md).
 - Startup failures on Apple platforms can occur in manager loading, profile preparation, permission/authorization, or provider startup. They do not necessarily indicate a Go core failure.
 - Other platforms use platform-appropriate system-level adapters, but keep the same product semantics: System VPN / Secure Tunnel / Packet Tunnel.
 - `Native Bridge` isolates platform differences so the Flutter UI does not directly manage Network Extension or platform service details.
