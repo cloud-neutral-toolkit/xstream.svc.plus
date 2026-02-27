@@ -140,15 +140,14 @@ extension AppDelegate {
         return
       }
     }
-    // Always deduplicate existing runtime instances before a new launch.
+    // Always stop existing instance before a new launch.
     _ = stopDirectXray()
     if isDirectXrayRunning() {
-      let pids = listDirectXrayPids(configPath: runtimeConfigPath)
       result(
         FlutterError(
           code: "EXEC_FAILED",
           message: "xray stop existing process failed",
-          details: "remaining pids=\(pids)"
+          details: "process still running after terminate"
         )
       )
       return
@@ -158,23 +157,16 @@ extension AppDelegate {
       return
     }
 
-    let escapedRuntimeConfig = shellEscaped(runtimeConfigPath)
-    let escapedRuntimeLog = shellEscaped(runtimeLogPath)
-    let escapedXray = shellEscaped(xrayExecutable)
     logToFlutter("info", "starting xray executable=\(xrayExecutable), runtimeConfig=\(runtimeConfigPath), runtimeLog=\(runtimeLogPath)")
 
-let prepareCommand = """
-XRAY_CFG=\(escapedRuntimeConfig)
-XRAY_LOG=\(escapedRuntimeLog)
-mkdir -p "$(dirname "$XRAY_CFG")"
-mkdir -p "$(dirname "$XRAY_LOG")"
-: > "$XRAY_LOG"
-"""
-    let (prepareOK, prepareOutput) = runCommandAndCapture(command: prepareCommand)
-    if !prepareOK {
-      result(FlutterError(code: "PREPARE_FAILED", message: "prepare config failed", details: prepareOutput))
-      return
-    }
+    // Prepare directories using FileManager (no shell).
+    let fm = FileManager.default
+    let configDir = (runtimeConfigPath as NSString).deletingLastPathComponent
+    let logDir = (runtimeLogPath as NSString).deletingLastPathComponent
+    try? fm.createDirectory(atPath: configDir, withIntermediateDirectories: true)
+    try? fm.createDirectory(atPath: logDir, withIntermediateDirectories: true)
+    fm.createFile(atPath: runtimeLogPath, contents: nil)
+
     do {
       let removedTunInbounds = try prepareDirectRuntimeConfig(
         sourcePath: sourceConfig,
@@ -195,19 +187,32 @@ mkdir -p "$(dirname "$XRAY_LOG")"
       return
     }
 
-    let startCommand = """
-XRAY_BIN=\(escapedXray)
-XRAY_CFG=\(escapedRuntimeConfig)
-XRAY_LOG=\(escapedRuntimeLog)
-nohup "$XRAY_BIN" run -c "$XRAY_CFG" >"$XRAY_LOG" 2>&1 &
-sleep 1
-"""
-    let (startOK, startOutput) = runCommandAndCapture(command: startCommand)
-    if !startOK {
+    // Launch xray via Foundation.Process (replaces nohup shell).
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: xrayExecutable)
+    process.arguments = ["run", "-c", runtimeConfigPath]
+    process.currentDirectoryURL = URL(fileURLWithPath: (xrayExecutable as NSString).deletingLastPathComponent)
+
+    do {
+      let logFileHandle = try FileHandle(forWritingTo: URL(fileURLWithPath: runtimeLogPath))
+      logFileHandle.seekToEndOfFile()
+      process.standardOutput = logFileHandle
+      process.standardError = logFileHandle
+    } catch {
       clearActiveNodeName()
-      result(FlutterError(code: "EXEC_FAILED", message: "start xray failed", details: startOutput))
+      result(FlutterError(code: "LOG_SETUP_FAILED", message: "failed to open log file for writing", details: error.localizedDescription))
       return
     }
+
+    do {
+      try process.run()
+    } catch {
+      clearActiveNodeName()
+      result(FlutterError(code: "EXEC_FAILED", message: "start xray failed", details: error.localizedDescription))
+      return
+    }
+
+    xrayProcess = process
 
     if waitForDirectXrayReady(runtimeLogPath: runtimeLogPath, timeoutSeconds: 3.0) {
       writeActiveNodeName(requestedNodeName)
@@ -216,16 +221,13 @@ sleep 1
       return
     }
 
-    let (_, runtimeLogTail) = runCommandAndCapture(command: "tail -n 80 \(escapedRuntimeLog)")
+    // Startup verification failed — read log tail for diagnostics.
+    let logTail = readLogTail(runtimeLogPath: runtimeLogPath, lines: 80)
     clearActiveNodeName()
-    let details = runtimeLogTail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-      ? startOutput
-      : runtimeLogTail
-    result(FlutterError(code: "EXEC_FAILED", message: "xray not running after start", details: details))
+    result(FlutterError(code: "EXEC_FAILED", message: "xray not running after start", details: logTail))
   }
 
   private func stopNodeServiceWithDirectXray(result: @escaping FlutterResult) {
-
     if stopDirectXray() {
       logToFlutter("info", "stopNodeService success")
       clearActiveNodeName()
@@ -237,72 +239,64 @@ sleep 1
   }
 
   private func isDirectXrayRunning() -> Bool {
-    let runtimeConfigPath = resolvedRuntimeConfigPath()
-    return !listDirectXrayPids(configPath: runtimeConfigPath).isEmpty
+    guard let process = xrayProcess else {
+      return false
+    }
+    return process.isRunning
   }
 
   private func stopDirectXray() -> Bool {
-    let runtimeConfigPath = resolvedRuntimeConfigPath()
-    let firstBatch = listDirectXrayPids(configPath: runtimeConfigPath)
-    if !firstBatch.isEmpty {
-      let pidList = firstBatch.map(String.init).joined(separator: " ")
-      _ = runCommandAndCapture(command: "/bin/kill \(pidList) >/dev/null 2>&1 || true")
-      Thread.sleep(forTimeInterval: 0.6)
+    guard let process = xrayProcess else {
+      return true
     }
-
-    let remaining = listDirectXrayPids(configPath: runtimeConfigPath)
-    if !remaining.isEmpty {
-      let pidList = remaining.map(String.init).joined(separator: " ")
-      _ = runCommandAndCapture(command: "/bin/kill -9 \(pidList) >/dev/null 2>&1 || true")
-      Thread.sleep(forTimeInterval: 0.3)
+    if process.isRunning {
+      process.terminate()
+      // Give process time to exit gracefully.
+      let deadline = Date().addingTimeInterval(2.0)
+      while process.isRunning && Date() < deadline {
+        Thread.sleep(forTimeInterval: 0.1)
+      }
+      // Force kill if still running.
+      if process.isRunning {
+        kill(process.processIdentifier, SIGKILL)
+        Thread.sleep(forTimeInterval: 0.3)
+      }
     }
-    return listDirectXrayPids(configPath: runtimeConfigPath).isEmpty
+    xrayProcess = nil
+    return true
   }
-
-  private func listDirectXrayPids(configPath: String) -> [Int32] {
-    let escapedConfig = shellEscaped(configPath)
-    let listCommand = """
-CFG=\(escapedConfig)
-/bin/ps -axo pid=,command= | /usr/bin/awk -v cfg="$CFG" '
-  /xray run -c/ && index($0, cfg) > 0 && index($0, "/bin/zsh -c") == 0 {print $1}
-'
-"""
-    let (ok, output) = runCommandAndCapture(command: listCommand)
-    if !ok {
-      return []
-    }
-    return output
-      .split(whereSeparator: \.isNewline)
-      .compactMap { Int32($0.trimmingCharacters(in: .whitespacesAndNewlines)) }
-  }
-
-
 
   private func waitForDirectXrayReady(runtimeLogPath: String, timeoutSeconds: TimeInterval) -> Bool {
     let started = Date()
     while Date().timeIntervalSince(started) < timeoutSeconds {
-      if isDirectXrayRunning() {
-        return true
+      guard isDirectXrayRunning() else {
+        // Process exited prematurely.
+        return false
       }
       if hasXrayStartedMarker(runtimeLogPath: runtimeLogPath) {
         return true
       }
       Thread.sleep(forTimeInterval: 0.25)
     }
-    return isDirectXrayRunning() || hasXrayStartedMarker(runtimeLogPath: runtimeLogPath)
+    return isDirectXrayRunning() && hasXrayStartedMarker(runtimeLogPath: runtimeLogPath)
   }
 
   private func hasXrayStartedMarker(runtimeLogPath: String) -> Bool {
-    let escapedRuntimeLog = shellEscaped(runtimeLogPath)
-    let markerCommand = """
-XRAY_LOG=\(escapedRuntimeLog)
-if [ ! -f "$XRAY_LOG" ]; then
-  exit 1
-fi
-tail -n 120 "$XRAY_LOG" | /usr/bin/grep -E "core: Xray .* started|Xray [0-9]+\\.[0-9]+\\.[0-9]+ started" >/dev/null
-"""
-    let (ok, _) = runCommandAndCapture(command: markerCommand)
-    return ok
+    guard let content = try? String(contentsOfFile: runtimeLogPath, encoding: .utf8) else {
+      return false
+    }
+    let lines = content.components(separatedBy: .newlines)
+    let tail = lines.suffix(120).joined(separator: "\n")
+    let pattern = #"core: Xray .* started|Xray [0-9]+\.[0-9]+\.[0-9]+ started"#
+    return tail.range(of: pattern, options: .regularExpression) != nil
+  }
+
+  private func readLogTail(runtimeLogPath: String, lines: Int) -> String {
+    guard let content = try? String(contentsOfFile: runtimeLogPath, encoding: .utf8) else {
+      return ""
+    }
+    let allLines = content.components(separatedBy: .newlines)
+    return allLines.suffix(lines).joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   private func verifySocks5Proxy(result: @escaping FlutterResult) {

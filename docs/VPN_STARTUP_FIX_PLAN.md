@@ -25,9 +25,9 @@
 - [ ] Validate proxy-only inbound config (SOCKS + HTTP) for proxy mode
 
 # Phase 5: Enhanced Logging & Error Handling
-- [ ] Add structured logging to `PacketTunnelProvider.swift`
-- [ ] Surface tunnel engine errors to Flutter via `onPacketTunnelError`
-- [ ] Add diagnostic error messages in `native_bridge.dart`
+- [x] Add structured logging to `PacketTunnelProvider.swift`
+- [x] Surface tunnel engine errors to Flutter via `onPacketTunnelError`
+- [x] Add diagnostic error messages in `native_bridge.dart`
 
 # Phase 6: iOS parity
 - [ ] Add `com.apple.security.application-groups` to iOS `PacketTunnel.entitlements`
