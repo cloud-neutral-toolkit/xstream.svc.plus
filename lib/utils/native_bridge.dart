@@ -847,6 +847,51 @@ class NativeBridge {
     _darwinFlutterApiReady = true;
   }
 
+  static Future<String> prepareNodeForTunnel(String nodeName) async {
+    if (!Platform.isIOS) {
+      return '当前平台无需预注册 Packet Tunnel 配置';
+    }
+
+    final node = VpnConfig.getNodeByName(nodeName);
+    if (node == null) return '未知节点: $nodeName';
+
+    final sourceConfigPath = await _resolveNodeConfigSource(node);
+    if (sourceConfigPath == null) {
+      final configsPath = await GlobalApplicationConfig.getConfigsPath();
+      return '保存失败: 节点配置文件不存在\n'
+          '预期路径: node-${_normalizeConfigToken(node.countryCode)}-config.json\n'
+          '搜索目录: $configsPath';
+    }
+
+    if (node.configPath != sourceConfigPath) {
+      node.configPath = sourceConfigPath;
+      VpnConfig.updateNode(node);
+      await VpnConfig.saveToFile();
+    }
+
+    final runtimeConfigPath = await _prepareCanonicalTunnelConfigPath(
+      sourceConfigPath,
+      isTunMode: true,
+    );
+
+    _ensureDarwinFlutterApiReady();
+    try {
+      final profile = await _buildDefaultTunnelProfile(
+        configPath: runtimeConfigPath,
+      );
+      final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
+      return saveResult == 'profile_saved'
+          ? 'iOS Packet Tunnel 配置已保存到系统 VPN 列表'
+          : saveResult;
+    } on MissingPluginException {
+      return '插件未实现';
+    } on PlatformException catch (e) {
+      return '保存失败: ${_platformErrorSummary(e)}';
+    } catch (e) {
+      return '保存失败: $e';
+    }
+  }
+
   /// Start Packet Tunnel on Darwin platforms.
   static Future<String> startPacketTunnel() async {
     if (Platform.isAndroid) {

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../utils/global_config.dart';
+import '../../utils/native_bridge.dart';
 import '../../widgets/log_console.dart';
 import '../../utils/app_logger.dart';
 import '../../services/vpn_config_service.dart';
@@ -236,6 +237,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
     GlobalState.nodeListRevision.value++;
     GlobalState.activeNodeName.value = '';
     addAppLog('✅ 导入节点已同步到首页: $targetName');
+    if (Platform.isIOS) {
+      addAppLog(await NativeBridge.prepareNodeForTunnel(targetName));
+    }
   }
 
   @override

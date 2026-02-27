@@ -66,12 +66,13 @@ Key components:
 ## 4) Startup Sequence
 
 1. Dart builds `TunnelProfile` and calls `savePacketTunnelProfile`.
-2. Dart calls `startPacketTunnel`.
-3. `DarwinHostApiImpl` loads/creates `NETunnelProviderManager`, writes latest options, then starts VPN tunnel.
-4. `PacketTunnelProvider.startTunnel` resolves options, builds network settings, and applies `setTunnelNetworkSettings`.
-5. Provider resolves the active Packet Tunnel fd / `utun` handle inside the extension process.
-6. Provider starts `XrayTunnelEngine` with `StartXrayTunnelWithFd(config, fd, egressInterface)`.
-7. Status is persisted and emitted back to Flutter with `TunnelStatus`.
+2. On iOS, `DarwinHostApiImpl` also loads/creates `NETunnelProviderManager` during profile save so `Xstream` becomes visible in the system VPN list before connection starts.
+3. Dart calls `startPacketTunnel`.
+4. `DarwinHostApiImpl` refreshes `NETunnelProviderManager` with latest options, then starts VPN tunnel.
+5. `PacketTunnelProvider.startTunnel` resolves options, builds network settings, and applies `setTunnelNetworkSettings`.
+6. Provider resolves the active Packet Tunnel fd / `utun` handle inside the extension process.
+7. Provider starts `XrayTunnelEngine` with `StartXrayTunnelWithFd(config, fd, egressInterface)`.
+8. Status is persisted and emitted back to Flutter with `TunnelStatus`.
 
 There is no separate Darwin startup path that launches the tunnel engine without the Packet Tunnel fd. If fd handoff fails, provider startup fails and reports that error back through the shared status path.
 

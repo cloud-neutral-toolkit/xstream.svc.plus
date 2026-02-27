@@ -1,6 +1,7 @@
 # Unreleased
 
 ## ✅ Changes
+- Updated iOS Packet Tunnel profile save flow to register `Xstream` in the system VPN list during profile save, and pre-register the VPN profile after iOS node import without auto-connecting
 - Fixed iOS Packet Tunnel provider build by replacing unavailable iPhoneOS SDK `utun` macros with stable Darwin fallback constants
 - Added repo-local `xstream-ios-real-device-smoke` skill with executable iPhone smoke script, baseline, test cases, and latest report
 - Added iOS `RunnerTests` Packet Tunnel start/stop smoke coverage and test-host fixes for real-device execution

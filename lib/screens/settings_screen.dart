@@ -425,6 +425,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _prepareImportedNodeForIos(String nodeName) async {
+    if (!Platform.isIOS) return;
+    final targetName = nodeName.trim();
+    if (targetName.isEmpty) return;
+    addAppLog(await NativeBridge.prepareNodeForTunnel(targetName));
+  }
+
   Future<void> _onImportConfig() async {
     final requiresUnlock = !Platform.isIOS;
     final controller = TextEditingController();
@@ -480,6 +487,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         GlobalState.lastImportedNodeName.value = profile.name;
         GlobalState.nodeListRevision.value++;
         addAppLog('✅ 已从 VLESS 链接导入配置');
+        await _prepareImportedNodeForIos(profile.name);
         return;
       }
 
@@ -519,6 +527,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       });
       GlobalState.lastImportedNodeName.value = imported;
       GlobalState.nodeListRevision.value++;
+      await _prepareImportedNodeForIos(imported);
       addAppLog('✅ 已导入配置');
     } catch (e) {
       addAppLog('[错误] 导入失败: $e', level: LogLevel.error);

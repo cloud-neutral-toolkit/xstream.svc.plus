@@ -1,13 +1,14 @@
-#if os(macOS)
-import FlutterMacOS
-import Cocoa
-#else
-import Flutter
-#endif
+import Darwin
 import Foundation
 import Network
 import NetworkExtension
-import Darwin
+
+#if os(macOS)
+  import FlutterMacOS
+  import Cocoa
+#else
+  import Flutter
+#endif
 
 class DarwinHostApiImpl: DarwinHostApi {
   private let groupId = "group.plus.svc.xstream"
@@ -32,7 +33,8 @@ class DarwinHostApiImpl: DarwinHostApi {
         forSecurityApplicationGroupIdentifier: groupId
       )?.relativePath
     else {
-      throw PigeonError(code: "nil-container-url", message: "App Group container not found", details: groupId)
+      throw PigeonError(
+        code: "nil-container-url", message: "App Group container not found", details: groupId)
     }
     return path
   }
@@ -79,40 +81,40 @@ class DarwinHostApiImpl: DarwinHostApi {
 
   func setupShutdownNotification() throws {
     #if os(macOS)
-    let workspace = NSWorkspace.shared
-    let notificationCenter = workspace.notificationCenter
+      let workspace = NSWorkspace.shared
+      let notificationCenter = workspace.notificationCenter
 
-    notificationCenter.addObserver(
-      forName: NSWorkspace.willPowerOffNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      self?.flutterApi?.onSystemWillShutdown(completion: { _ in })
-    }
+      notificationCenter.addObserver(
+        forName: NSWorkspace.willPowerOffNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.flutterApi?.onSystemWillShutdown(completion: { _ in })
+      }
 
-    notificationCenter.addObserver(
-      forName: NSWorkspace.sessionDidResignActiveNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      self?.flutterApi?.onSystemWillRestart(completion: { _ in })
-    }
+      notificationCenter.addObserver(
+        forName: NSWorkspace.sessionDidResignActiveNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.flutterApi?.onSystemWillRestart(completion: { _ in })
+      }
 
-    notificationCenter.addObserver(
-      forName: NSWorkspace.willSleepNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      self?.flutterApi?.onSystemWillSleep(completion: { _ in })
-    }
+      notificationCenter.addObserver(
+        forName: NSWorkspace.willSleepNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.flutterApi?.onSystemWillSleep(completion: { _ in })
+      }
 
-    NotificationCenter.default.addObserver(
-      forName: NSApplication.willTerminateNotification,
-      object: nil,
-      queue: .main
-    ) { [weak self] _ in
-      self?.flutterApi?.onSystemWillShutdown(completion: { _ in })
-    }
+      NotificationCenter.default.addObserver(
+        forName: NSApplication.willTerminateNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        self?.flutterApi?.onSystemWillShutdown(completion: { _ in })
+      }
     #endif
   }
 
@@ -121,6 +123,23 @@ class DarwinHostApiImpl: DarwinHostApi {
     let options = buildPacketTunnelOptions(profile: profile)
     defaults.set(options, forKey: profileOptionsKey)
     defaults.removeObject(forKey: statusErrorKey)
+
+    #if os(iOS)
+      do {
+        try registerPacketTunnelManagerForSystemSettings(options: options)
+      } catch {
+        let errorMessage = describeError(error)
+        writeLastError(errorMessage)
+        emitPacketTunnelError(code: "profile-save-failed", message: errorMessage)
+        emitPacketTunnelStateChanged()
+        throw PigeonError(
+          code: "profile-save-failed",
+          message: errorMessage,
+          details: nil
+        )
+      }
+    #endif
+
     emitPacketTunnelStateChanged()
     return "profile_saved"
   }
@@ -143,14 +162,17 @@ class DarwinHostApiImpl: DarwinHostApi {
       do {
         let data = try Data(contentsOf: url)
         if data.isEmpty {
-          throw NSError(domain: "Xstream", code: -1, userInfo: [NSLocalizedDescriptionKey: "Config file is empty"])
+          throw NSError(
+            domain: "Xstream", code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Config file is empty"])
         }
         options["config"] = data as NSData
       } catch {
         let errorMsg = "Failed to load config file at \(configPath): \(error.localizedDescription)"
         self.writeLastError(errorMsg)
         self.emitPacketTunnelError(code: "config-load-failed", message: errorMsg)
-        completion(.failure(PigeonError(code: "config-load-failed", message: errorMsg, details: nil)))
+        completion(
+          .failure(PigeonError(code: "config-load-failed", message: errorMsg, details: nil)))
         return
       }
     }
@@ -170,15 +192,18 @@ class DarwinHostApiImpl: DarwinHostApi {
           details: nil
         )
         self.writeLastError(managerError.localizedDescription)
-        self.emitPacketTunnelError(code: "manager-unavailable", message: managerError.localizedDescription)
+        self.emitPacketTunnelError(
+          code: "manager-unavailable", message: managerError.localizedDescription)
         completion(.failure(managerError))
         return
       }
 
-      self.prepareManagerWithLatestOptions(manager: manager, options: options) { prepared, prepareError in
+      self.prepareManagerWithLatestOptions(manager: manager, options: options) {
+        prepared, prepareError in
         if let prepareError {
           self.writeLastError(prepareError.localizedDescription)
-          self.emitPacketTunnelError(code: "manager-prepare-failed", message: prepareError.localizedDescription)
+          self.emitPacketTunnelError(
+            code: "manager-prepare-failed", message: prepareError.localizedDescription)
           completion(.failure(prepareError))
           return
         }
@@ -189,7 +214,8 @@ class DarwinHostApiImpl: DarwinHostApi {
             details: nil
           )
           self.writeLastError(preparedError.localizedDescription)
-          self.emitPacketTunnelError(code: "manager-prepare-failed", message: preparedError.localizedDescription)
+          self.emitPacketTunnelError(
+            code: "manager-prepare-failed", message: preparedError.localizedDescription)
           completion(.failure(preparedError))
           return
         }
@@ -290,38 +316,44 @@ class DarwinHostApiImpl: DarwinHostApi {
       "dnsServers6": NSArray(array: profile.dnsServers6),
       "ipv4Addresses": NSArray(array: profile.ipv4Addresses),
       "ipv4SubnetMasks": NSArray(array: profile.ipv4SubnetMasks),
-      "ipv4IncludedRoutes": NSArray(array: profile.ipv4IncludedRoutes.map { route in
-        [
-          "destinationAddress": route.destinationAddress,
-          "subnetMask": route.subnetMask,
-        ] as NSDictionary
-      }),
-      "ipv4ExcludedRoutes": NSArray(array: profile.ipv4ExcludedRoutes.map { route in
-        [
-          "destinationAddress": route.destinationAddress,
-          "subnetMask": route.subnetMask,
-        ] as NSDictionary
-      }),
-      "ipv4ExcludedRouteAddresses": NSArray(array: profile.ipv4ExcludedRoutes.map { route in
-        [
-          "destinationAddress": route.destinationAddress,
-          "subnetMask": route.subnetMask,
-        ] as NSDictionary
-      }),
+      "ipv4IncludedRoutes": NSArray(
+        array: profile.ipv4IncludedRoutes.map { route in
+          [
+            "destinationAddress": route.destinationAddress,
+            "subnetMask": route.subnetMask,
+          ] as NSDictionary
+        }),
+      "ipv4ExcludedRoutes": NSArray(
+        array: profile.ipv4ExcludedRoutes.map { route in
+          [
+            "destinationAddress": route.destinationAddress,
+            "subnetMask": route.subnetMask,
+          ] as NSDictionary
+        }),
+      "ipv4ExcludedRouteAddresses": NSArray(
+        array: profile.ipv4ExcludedRoutes.map { route in
+          [
+            "destinationAddress": route.destinationAddress,
+            "subnetMask": route.subnetMask,
+          ] as NSDictionary
+        }),
       "ipv6Addresses": NSArray(array: profile.ipv6Addresses),
-      "ipv6NetworkPrefixLengths": NSArray(array: profile.ipv6NetworkPrefixLengths.map(NSNumber.init(value:))),
-      "ipv6IncludedRoutes": NSArray(array: profile.ipv6IncludedRoutes.map { route in
-        [
-          "destinationAddress": route.destinationAddress,
-          "networkPrefixLength": NSNumber(value: route.networkPrefixLength),
-        ] as NSDictionary
-      }),
-      "ipv6ExcludedRoutes": NSArray(array: profile.ipv6ExcludedRoutes.map { route in
-        [
-          "destinationAddress": route.destinationAddress,
-          "networkPrefixLength": NSNumber(value: route.networkPrefixLength),
-        ] as NSDictionary
-      }),
+      "ipv6NetworkPrefixLengths": NSArray(
+        array: profile.ipv6NetworkPrefixLengths.map(NSNumber.init(value:))),
+      "ipv6IncludedRoutes": NSArray(
+        array: profile.ipv6IncludedRoutes.map { route in
+          [
+            "destinationAddress": route.destinationAddress,
+            "networkPrefixLength": NSNumber(value: route.networkPrefixLength),
+          ] as NSDictionary
+        }),
+      "ipv6ExcludedRoutes": NSArray(
+        array: profile.ipv6ExcludedRoutes.map { route in
+          [
+            "destinationAddress": route.destinationAddress,
+            "networkPrefixLength": NSNumber(value: route.networkPrefixLength),
+          ] as NSDictionary
+        }),
     ]
 
     let configURL = URL(fileURLWithPath: profile.configPath)
@@ -330,12 +362,92 @@ class DarwinHostApiImpl: DarwinHostApi {
     }
     options["configPath"] = profile.configPath as NSString
 
-    return options;
+    return options
   }
 
+  #if os(iOS)
+    private func registerPacketTunnelManagerForSystemSettings(options: [String: NSObject]) throws {
+      let manager = try waitForTunnelManagerOperation(
+        timeoutSeconds: 15,
+        timeoutCode: "manager-load-timeout",
+        timeoutMessage: "Timed out while loading Packet Tunnel manager"
+      ) { completion in
+        self.loadOrCreateTunnelManager(completion: completion)
+      }
+
+      _ = try waitForTunnelManagerOperation(
+        timeoutSeconds: 15,
+        timeoutCode: "manager-prepare-timeout",
+        timeoutMessage: "Timed out while saving Packet Tunnel manager"
+      ) { completion in
+        self.prepareManagerWithLatestOptions(
+          manager: manager,
+          options: options,
+          completion: completion
+        )
+      }
+    }
+
+    private func waitForTunnelManagerOperation(
+      timeoutSeconds: TimeInterval,
+      timeoutCode: String,
+      timeoutMessage: String,
+      operation: (@escaping (NETunnelProviderManager?, Error?) -> Void) -> Void
+    ) throws -> NETunnelProviderManager {
+      let semaphore = DispatchSemaphore(value: 0)
+      var resolvedManager: NETunnelProviderManager?
+      var resolvedError: Error?
+
+      operation { manager, error in
+        resolvedManager = manager
+        resolvedError = error
+        semaphore.signal()
+      }
+
+      let deadline = Date().addingTimeInterval(timeoutSeconds)
+      if Thread.isMainThread {
+        while true {
+          if semaphore.wait(timeout: .now()) == .success {
+            break
+          }
+          if Date() >= deadline {
+            throw PigeonError(
+              code: timeoutCode,
+              message: timeoutMessage,
+              details: nil
+            )
+          }
+          RunLoop.current.run(
+            mode: .default,
+            before: Date().addingTimeInterval(0.05)
+          )
+        }
+      } else if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
+        throw PigeonError(
+          code: timeoutCode,
+          message: timeoutMessage,
+          details: nil
+        )
+      }
+
+      if let resolvedError {
+        throw resolvedError
+      }
+      guard let resolvedManager else {
+        throw PigeonError(
+          code: "manager-unavailable",
+          message: "No available Packet Tunnel manager",
+          details: nil
+        )
+      }
+      return resolvedManager
+    }
+  #endif
+
   private func packetTunnelProviderBundleId() -> String? {
-    if let value = Bundle.main.object(forInfoDictionaryKey: "PacketTunnelProviderBundleId") as? String,
-       !value.isEmpty
+    if let value = Bundle.main.object(forInfoDictionaryKey: "PacketTunnelProviderBundleId")
+      as? String,
+      !value.isEmpty
     {
       return value
     }
@@ -352,17 +464,20 @@ class DarwinHostApiImpl: DarwinHostApi {
         return
       }
       let providerId = self.packetTunnelProviderBundleId()
-      let manager = managers?.first(where: { mgr in
-        guard let proto = mgr.protocolConfiguration as? NETunnelProviderProtocol else {
-          return false
-        }
-        return proto.providerBundleIdentifier == providerId
-      }) ?? managers?.first
+      let manager =
+        managers?.first(where: { mgr in
+          guard let proto = mgr.protocolConfiguration as? NETunnelProviderProtocol else {
+            return false
+          }
+          return proto.providerBundleIdentifier == providerId
+        }) ?? managers?.first
       completion(manager, nil)
     }
   }
 
-  private func loadOrCreateTunnelManager(completion: @escaping (NETunnelProviderManager?, Error?) -> Void) {
+  private func loadOrCreateTunnelManager(
+    completion: @escaping (NETunnelProviderManager?, Error?) -> Void
+  ) {
     NETunnelProviderManager.loadAllFromPreferences { managers, error in
       if let error {
         completion(nil, error)
@@ -381,9 +496,13 @@ class DarwinHostApiImpl: DarwinHostApi {
       }
 
       guard let providerId else {
-        completion(nil, NSError(domain: "Xstream.PacketTunnel", code: -1, userInfo: [
-          NSLocalizedDescriptionKey: "Missing PacketTunnel provider bundle id",
-        ]))
+        completion(
+          nil,
+          NSError(
+            domain: "Xstream.PacketTunnel", code: -1,
+            userInfo: [
+              NSLocalizedDescriptionKey: "Missing PacketTunnel provider bundle id"
+            ]))
         return
       }
 
@@ -392,7 +511,7 @@ class DarwinHostApiImpl: DarwinHostApi {
       proto.providerBundleIdentifier = providerId
       proto.serverAddress = self.packetTunnelDisplayName
       proto.providerConfiguration = [
-        "options": self.storedPacketTunnelOptions() ?? [:],
+        "options": self.storedPacketTunnelOptions() ?? [:]
       ]
 
       manager.protocolConfiguration = proto
@@ -421,17 +540,22 @@ class DarwinHostApiImpl: DarwinHostApi {
     completion: @escaping (NETunnelProviderManager?, Error?) -> Void
   ) {
     guard let providerId = packetTunnelProviderBundleId() else {
-      completion(nil, NSError(domain: "Xstream.PacketTunnel", code: -1, userInfo: [
-        NSLocalizedDescriptionKey: "Missing PacketTunnel provider bundle id",
-      ]))
+      completion(
+        nil,
+        NSError(
+          domain: "Xstream.PacketTunnel", code: -1,
+          userInfo: [
+            NSLocalizedDescriptionKey: "Missing PacketTunnel provider bundle id"
+          ]))
       return
     }
 
-    let proto = (manager.protocolConfiguration as? NETunnelProviderProtocol) ?? NETunnelProviderProtocol()
+    let proto =
+      (manager.protocolConfiguration as? NETunnelProviderProtocol) ?? NETunnelProviderProtocol()
     proto.providerBundleIdentifier = providerId
     proto.serverAddress = self.packetTunnelDisplayName
     proto.providerConfiguration = [
-      "options": options,
+      "options": options
     ]
 
     manager.protocolConfiguration = proto
@@ -482,15 +606,16 @@ class DarwinHostApiImpl: DarwinHostApi {
       parts.append("message=\(localized)")
     }
     if let reason = nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String,
-       !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+      !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     {
       parts.append("reason=\(reason)")
     }
     if let underlying = nsError.userInfo[NSUnderlyingErrorKey] as? NSError {
-      parts.append("underlying=\(underlying.domain)(\(underlying.code)): \(underlying.localizedDescription)")
+      parts.append(
+        "underlying=\(underlying.domain)(\(underlying.code)): \(underlying.localizedDescription)")
     }
-    if (nsError.domain == "NEConfigurationErrorDomain" && nsError.code == 10) ||
-      (nsError.domain == "NEVPNErrorDomain" && nsError.code == 5)
+    if (nsError.domain == "NEConfigurationErrorDomain" && nsError.code == 10)
+      || (nsError.domain == "NEVPNErrorDomain" && nsError.code == 5)
     {
       parts.append("hint=Packet Tunnel extension signing/entitlements are invalid or missing")
     }
@@ -560,7 +685,7 @@ class DarwinHostApiImpl: DarwinHostApi {
     }
 
     getPacketTunnelStatus { result in
-      guard case let .success(status) = result else {
+      guard case .success(let status) = result else {
         return
       }
       DispatchQueue.main.async {
