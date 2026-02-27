@@ -40,12 +40,21 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         self.startPathMonitor()
 
         let resolvedFd = self.resolvePacketFlowFileDescriptor()
-        let fd = resolvedFd.fd
+        let resolvedTun = self.resolveDarwinTunnelHandle(preferredFd: resolvedFd)
+        let fd = resolvedTun.fd
         let egressInterface = self.monitor.currentPath.availableInterfaces.first(where: { !$0.name.contains("utun") })?.name ?? ""
 
         do {
-          let configData = self.sanitizeConfigForDarwinTun(self.resolveConfigData(options: map))
-          try self.engine.start(config: configData, fd: fd, fdDetail: resolvedFd.detail, egressInterface: egressInterface)
+          let configData = self.sanitizeConfigForDarwinTun(
+            self.resolveConfigData(options: map),
+            tunnelInterfaceName: resolvedTun.interfaceName
+          )
+          try self.engine.start(
+            config: configData,
+            fd: fd,
+            fdDetail: resolvedTun.detail,
+            egressInterface: egressInterface
+          )
           self.statusStore.markConnected()
           os_log("PacketTunnelProvider: Engine started successfully", log: tunnelLog, type: .info)
           completionHandler(nil)
@@ -96,7 +105,10 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     return Data()
   }
 
-  private func sanitizeConfigForDarwinTun(_ data: Data) -> Data {
+  private func sanitizeConfigForDarwinTun(
+    _ data: Data,
+    tunnelInterfaceName: String?
+  ) -> Data {
     guard !data.isEmpty else {
       return data
     }
@@ -107,6 +119,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       return data
     }
 
+    let normalizedTunnelInterface = normalizeUtunInterfaceName(tunnelInterfaceName)
     var updated = false
     for index in inbounds.indices {
       guard
@@ -128,6 +141,15 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         if !isValidUtun {
           settings.removeValue(forKey: key)
           updated = true
+        }
+      }
+
+      if let normalizedTunnelInterface {
+        for key in ["name", "interfaceName", "interface"] {
+          if (settings[key] as? String) != normalizedTunnelInterface {
+            settings[key] = normalizedTunnelInterface
+            updated = true
+          }
         }
       }
       inbounds[index]["settings"] = settings
@@ -269,6 +291,25 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     monitor.start(queue: DispatchQueue.global())
   }
 
+  private func resolveDarwinTunnelHandle(
+    preferredFd: (fd: Int32, detail: String)
+  ) -> (fd: Int32, detail: String, interfaceName: String?) {
+    if preferredFd.fd >= 0 {
+      let interfaceName = resolveUtunInterfaceName(forFileDescriptor: preferredFd.fd)
+        ?? resolveLikelyTunnelInterfaceName()
+      let detail = annotateFdDetail(preferredFd.detail, interfaceName: interfaceName)
+      return (preferredFd.fd, detail, interfaceName)
+    }
+
+    if let scanned = scanOpenFileDescriptorsForUtun() {
+      return scanned
+    }
+
+    let interfaceName = resolveLikelyTunnelInterfaceName()
+    let detail = annotateFdDetail(preferredFd.detail, interfaceName: interfaceName)
+    return (preferredFd.fd, detail, interfaceName)
+  }
+
   private func resolvePacketFlowFileDescriptor() -> (fd: Int32, detail: String) {
     let flowObj = packetFlow as NSObject
 
@@ -313,6 +354,112 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     }
 
     return (-1, "no accessible fd selector on \(NSStringFromClass(type(of: flowObj)))")
+  }
+
+  private func scanOpenFileDescriptorsForUtun(
+    maxFd: Int32 = 1024
+  ) -> (fd: Int32, detail: String, interfaceName: String?)? {
+    var matches: [(fd: Int32, interfaceName: String)] = []
+
+    for candidate in 0 ... Int(maxFd) {
+      let fd = Int32(candidate)
+      guard fcntl(fd, F_GETFD) != -1 else {
+        continue
+      }
+      guard let interfaceName = resolveUtunInterfaceName(forFileDescriptor: fd) else {
+        continue
+      }
+      matches.append((fd, interfaceName))
+    }
+
+    guard !matches.isEmpty else {
+      return nil
+    }
+
+    let resolved = matches.max { lhs, rhs in
+      let lhsIndex = utunSortKey(lhs.interfaceName)
+      let rhsIndex = utunSortKey(rhs.interfaceName)
+      if lhsIndex == rhsIndex {
+        return lhs.fd < rhs.fd
+      }
+      return lhsIndex < rhsIndex
+    }!
+    return (
+      resolved.fd,
+      "fd scan -> \(resolved.fd)",
+      resolved.interfaceName
+    )
+  }
+
+  private func resolveUtunInterfaceName(forFileDescriptor fd: Int32) -> String? {
+    var buffer = [CChar](repeating: 0, count: Int(IFNAMSIZ))
+    var length = socklen_t(buffer.count)
+    let result = buffer.withUnsafeMutableBufferPointer { pointer in
+      getsockopt(
+        fd,
+        SYSPROTO_CONTROL,
+        UTUN_OPT_IFNAME,
+        pointer.baseAddress,
+        &length
+      )
+    }
+    guard result == 0 else {
+      return nil
+    }
+    return normalizeUtunInterfaceName(String(cString: buffer))
+  }
+
+  private func resolveLikelyTunnelInterfaceName() -> String? {
+    listUtunInterfaces().max { lhs, rhs in
+      utunSortKey(lhs) < utunSortKey(rhs)
+    }
+  }
+
+  private func listUtunInterfaces() -> [String] {
+    var ifaddr: UnsafeMutablePointer<ifaddrs>?
+    guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
+      return []
+    }
+    defer { freeifaddrs(ifaddr) }
+
+    var pointer = firstAddr
+    var names = Set<String>()
+    while true {
+      let name = String(cString: pointer.pointee.ifa_name)
+      if let normalized = normalizeUtunInterfaceName(name) {
+        names.insert(normalized)
+      }
+      guard let next = pointer.pointee.ifa_next else {
+        break
+      }
+      pointer = next
+    }
+
+    return names.sorted { lhs, rhs in
+      utunSortKey(lhs) < utunSortKey(rhs)
+    }
+  }
+
+  private func normalizeUtunInterfaceName(_ raw: String?) -> String? {
+    guard let raw else {
+      return nil
+    }
+    let normalized = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard normalized.range(of: #"^utun[0-9]+$"#, options: .regularExpression) != nil else {
+      return nil
+    }
+    return normalized
+  }
+
+  private func utunSortKey(_ name: String) -> Int {
+    Int(name.dropFirst("utun".count)) ?? -1
+  }
+
+  private func annotateFdDetail(_ detail: String, interfaceName: String?) -> String {
+    guard let interfaceName else {
+      return detail
+    }
+    return "\(detail), tun=\(interfaceName)"
   }
 
   private func resolveIntSelectorPath(on object: NSObject, path: [String]) -> Int32? {
