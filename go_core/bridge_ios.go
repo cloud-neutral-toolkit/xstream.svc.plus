@@ -241,28 +241,6 @@ func StartXrayTunnelWithFd(configC *C.char, fd C.int, interfaceC *C.char) C.long
 	return C.longlong(handle)
 }
 
-//export StartXrayTunnel
-func StartXrayTunnel(configC *C.char) C.longlong {
-	instMu.Lock()
-	defer instMu.Unlock()
-
-	if xray.GetXrayState() {
-		setTunnelLastError("xray already running")
-		return C.longlong(-1)
-	}
-
-	cfgData := []byte(C.GoString(configC))
-	if err := startXrayInternal(cfgData); err != nil {
-		setTunnelLastError(err.Error())
-		return C.longlong(-1)
-	}
-
-	setTunnelLastError("")
-	handle := tunnelSeq.Add(1)
-	tunnelSession.Store(handle, true)
-	return C.longlong(handle)
-}
-
 //export GetLastXrayTunnelError
 func GetLastXrayTunnelError() *C.char {
 	return C.CString(getTunnelLastError())

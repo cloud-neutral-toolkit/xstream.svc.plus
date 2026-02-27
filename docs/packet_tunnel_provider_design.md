@@ -21,7 +21,7 @@ The PacketTunnelProvider must adhere to the global semantics and usage constrain
 
 * The Flutter-side native bridge (`lib/utils/native_bridge.dart`) starts Apple Packet Tunnel mode through `DarwinHostApi`.
 * `darwin/MacosHostApi.swift` implements `DarwinHostApiImpl`, which persists tunnel options, prepares `NETunnelProviderManager`, and starts or stops the tunnel connection.
-* `macos/PacketTunnel/PacketTunnelProvider.swift` and `ios/PacketTunnel/PacketTunnelProvider.swift` implement the provider that applies `NEPacketTunnelNetworkSettings`, resolves a packet-flow file descriptor, and hands runtime control to `XrayTunnelBridge`.
+* `macos/PacketTunnel/PacketTunnelProvider.swift` and `ios/PacketTunnel/PacketTunnelProvider.swift` implement the provider that applies `NEPacketTunnelNetworkSettings`, resolves the live Packet Tunnel file descriptor / `utun` handle from the extension process, and hands runtime control to `XrayTunnelBridge`.
 * The Go core (`go_core/bridge_*.go`) and Xray runtime perform packet processing, routing, encryption, DNS handling, and network acceleration once the provider has started successfully.
 
 ## Lifecycle and Control
@@ -29,9 +29,11 @@ The PacketTunnelProvider must adhere to the global semantics and usage constrain
 1. **Start request**: The user enables VPN / TUN mode in Flutter. `lib/utils/native_bridge.dart` writes the runtime config path into a tunnel profile and calls `DarwinHostApi.startPacketTunnel()`.
 2. **Manager preparation**: `DarwinHostApiImpl` loads or creates a `NETunnelProviderManager`, refreshes `NETunnelProviderProtocol` with the latest options, saves preferences, and then calls `startVPNTunnel(options:)`.
 3. **Provider startup**: `PacketTunnelProvider.startTunnel(options:completionHandler:)` runs inside the Network Extension process. The provider resolves the options map, decides IPv4/IPv6 settings, and applies `NEPacketTunnelNetworkSettings`.
-4. **Engine handoff**: After network settings are active, the provider resolves an accessible packet-flow file descriptor from `packetFlow`, sanitizes the TUN inbound config for Darwin, and calls `XrayTunnelBridge.start(configData:fd:fdDetail:egressInterface:)`.
+4. **Engine handoff**: After network settings are active, the provider resolves an accessible Packet Tunnel file descriptor from `packetFlow` or the extension's open `utun` descriptors, sanitizes the Darwin TUN inbound config, and calls `XrayTunnelBridge.start(configData:fd:fdDetail:egressInterface:)`.
 5. **Runtime operation**: The Go / Xray runtime owns packet forwarding, DNS inside the secure tunnel, and engine lifecycle. The provider remains responsible for Network Extension state and teardown.
 6. **Stop**: When the user disables the tunnel or startup fails, `stopTunnel(with:completionHandler:)` or the local rollback path stops the engine, clears active state, and updates shared status.
+
+The provider does not keep a second "start without Packet Tunnel fd" path. If the Network Extension process cannot hand off a valid system tunnel fd to Xray, startup fails and reports the handoff error instead of attempting an alternate engine bootstrap.
 
 This means Apple startup failures can occur in multiple layers:
 - Flutter or profile generation
@@ -48,6 +50,7 @@ They should not all be treated as the same category of failure.
 * Packet Tunnel provider failures are logged with the `plus.svc.xstream` subsystem and mirrored into the shared status store when startup or rollback fails.
 * The current macOS UI now checks for authorization-related failures such as `permission denied` and opens a permissions guide that directs the user to approve the System VPN / Packet Tunnel request for `Xstream Secure Tunnel`.
 * Restart and recovery behavior is currently conservative: the tunnel is stopped on startup failure and the user is expected to retry after fixing authorization, signing, configuration, or runtime issues.
+* Missing or invalid Packet Tunnel fd handoff is treated as a provider startup failure, because Packet Tunnel is the only permitted system-level entry point on Apple platforms.
 
 ## Testing and Validation
 

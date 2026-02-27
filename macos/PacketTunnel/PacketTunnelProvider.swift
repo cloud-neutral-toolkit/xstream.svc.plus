@@ -296,7 +296,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
   ) -> (fd: Int32, detail: String, interfaceName: String?) {
     if preferredFd.fd >= 0 {
       let interfaceName = resolveUtunInterfaceName(forFileDescriptor: preferredFd.fd)
-        ?? resolveLikelyTunnelInterfaceName()
       let detail = annotateFdDetail(preferredFd.detail, interfaceName: interfaceName)
       return (preferredFd.fd, detail, interfaceName)
     }
@@ -305,9 +304,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       return scanned
     }
 
-    let interfaceName = resolveLikelyTunnelInterfaceName()
-    let detail = annotateFdDetail(preferredFd.detail, interfaceName: interfaceName)
-    return (preferredFd.fd, detail, interfaceName)
+    return (preferredFd.fd, preferredFd.detail, nil)
   }
 
   private func resolvePacketFlowFileDescriptor() -> (fd: Int32, detail: String) {
@@ -407,37 +404,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
       return nil
     }
     return normalizeUtunInterfaceName(String(cString: buffer))
-  }
-
-  private func resolveLikelyTunnelInterfaceName() -> String? {
-    listUtunInterfaces().max { lhs, rhs in
-      utunSortKey(lhs) < utunSortKey(rhs)
-    }
-  }
-
-  private func listUtunInterfaces() -> [String] {
-    var ifaddr: UnsafeMutablePointer<ifaddrs>?
-    guard getifaddrs(&ifaddr) == 0, let firstAddr = ifaddr else {
-      return []
-    }
-    defer { freeifaddrs(ifaddr) }
-
-    var pointer = firstAddr
-    var names = Set<String>()
-    while true {
-      let name = String(cString: pointer.pointee.ifa_name)
-      if let normalized = normalizeUtunInterfaceName(name) {
-        names.insert(normalized)
-      }
-      guard let next = pointer.pointee.ifa_next else {
-        break
-      }
-      pointer = next
-    }
-
-    return names.sorted { lhs, rhs in
-      utunSortKey(lhs) < utunSortKey(rhs)
-    }
   }
 
   private func normalizeUtunInterfaceName(_ raw: String?) -> String? {
@@ -579,14 +545,12 @@ private final class XrayTunnelEngine: SecureTunnelEngine {
 }
 
 private final class XrayTunnelBridge {
-  private typealias StartXrayTunnelFn = @convention(c) (UnsafePointer<CChar>?) -> Int64
   private typealias StartXrayTunnelWithFdFn = @convention(c) (UnsafePointer<CChar>?, Int32, UnsafePointer<CChar>?) -> Int64
   private typealias StopXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeXrayTunnelFn = @convention(c) (Int64) -> UnsafeMutablePointer<CChar>?
   private typealias FreeCStringFn = @convention(c) (UnsafeMutablePointer<CChar>?) -> Void
   private typealias GetLastXrayTunnelErrorFn = @convention(c) () -> UnsafeMutablePointer<CChar>?
 
-  private let startWithoutFdFn: StartXrayTunnelFn?
   private let startFn: StartXrayTunnelWithFdFn?
   private let stopFn: StopXrayTunnelFn?
   private let freeTunnelFn: FreeXrayTunnelFn?
@@ -599,7 +563,6 @@ private final class XrayTunnelBridge {
     let loaded = XrayTunnelBridge.openBridgeHandle()
     dlHandle = loaded.handle
     loadError = loaded.error
-    startWithoutFdFn = XrayTunnelBridge.loadSymbol("StartXrayTunnel", from: dlHandle)
     startFn = XrayTunnelBridge.loadSymbol("StartXrayTunnelWithFd", from: dlHandle)
     stopFn = XrayTunnelBridge.loadSymbol("StopXrayTunnel", from: dlHandle)
     freeTunnelFn = XrayTunnelBridge.loadSymbol("FreeXrayTunnel", from: dlHandle)
@@ -614,36 +577,33 @@ private final class XrayTunnelBridge {
   }
 
   func start(configData: Data, fd: Int32, fdDetail: String, egressInterface: String) throws -> Int64 {
-    guard startFn != nil || startWithoutFdFn != nil else {
+    guard let startFn else {
       let message = loadError ?? "failed to load bridge symbols"
       throw NSError(
         domain: "Xstream.PacketTunnel",
         code: -11,
-        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel symbols unavailable (\(message))"]
+        userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd symbol unavailable (\(message))"]
+      )
+    }
+    guard fd >= 0 else {
+      let summary = summarizeConfig(configData)
+      throw NSError(
+        domain: "Xstream.PacketTunnel",
+        code: -12,
+        userInfo: [NSLocalizedDescriptionKey: "Packet Tunnel handoff failed: system tun fd unavailable (fdDetail=\(fdDetail), egress=\(egressInterface), \(summary))"]
       )
     }
     let json = String(data: configData, encoding: .utf8) ?? "{}"
     return try json.withCString { cstr in
       return try egressInterface.withCString { ifaceCstr in
-        let handle: Int64
-        let startPath: String
-        if fd >= 0, let startFn {
-          handle = startFn(cstr, fd, ifaceCstr)
-          startPath = "with-fd"
-        } else if let startWithoutFdFn {
-          handle = startWithoutFdFn(cstr)
-          startPath = "without-fd"
-        } else {
-          handle = -1
-          startPath = "without-fd-unavailable"
-        }
+        let handle = startFn(cstr, fd, ifaceCstr)
         if handle <= 0 {
           let bridgeError = readBridgeError()
           let summary = summarizeConfig(configData)
           throw NSError(
             domain: "Xstream.PacketTunnel",
             code: -12,
-            userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnel failed (\(startPath)) invalid handle (fd=\(fd), fdDetail=\(fdDetail), egress=\(egressInterface), bridgeError=\(bridgeError), \(summary))"]
+            userInfo: [NSLocalizedDescriptionKey: "StartXrayTunnelWithFd failed invalid handle (fd=\(fd), fdDetail=\(fdDetail), egress=\(egressInterface), bridgeError=\(bridgeError), \(summary))"]
           )
         }
         return handle

@@ -35,8 +35,8 @@ Status callbacks:
 
 Declared in `bindings/bridge.h` and exported in `go_core/bridge_ios.go`:
 
-- `StartXrayTunnel(const char* config) -> long long`
-- `SubmitInboundPacket(long long handle, const uint8_t* data, int32_t length, int32_t protocol) -> int32_t`
+- `StartXrayTunnelWithFd(const char* config, int fd, const char* egressInterface) -> long long`
+- `GetLastXrayTunnelError() -> char*`
 - `StopXrayTunnel(long long handle) -> char*`
 - `FreeXrayTunnel(long long handle) -> char*`
 - `FreeCString(char* str) -> void`
@@ -59,7 +59,6 @@ Declared in `bindings/bridge.h` and exported in `go_core/bridge_ios.go`:
 
 Key components:
 
-- `NEPacketFlowAdapter` handles packetFlow read/write
 - `XrayTunnelEngine` owns tunnel session lifecycle
 - `XrayTunnelBridge` maps Swift to Go symbols
 - `PacketTunnelStatusStore` persists status in App Group
@@ -70,11 +69,11 @@ Key components:
 2. Dart calls `startPacketTunnel`.
 3. `DarwinHostApiImpl` loads/creates `NETunnelProviderManager`, writes latest options, then starts VPN tunnel.
 4. `PacketTunnelProvider.startTunnel` resolves options, builds network settings, and applies `setTunnelNetworkSettings`.
-5. Provider starts `NEPacketFlowAdapter`.
-6. Provider starts `XrayTunnelEngine`:
-   - `StartXrayTunnel(config)` returns session handle
-   - packetFlow inbound packets are pushed by `SubmitInboundPacket`
+5. Provider resolves the active Packet Tunnel fd / `utun` handle inside the extension process.
+6. Provider starts `XrayTunnelEngine` with `StartXrayTunnelWithFd(config, fd, egressInterface)`.
 7. Status is persisted and emitted back to Flutter with `TunnelStatus`.
+
+There is no separate Darwin startup path that launches the tunnel engine without the Packet Tunnel fd. If fd handoff fails, provider startup fails and reports that error back through the shared status path.
 
 ## 5) Failure Rollback Path
 
@@ -88,7 +87,6 @@ Key components:
 ### 5.2 Provider startup failures (`PacketTunnelProvider`)
 
 - If engine start fails after network settings:
-  - stop adapter
   - stop engine
   - cancel path monitor
   - clear active settings cache
@@ -99,7 +97,6 @@ Key components:
 
 - `stopTunnel` always:
   - cancel monitor
-  - stop adapter
   - stop engine (`StopXrayTunnel` + `FreeXrayTunnel`)
   - clear connected timestamp
 
@@ -138,8 +135,8 @@ Mode A: `Proxy Mode`
 Mode B: `Tunnel Mode` (System VPN)
 
 1. Dart triggers `NETunnelProviderManager`.
-2. `PacketTunnelProvider` applies network settings and owns `utun`.
-3. Data plane inside extension bridges packet flow to the tunnel engine.
+2. `PacketTunnelProvider` applies network settings and owns the system `utun`.
+3. The provider hands the live Packet Tunnel fd to `xray-core`.
 
 ### 8.3 Target data-plane shape in Tunnel Mode
 
@@ -147,10 +144,9 @@ Mode B: `Tunnel Mode` (System VPN)
 flowchart LR
   A["Flutter (existing UI)"] --> B["DarwinHostApi / NETunnelProviderManager"]
   B --> C["PacketTunnelProvider"]
-  C --> D["NEPacketFlowAdapter"]
-  D --> E["Extension Data Bridge"]
-  E --> F["libXray Engine"]
-  F --> G["Encrypted Outbound"]
+  C --> D["Packet Tunnel fd / utun handoff"]
+  D --> E["libXray Engine"]
+  E --> F["Encrypted Outbound"]
 ```
 
 ## 9) OneXray-to-Xstream mapping
@@ -166,12 +162,12 @@ This mapping is used to migrate implementation details while preserving current 
 Given the current repository state:
 
 1. Control plane is already stable.
-2. `SubmitInboundPacket` in `go_core/bridge_ios.go` is still a placeholder.
+2. Darwin Packet Tunnel startup now depends on valid fd handoff from `PacketTunnelProvider` to `StartXrayTunnelWithFd`.
 
 Recommended sequence:
 
-1. First close data path with extension-local proxy bridge (SOCKS/HTTP to libXray) while keeping `PacketTunnelProvider` as the sole system entry.
-2. Then iterate toward deeper packet bridge integration once Darwin adapter capabilities are verified in `go_core`.
+1. Keep `NEPacketTunnelProvider` as the sole Apple system entry.
+2. Treat fd handoff failures as first-class startup errors and diagnose them before engine changes.
 
 ## 11) Loop prevention baseline
 
