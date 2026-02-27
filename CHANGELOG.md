@@ -1,6 +1,10 @@
 # Unreleased
 
 ## ✅ Changes
+- Fixed iOS Packet Tunnel provider build by replacing unavailable iPhoneOS SDK `utun` macros with stable Darwin fallback constants
+- Added repo-local `xstream-ios-real-device-smoke` skill with executable iPhone smoke script, baseline, test cases, and latest report
+- Added iOS `RunnerTests` Packet Tunnel start/stop smoke coverage and test-host fixes for real-device execution
+- Recorded current iPhone Packet Tunnel smoke blocker and next-step checklist in `docs/ios-packet-tunnel-real-device-followup.md`
 - Removed tun2socks-based system-wide path; Packet Tunnel is now the only TUN/VPN entry on macOS
 - Cleaned tun2socks scripts/resources/docs and related native/Dart APIs
 - Added iOS/macOS `PacketTunnel` app extension targets with embedded `.appex` wiring in both Xcode projects
