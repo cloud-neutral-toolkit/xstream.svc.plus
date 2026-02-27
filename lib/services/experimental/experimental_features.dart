@@ -6,8 +6,12 @@ class ExperimentalFeatures {
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    GlobalState.tunnelProxyEnabled.value =
-        prefs.getBool(_tunnelProxyKey) ?? false;
+    final enabled = prefs.getBool(_tunnelProxyKey);
+    if (enabled == null) {
+      GlobalState.setConnectionMode(GlobalState.connectionMode.value);
+    } else {
+      GlobalState.setTunnelModeEnabled(enabled);
+    }
     GlobalState.tunnelProxyEnabled.addListener(() {
       prefs.setBool(_tunnelProxyKey, GlobalState.tunnelProxyEnabled.value);
     });

@@ -951,9 +951,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: enabled,
                         onChanged: (value) {
                           setState(() {
-                            GlobalState.tunnelProxyEnabled.value = value;
-                            GlobalState.connectionMode.value =
-                                value ? 'VPN' : '仅代理';
+                            GlobalState.setTunnelModeEnabled(value);
                           });
                           addAppLog('系统级网络隧道: ${value ? "开启" : "关闭"}');
                           _refreshTunStatus();
@@ -1240,9 +1238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               value: enabled,
                               onChanged: (value) {
                                 setState(() {
-                                  GlobalState.tunnelProxyEnabled.value = value;
-                                  GlobalState.connectionMode.value =
-                                      value ? 'VPN' : '仅代理';
+                                  GlobalState.setTunnelModeEnabled(value);
                                 });
                                 addAppLog(
                                   '系统级网络隧道: ${value ? "开启" : "关闭"}',

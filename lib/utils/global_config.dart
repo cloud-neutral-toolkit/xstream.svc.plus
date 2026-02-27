@@ -37,6 +37,9 @@ Map<String, String> collectSystemInfo() => {
 
 /// 全局应用状态管理（使用 ValueNotifier 实现响应式绑定）
 class GlobalState {
+  static const String tunnelConnectionMode = 'VPN';
+  static const String proxyOnlyConnectionMode = '仅代理';
+
   /// 解锁状态（true 表示已解锁）
   static final ValueNotifier<bool> isUnlocked = ValueNotifier<bool>(false);
 
@@ -73,7 +76,7 @@ class GlobalState {
 
   /// 当前连接模式，可在底部弹出栏中切换（如 VPN / 仅代理）
   static final ValueNotifier<String> connectionMode =
-      ValueNotifier<String>('VPN');
+      ValueNotifier<String>(tunnelConnectionMode);
 
   /// 当前活跃节点名称（桌面菜单栏/主界面共享）
   static final ValueNotifier<String> activeNodeName = ValueNotifier<String>('');
@@ -114,6 +117,37 @@ class GlobalState {
 
   /// 系统代理 HTTP 端口
   static final ValueNotifier<String> httpPort = ValueNotifier<String>('1081');
+
+  static String normalizeConnectionMode(String? value) {
+    return value == proxyOnlyConnectionMode
+        ? proxyOnlyConnectionMode
+        : tunnelConnectionMode;
+  }
+
+  static bool isTunnelModeValue(String? value) {
+    return normalizeConnectionMode(value) == tunnelConnectionMode;
+  }
+
+  static bool get isTunnelMode {
+    return isTunnelModeValue(connectionMode.value);
+  }
+
+  static void setConnectionMode(String? mode) {
+    final normalized = normalizeConnectionMode(mode);
+    final tunnelEnabled = normalized == tunnelConnectionMode;
+    if (connectionMode.value != normalized) {
+      connectionMode.value = normalized;
+    }
+    if (tunnelProxyEnabled.value != tunnelEnabled) {
+      tunnelProxyEnabled.value = tunnelEnabled;
+    }
+  }
+
+  static void setTunnelModeEnabled(bool enabled) {
+    setConnectionMode(
+      enabled ? tunnelConnectionMode : proxyOnlyConnectionMode,
+    );
+  }
 }
 
 /// 管理 DNS 配置，支持保存到本地

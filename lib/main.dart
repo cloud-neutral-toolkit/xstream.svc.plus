@@ -301,7 +301,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   Future<void> _onConnectionModeChanged() async {
     final mode = GlobalState.connectionMode.value;
-    final tunnelEnabled = mode == 'VPN';
+    final tunnelEnabled = GlobalState.isTunnelModeValue(mode);
     if (GlobalState.tunnelProxyEnabled.value != tunnelEnabled) {
       GlobalState.tunnelProxyEnabled.value = tunnelEnabled;
     }
@@ -351,13 +351,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         break;
       case 'setProxyMode':
         final mode = (payload['mode'] as String?) ?? 'VPN';
-        GlobalState.connectionMode.value = mode;
+        GlobalState.setConnectionMode(mode);
         break;
       case 'startAcceleration':
         await _startAccelerationFromMenu(payload);
         break;
       case 'stopAcceleration':
         await _stopAccelerationFromMenu(payload);
+        break;
+      case 'reconnectAcceleration':
+        await _stopAccelerationFromMenu(payload);
+        await _startAccelerationFromMenu(payload);
         break;
       case 'connectionStateChanged':
         final connected = payload['connected'] == true;
@@ -425,8 +429,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (!Platform.isMacOS) return;
     final nodeName = GlobalState.activeNodeName.value.trim();
     final connected = nodeName.isNotEmpty;
-    final mode =
-        GlobalState.connectionMode.value == '仅代理' ? 'proxyOnly' : 'tun';
+    final mode = GlobalState.isTunnelMode ? 'tun' : 'proxyOnly';
     await NativeBridge.updateMenuState(
       connected: connected,
       nodeName: connected ? nodeName : '-',

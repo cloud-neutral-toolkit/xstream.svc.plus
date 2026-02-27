@@ -139,12 +139,12 @@ class NativeBridge {
   }
 
   /// Whether the current connection mode is TUN (VPN / Packet Tunnel).
-  static bool get isTunMode => GlobalState.connectionMode.value == 'VPN';
+  static bool get isTunMode => GlobalState.isTunnelMode;
 
   /// Start node via Packet Tunnel (TUN mode).
   ///
   /// Platform routing:
-  /// - **iOS**: FFI → `startXray(configJson)` with TUN inbound in config
+  /// - **iOS**: Pigeon → `DarwinHostApi.savePacketTunnelProfile` + `startPacketTunnel`
   /// - **Android**: MethodChannel → `savePacketTunnelProfile` + `startPacketTunnel`
   /// - **macOS**: Pigeon → `DarwinHostApi.savePacketTunnelProfile` + `startPacketTunnel`
   /// - **Windows**: FFI → `startXray(configJson)` (TUN inbound handled by xray-core tun2socks)
@@ -171,25 +171,6 @@ class NativeBridge {
       isTunMode: true,
     );
 
-    // ── iOS: FFI → startXray(configJson) ────────────────────────────
-    if (Platform.isIOS) {
-      try {
-        if (_mobileActiveNodeName != null &&
-            _mobileActiveNodeName != nodeName) {
-          stopXray();
-          _mobileActiveNodeName = null;
-        }
-        final configJson = await File(runtimeConfigPath).readAsString();
-        final result = startXray(configJson);
-        if (result.toLowerCase().startsWith('success')) {
-          _mobileActiveNodeName = nodeName;
-        }
-        return result;
-      } catch (e) {
-        return '启动失败: $e';
-      }
-    }
-
     // ── Android: MethodChannel → savePacketTunnelProfile + startPacketTunnel
     if (Platform.isAndroid) {
       try {
@@ -211,8 +192,8 @@ class NativeBridge {
       }
     }
 
-    // ── macOS: Pigeon → DarwinHostApi.savePacketTunnelProfile + startPacketTunnel
-    if (Platform.isMacOS) {
+    // ── Darwin: Pigeon → DarwinHostApi.savePacketTunnelProfile + startPacketTunnel
+    if (_isDarwin) {
       _ensureDarwinFlutterApiReady();
       try {
         final profile = await _buildDefaultTunnelProfile(
@@ -221,9 +202,12 @@ class NativeBridge {
         final saveResult =
             await _darwinHostApi.savePacketTunnelProfile(profile);
         await _darwinHostApi.startPacketTunnel();
-        return saveResult == 'profile_saved'
-            ? 'Packet Tunnel 启动请求已提交 ($nodeName)'
-            : saveResult;
+        if (saveResult != 'profile_saved') {
+          return saveResult;
+        }
+        return _waitForDarwinPacketTunnelConnected(
+          successMessage: 'TUN 模式启动成功 ($nodeName)',
+        );
       } on PlatformException catch (e) {
         return '启动失败: ${_platformErrorSummary(e)}';
       } catch (e) {
@@ -279,23 +263,17 @@ class NativeBridge {
   /// Stop node via Packet Tunnel (TUN mode).
   ///
   /// Platform routing:
-  /// - **iOS**: FFI → `stopXray()`
+  /// - **iOS**: Pigeon → `DarwinHostApi.stopPacketTunnel`
   /// - **Android**: MethodChannel → `stopPacketTunnel`
   /// - **macOS**: Pigeon → `DarwinHostApi.stopPacketTunnel`
   /// - **Windows**: FFI → `stopXray()`
   /// - **Linux**: FFI → `stopXray()`
   static Future<String> stopNodeForTunnel() async {
-    // ── iOS: FFI stopXray ───────────────────────────────────────────
-    if (Platform.isIOS) {
-      try {
-        final result = stopXray();
-        if (result.toLowerCase().startsWith('success')) {
-          _mobileActiveNodeName = null;
-        }
-        return result;
-      } catch (e) {
-        return '停止失败: $e';
-      }
+    // ── Darwin: delegate to official Packet Tunnel control path ────
+    if (_isDarwin) {
+      final result = await stopPacketTunnel();
+      _mobileActiveNodeName = null;
+      return result;
     }
 
     // ── Windows / Linux: FFI stopXray ───────────────────────────────
@@ -315,7 +293,7 @@ class NativeBridge {
       }
     }
 
-    // ── Android / macOS: delegate to existing stopPacketTunnel ──────
+    // ── Android: delegate to existing stopPacketTunnel ──────────────
     final result = await stopPacketTunnel();
     _mobileActiveNodeName = null;
     return result;
@@ -915,9 +893,12 @@ class NativeBridge {
       );
       final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
       await _darwinHostApi.startPacketTunnel();
-      return saveResult == 'profile_saved'
-          ? 'Packet Tunnel start request submitted'
-          : saveResult;
+      if (saveResult != 'profile_saved') {
+        return saveResult;
+      }
+      return _waitForDarwinPacketTunnelConnected(
+        successMessage: 'Packet Tunnel 已连接',
+      );
     } on MissingPluginException {
       return '插件未实现';
     } on PlatformException catch (e) {
@@ -991,6 +972,40 @@ class NativeBridge {
     } catch (_) {
       return _tunStatusFallback;
     }
+  }
+
+  static Future<String> _waitForDarwinPacketTunnelConnected({
+    required String successMessage,
+    Duration timeout = const Duration(seconds: 12),
+  }) async {
+    final deadline = DateTime.now().add(timeout);
+    var lastStatus = _tunStatusFallback;
+
+    while (DateTime.now().isBefore(deadline)) {
+      lastStatus = await getPacketTunnelStatus();
+      final state = lastStatus.status;
+      final error = lastStatus.lastError?.trim();
+
+      if (state == 'connected') {
+        return successMessage;
+      }
+      if ((state == 'disconnected' || state == 'invalid') &&
+          error != null &&
+          error.isNotEmpty) {
+        return '启动失败: $error';
+      }
+
+      await Future.delayed(const Duration(milliseconds: 250));
+    }
+
+    final error = lastStatus.lastError?.trim();
+    if (error != null && error.isNotEmpty) {
+      return '启动失败: $error';
+    }
+    final utunDetail = lastStatus.utunInterfaces.isEmpty
+        ? ''
+        : ' (${lastStatus.utunInterfaces.join(", ")})';
+    return '启动失败: Packet Tunnel 状态未就绪: ${lastStatus.status}$utunDetail';
   }
 
   /// Start embedded xray-core via FFI on iOS

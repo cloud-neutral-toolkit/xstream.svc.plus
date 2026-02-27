@@ -211,107 +211,45 @@ class AppDelegate: FlutterAppDelegate {
 
   @objc private func reconnectAcceleration() {
     guard let node = resolveTargetNodeName() else { return }
-    let stopSuccess = stopServiceForNode(node)
-    if !stopSuccess {
-      return
-    }
-    _ = startServiceForNode(node)
+    notifyFlutterMenuAction(action: "reconnectAcceleration", payload: [
+      "nodeName": node,
+      "proxyMode": menuState.proxyMode.rawValue,
+    ])
   }
 
   @objc private func quitAndStopAcceleration() {
-    if let node = resolveTargetNodeName() {
-      _ = stopServiceForNode(node)
+    if menuState.connected {
+      notifyFlutterMenuAction(action: "stopAcceleration", payload: [
+        "nodeName": menuState.nodeName == "-" ? "" : menuState.nodeName,
+        "proxyMode": menuState.proxyMode.rawValue,
+      ])
+      DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+        NSApp.terminate(nil)
+      }
+      return
     }
     NSApp.terminate(nil)
   }
 
   private func startAcceleration() {
-    guard let node = resolveTargetNodeName() else { return }
-    _ = startServiceForNode(node)
+    notifyFlutterMenuAction(action: "startAcceleration", payload: [
+      "nodeName": resolveTargetNodeName() ?? "",
+      "proxyMode": menuState.proxyMode.rawValue,
+    ])
   }
 
   private func stopAcceleration() {
-    guard let node = resolveTargetNodeName() else { return }
-    _ = stopServiceForNode(node)
-  }
-
-  @discardableResult
-  private func startServiceForNode(_ nodeName: String) -> Bool {
-    guard let serviceName = serviceNameForNode(nodeName) else { return false }
-    let servicePath = "/Users/\(NSUserName())/Library/LaunchAgents/\(serviceName)"
-    let uid = getuid()
-    let os = ProcessInfo.processInfo.operatingSystemVersion
-    let useModernLaunchctl = os.majorVersion >= 11 || (os.majorVersion == 10 && os.minorVersion >= 15)
-    let command = useModernLaunchctl
-      ? "launchctl bootstrap gui/\(uid) \"\(servicePath)\""
-      : "launchctl load \"\(servicePath)\""
-    let (success, output) = runShellCommand(command)
-    if success {
-      menuState.connected = true
-      menuState.nodeName = nodeName
-      refreshMenuUI()
-      notifyFlutterMenuAction(action: "connectionStateChanged", payload: [
-        "connected": true,
-        "nodeName": nodeName,
-        "proxyMode": menuState.proxyMode.rawValue
-      ])
-      logToFlutter("info", "状态栏启动加速成功: \(nodeName)")
-      return true
-    }
-    logToFlutter("error", "状态栏启动加速失败: \(output)")
-    return false
-  }
-
-  @discardableResult
-  private func stopServiceForNode(_ nodeName: String) -> Bool {
-    guard let serviceName = serviceNameForNode(nodeName) else { return false }
-    let servicePath = "/Users/\(NSUserName())/Library/LaunchAgents/\(serviceName)"
-    let uid = getuid()
-    let os = ProcessInfo.processInfo.operatingSystemVersion
-    let useModernLaunchctl = os.majorVersion >= 11 || (os.majorVersion == 10 && os.minorVersion >= 15)
-    let command = useModernLaunchctl
-      ? "launchctl bootout gui/\(uid) \"\(servicePath)\""
-      : "launchctl unload \"\(servicePath)\""
-    let (success, output) = runShellCommand(command)
-    if success {
-      menuState.connected = false
-      refreshMenuUI()
-      notifyFlutterMenuAction(action: "connectionStateChanged", payload: [
-        "connected": false,
-        "nodeName": nodeName,
-        "proxyMode": menuState.proxyMode.rawValue
-      ])
-      logToFlutter("info", "状态栏停止加速成功: \(nodeName)")
-      return true
-    }
-    logToFlutter("error", "状态栏停止加速失败: \(output)")
-    return false
-  }
-
-  private func runShellCommand(_ command: String) -> (Bool, String) {
-    let task = Process()
-    task.launchPath = "/bin/zsh"
-    task.arguments = ["-c", command]
-    let pipe = Pipe()
-    task.standardOutput = pipe
-    task.standardError = pipe
-
-    do {
-      try task.run()
-      task.waitUntilExit()
-      let data = pipe.fileHandleForReading.readDataToEndOfFile()
-      let output = String(data: data, encoding: .utf8) ?? ""
-      return (task.terminationStatus == 0, output)
-    } catch {
-      return (false, error.localizedDescription)
-    }
+    notifyFlutterMenuAction(action: "stopAcceleration", payload: [
+      "nodeName": menuState.nodeName == "-" ? "" : menuState.nodeName,
+      "proxyMode": menuState.proxyMode.rawValue,
+    ])
   }
 
   private func resolveTargetNodeName() -> String? {
     if menuState.nodeName != "-" && !menuState.nodeName.isEmpty {
       return menuState.nodeName
     }
-    if let first = loadNodeEntries().first?.name {
+    if let first = loadNodeNames().first {
       menuState.nodeName = first
       refreshMenuUI()
       return first
@@ -319,25 +257,20 @@ class AppDelegate: FlutterAppDelegate {
     return nil
   }
 
-  private func serviceNameForNode(_ nodeName: String) -> String? {
-    return loadNodeEntries().first(where: { $0.name == nodeName })?.serviceName
-  }
-
-  private func loadNodeEntries() -> [(name: String, serviceName: String)] {
+  private func loadNodeNames() -> [String] {
     guard let rulesFile = resolveRulesFile(),
-          let data = try? Data(contentsOf: rulesFile),
-          let object = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
+      let data = try? Data(contentsOf: rulesFile),
+      let object = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+    else {
       return []
     }
 
     return object.compactMap { item in
-      guard let name = item["name"] as? String,
-            let serviceName = item["serviceName"] as? String,
-            !name.isEmpty,
-            !serviceName.isEmpty else {
+      let name = (item["name"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard let name, !name.isEmpty else {
         return nil
       }
-      return (name, serviceName)
+      return name
     }
   }
 

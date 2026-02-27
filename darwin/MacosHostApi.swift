@@ -220,12 +220,14 @@ class DarwinHostApiImpl: DarwinHostApi {
       }
       guard let manager else {
         self.clearStartedAt()
+        self.clearLastError()
         self.emitPacketTunnelStateChanged()
         completion(.success(()))
         return
       }
       manager.connection.stopVPNTunnel()
       self.clearStartedAt()
+      self.clearLastError()
       self.emitPacketTunnelStateChanged()
       completion(.success(()))
     }
@@ -270,7 +272,6 @@ class DarwinHostApiImpl: DarwinHostApi {
 
   private func buildPacketTunnelOptions(profile: TunnelProfile) -> [String: NSObject] {
     var options: [String: NSObject] = [
-      "useFd": NSNumber(value: false),
       "tun46Setting": NSNumber(value: profile.tun46Setting),
       "defaultNicSupport6": NSNumber(value: profile.defaultNicSupport6),
       "mtu": NSNumber(value: profile.mtu),
