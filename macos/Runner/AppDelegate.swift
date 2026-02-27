@@ -76,6 +76,13 @@ class AppDelegate: FlutterAppDelegate {
     super.applicationDidFinishLaunching(notification)
   }
 
+  override func applicationWillTerminate(_ notification: Notification) {
+    // Stop the managed xray process.
+    _ = stopDirectXray()
+    // Kill any orphaned xray processes left from previous runs.
+    killOrphanXrayProcesses()
+  }
+
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
     return false
   }
