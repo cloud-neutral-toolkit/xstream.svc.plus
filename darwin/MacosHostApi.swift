@@ -123,6 +123,7 @@ class DarwinHostApiImpl: DarwinHostApi {
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     let defaults = sharedDefaults()
+    let previousOptions = storedPacketTunnelOptions()
     let options = buildPacketTunnelOptions(profile: profile)
     let staleManagerHint = readLastError()
     defaults.set(options, forKey: profileOptionsKey)
@@ -158,6 +159,16 @@ class DarwinHostApiImpl: DarwinHostApi {
           self.emitPacketTunnelError(code: "profile-save-failed", message: errorMessage)
           self.emitPacketTunnelStateChanged()
           completion(.failure(error))
+          return
+        }
+
+        if let providerId = self.packetTunnelProviderBundleId(),
+          self.packetTunnelOptionsEqual(previousOptions, options),
+          self.managerHasLatestOptions(manager, providerId: providerId, options: options),
+          !self.shouldForceManagerRecreation(staleManagerHint: staleManagerHint)
+        {
+          self.emitPacketTunnelStateChanged()
+          completion(.success("profile_unchanged"))
           return
         }
 
@@ -558,6 +569,55 @@ class DarwinHostApiImpl: DarwinHostApi {
       _ = staleManagerHint
       return false
     #endif
+  }
+
+  private func packetTunnelOptionsEqual(_ lhs: [String: NSObject]?, _ rhs: [String: NSObject])
+    -> Bool
+  {
+    guard let lhs else {
+      return false
+    }
+    return NSDictionary(dictionary: lhs).isEqual(to: rhs)
+  }
+
+  private func managerHasLatestOptions(
+    _ manager: NETunnelProviderManager,
+    providerId: String,
+    options: [String: NSObject]
+  ) -> Bool {
+    guard let proto = manager.protocolConfiguration as? NETunnelProviderProtocol else {
+      return false
+    }
+    guard proto.providerBundleIdentifier == providerId else {
+      return false
+    }
+    guard manager.localizedDescription == packetTunnelDisplayName else {
+      return false
+    }
+    guard proto.serverAddress == packetTunnelDisplayName else {
+      return false
+    }
+    guard
+      let currentOptions = packetTunnelOptions(
+        from: proto.providerConfiguration?["options"] as? [String: Any])
+    else {
+      return false
+    }
+    return packetTunnelOptionsEqual(currentOptions, options)
+  }
+
+  private func packetTunnelOptions(from dictionary: [String: Any]?) -> [String: NSObject]? {
+    guard let dictionary else {
+      return nil
+    }
+    var result: [String: NSObject] = [:]
+    for (key, value) in dictionary {
+      guard let object = value as? NSObject else {
+        return nil
+      }
+      result[key] = object
+    }
+    return result.isEmpty ? nil : result
   }
 
   // iOS can retain a stale System VPN profile after reinstall/update. When the

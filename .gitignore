@@ -60,6 +60,9 @@ windows/runner/resources/iconset/
 tools/xstream-mcp-server/node_modules/
 tools/xstream-mcp-server/xstream-mcp-server
 
+# Reference-only subproject
+vx/
+
 # Xray dat files are downloaded during macOS packaging
 macos/Resources/xray/geoip.dat
 macos/Resources/xray/geosite.dat

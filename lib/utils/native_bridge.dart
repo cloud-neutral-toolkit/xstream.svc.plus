@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ffi' as ffi;
 import 'package:flutter/services.dart';
 import 'package:ffi/ffi.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/vpn_config_service.dart'; // 引入新的 VpnConfig 类
 import '../bindings/bridge_bindings.dart';
 import '../app/darwin_host_api.g.dart' as darwin_host;
@@ -21,6 +22,8 @@ class NativeBridge {
       _nativeMenuActionHandler;
   static String? _mobileActiveNodeName;
   static String? _darwinAppGroupPathCache;
+  static const _iosTunnelProfileSignatureKey =
+      'ios_packet_tunnel_profile_signature';
 
   static final bool _useFfi = Platform.isWindows ||
       Platform.isLinux ||
@@ -200,10 +203,12 @@ class NativeBridge {
         final profile = await _buildDefaultTunnelProfile(
           configPath: runtimeConfigPath,
         );
-        final saveResult =
-            await _darwinHostApi.savePacketTunnelProfile(profile);
+        final saveResult = Platform.isIOS
+            ? await _saveIosPacketTunnelProfileIfNeeded(profile)
+            : await _darwinHostApi.savePacketTunnelProfile(profile);
         await _darwinHostApi.startPacketTunnel();
-        if (saveResult != 'profile_saved') {
+        if (saveResult != 'profile_saved' &&
+            saveResult != 'profile_unchanged') {
           return saveResult;
         }
         return _waitForDarwinPacketTunnelConnected(
@@ -914,8 +919,8 @@ class NativeBridge {
       final profile = await _buildDefaultTunnelProfile(
         configPath: runtimeConfigPath,
       );
-      final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
-      return saveResult == 'profile_saved'
+      final saveResult = await _saveIosPacketTunnelProfileIfNeeded(profile);
+      return saveResult == 'profile_saved' || saveResult == 'profile_unchanged'
           ? 'iOS Packet Tunnel 配置已保存到系统 VPN 列表'
           : saveResult;
     } on MissingPluginException {
@@ -936,8 +941,11 @@ class NativeBridge {
     try {
       final configPath = await _resolveOrBootstrapIosTunnelConfigPath();
       final profile = await _buildDefaultTunnelProfile(configPath: configPath);
-      final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
-      return saveResult == 'profile_saved'
+      final saveResult = await _saveIosPacketTunnelProfileIfNeeded(
+        profile,
+        force: true,
+      );
+      return saveResult == 'profile_saved' || saveResult == 'profile_unchanged'
           ? 'iOS System VPN 配置已注册到系统列表'
           : saveResult;
     } on MissingPluginException {
@@ -993,9 +1001,11 @@ class NativeBridge {
       final profile = await _buildDefaultTunnelProfile(
         configPath: canonicalPath,
       );
-      final saveResult = await _darwinHostApi.savePacketTunnelProfile(profile);
+      final saveResult = Platform.isIOS
+          ? await _saveIosPacketTunnelProfileIfNeeded(profile)
+          : await _darwinHostApi.savePacketTunnelProfile(profile);
       await _darwinHostApi.startPacketTunnel();
-      if (saveResult != 'profile_saved') {
+      if (saveResult != 'profile_saved' && saveResult != 'profile_unchanged') {
         return saveResult;
       }
       return _waitForDarwinPacketTunnelConnected(
@@ -1153,6 +1163,76 @@ class NativeBridge {
       return true;
     }
     return false;
+  }
+
+  static Future<String> _saveIosPacketTunnelProfileIfNeeded(
+    darwin_host.TunnelProfile profile, {
+    bool force = false,
+  }) async {
+    if (!Platform.isIOS) {
+      return _darwinHostApi.savePacketTunnelProfile(profile);
+    }
+
+    final signature = _serializeTunnelProfile(profile);
+    final prefs = await SharedPreferences.getInstance();
+    final savedSignature = prefs.getString(_iosTunnelProfileSignatureKey);
+
+    if (!force && savedSignature == signature) {
+      return 'profile_unchanged';
+    }
+
+    final result = await _darwinHostApi.savePacketTunnelProfile(profile);
+    if (result == 'profile_saved' || result == 'profile_unchanged') {
+      await prefs.setString(_iosTunnelProfileSignatureKey, signature);
+    }
+    return result;
+  }
+
+  static String _serializeTunnelProfile(darwin_host.TunnelProfile profile) {
+    return jsonEncode({
+      'mtu': profile.mtu,
+      'tun46Setting': profile.tun46Setting,
+      'defaultNicSupport6': profile.defaultNicSupport6,
+      'dnsServers4': profile.dnsServers4,
+      'dnsServers6': profile.dnsServers6,
+      'ipv4Addresses': profile.ipv4Addresses,
+      'ipv4SubnetMasks': profile.ipv4SubnetMasks,
+      'ipv4IncludedRoutes': profile.ipv4IncludedRoutes
+          .map(
+            (route) => {
+              'destinationAddress': route.destinationAddress,
+              'subnetMask': route.subnetMask,
+            },
+          )
+          .toList(),
+      'ipv4ExcludedRoutes': profile.ipv4ExcludedRoutes
+          .map(
+            (route) => {
+              'destinationAddress': route.destinationAddress,
+              'subnetMask': route.subnetMask,
+            },
+          )
+          .toList(),
+      'ipv6Addresses': profile.ipv6Addresses,
+      'ipv6NetworkPrefixLengths': profile.ipv6NetworkPrefixLengths,
+      'ipv6IncludedRoutes': profile.ipv6IncludedRoutes
+          .map(
+            (route) => {
+              'destinationAddress': route.destinationAddress,
+              'networkPrefixLength': route.networkPrefixLength,
+            },
+          )
+          .toList(),
+      'ipv6ExcludedRoutes': profile.ipv6ExcludedRoutes
+          .map(
+            (route) => {
+              'destinationAddress': route.destinationAddress,
+              'networkPrefixLength': route.networkPrefixLength,
+            },
+          )
+          .toList(),
+      'configPath': profile.configPath,
+    });
   }
 
   /// Start embedded xray-core via FFI on iOS

@@ -1,6 +1,8 @@
 # Unreleased
 
 ## ✅ Changes
+- Reduced iOS System VPN profile churn by saving Packet Tunnel configuration only when the profile changes, while keeping macOS Packet Tunnel save/start behavior unchanged
+- Realigned the iOS Packet Tunnel extension to use the standard Swift principal-class entry path and removed the temporary Objective-C startup probe
 - Moved iOS Packet Tunnel runtime config into the App Group shared container so the host app and Packet Tunnel extension use the same System VPN runtime path
 - Added iOS startup bootstrap to register the System VPN profile even before the first node import, so `Xstream` can appear in the system VPN list earlier
 - Updated iOS Packet Tunnel profile save flow to register `Xstream` in the system VPN list during profile save, and pre-register the VPN profile after iOS node import without auto-connecting

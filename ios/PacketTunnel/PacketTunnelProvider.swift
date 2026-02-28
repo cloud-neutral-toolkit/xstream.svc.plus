@@ -2,7 +2,6 @@ import Darwin
 import Foundation
 import Network
 import NetworkExtension
-import ObjectiveC.runtime
 import os.log
 
 let tunnelLog = OSLog(subsystem: "plus.svc.xstream", category: "PacketTunnel")
@@ -16,57 +15,7 @@ let tunnelLog = OSLog(subsystem: "plus.svc.xstream", category: "PacketTunnel")
   private let utunOptionInterfaceName = UTUN_OPT_IFNAME
 #endif
 
-private let packetTunnelGroupId = "group.plus.svc.xstream"
-private let packetTunnelProbeStageKey = "packet_tunnel_probe_stage"
-
-@objc(PacketTunnelProvider)
 public final class PacketTunnelProvider: NEPacketTunnelProvider {
-  public override func startTunnel(
-    options: [String: NSObject]?,
-    completionHandler: @escaping (Error?) -> Void
-  ) {
-    let defaults = UserDefaults(suiteName: packetTunnelGroupId)
-    defaults?.set("probe-startTunnel-entered", forKey: packetTunnelProbeStageKey)
-
-    let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-    settings.mtu = 1500
-
-    let ipv4 = NEIPv4Settings(addresses: ["10.0.0.2"], subnetMasks: ["255.255.255.0"])
-    ipv4.includedRoutes = [NEIPv4Route.default()]
-    settings.ipv4Settings = ipv4
-
-    let dns = NEDNSSettings(servers: ["1.1.1.1", "8.8.8.8"])
-    dns.matchDomains = [""]
-    dns.matchDomainsNoSearch = true
-    settings.dnsSettings = dns
-
-    setTunnelNetworkSettings(settings) { error in
-      if let error {
-        defaults?.set(
-          "probe-setTunnelNetworkSettings-error: \(error.localizedDescription)",
-          forKey: "packet_tunnel_last_error"
-        )
-        completionHandler(error)
-        return
-      }
-
-      defaults?.set("probe-setTunnelNetworkSettings-succeeded", forKey: packetTunnelProbeStageKey)
-      defaults?.set(Date().timeIntervalSince1970, forKey: "packet_tunnel_probe_connected_at")
-      completionHandler(nil)
-    }
-  }
-
-  public override func stopTunnel(
-    with reason: NEProviderStopReason,
-    completionHandler: @escaping () -> Void
-  ) {
-    let defaults = UserDefaults(suiteName: packetTunnelGroupId)
-    defaults?.set("probe-stopTunnel-\(reason.rawValue)", forKey: packetTunnelProbeStageKey)
-    completionHandler()
-  }
-}
-
-public final class PacketTunnelImplementation: NEPacketTunnelProvider {
   private var activeSettings: NEPacketTunnelNetworkSettings?
   private lazy var statusStore = PacketTunnelStatusStore()
   private var monitor: NWPathMonitor?

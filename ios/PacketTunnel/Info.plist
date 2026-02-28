@@ -4,12 +4,16 @@
 <dict>
   <key>CFBundleIdentifier</key>
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundlePackageType</key>
+  <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
   <key>CFBundleShortVersionString</key>
   <string>$(MARKETING_VERSION)</string>
   <key>CFBundleVersion</key>
   <string>$(CURRENT_PROJECT_VERSION)</string>
   <key>CFBundleName</key>
-  <string>PacketTunnel</string>
+  <string>$(PRODUCT_NAME)</string>
   <key>CFBundleDisplayName</key>
   <string>Xstream Packet Tunnel</string>
   <key>CFBundleExecutable</key>
@@ -19,7 +23,7 @@
     <key>NSExtensionPointIdentifier</key>
     <string>com.apple.networkextension.packet-tunnel</string>
     <key>NSExtensionPrincipalClass</key>
-    <string>PacketTunnelProvider</string>
+    <string>$(PRODUCT_MODULE_NAME).PacketTunnelProvider</string>
   </dict>
 </dict>
 </plist>
