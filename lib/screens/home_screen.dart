@@ -30,7 +30,7 @@ class _LatencyVisual {
   });
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const _emptyMetricValue = '— —';
   static final Uri _latencyProbeUri = Uri.parse('https://example.com/');
   String _activeNode = '';
@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _connectedLocation = '-';
   PacketTunnelMetricsSnapshot _packetTunnelMetrics =
       const PacketTunnelMetricsSnapshot();
+  AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
 
   void _showMessage(String msg, {Color? bgColor}) {
     if (!mounted) return;
@@ -60,15 +61,16 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     GlobalState.nodeListRevision.addListener(_onNodeListRevisionChanged);
     GlobalState.activeNodeName.addListener(_onActiveNodeChanged);
     _initializeConfig();
-    _startMetricsPolling();
-    _startLatencyPolling();
+    _updateMonitoringState();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _durationTimer?.cancel();
     _metricsTimer?.cancel();
     _latencyTimer?.cancel();
@@ -112,6 +114,12 @@ class _HomeScreenState extends State<HomeScreen> {
     await _initializeConfig();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appLifecycleState = state;
+    _updateMonitoringState();
+  }
+
   void _onActiveNodeChanged() {
     if (!mounted) return;
     setState(() {
@@ -122,7 +130,30 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     _syncConnectedMeta();
-    unawaited(_refreshActiveNodeLatency());
+    _updateMonitoringState();
+    if (_shouldPollMonitoring) {
+      unawaited(_refreshPacketTunnelMetrics());
+      unawaited(_refreshActiveNodeLatency());
+    } else if (_packetTunnelMetrics != const PacketTunnelMetricsSnapshot()) {
+      setState(() {
+        _packetTunnelMetrics = const PacketTunnelMetricsSnapshot();
+      });
+    }
+  }
+
+  bool get _shouldPollMonitoring =>
+      _appLifecycleState == AppLifecycleState.resumed && _activeNode.isNotEmpty;
+
+  void _updateMonitoringState() {
+    if (_shouldPollMonitoring) {
+      _startMetricsPolling();
+      _startLatencyPolling();
+      return;
+    }
+    _metricsTimer?.cancel();
+    _metricsTimer = null;
+    _latencyTimer?.cancel();
+    _latencyTimer = null;
   }
 
   void _syncConnectedMeta() {
@@ -159,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startMetricsPolling() {
     _metricsTimer?.cancel();
     unawaited(_refreshPacketTunnelMetrics());
-    _metricsTimer = Timer.periodic(const Duration(milliseconds: 500), (_) {
+    _metricsTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       unawaited(_refreshPacketTunnelMetrics());
     });
   }
@@ -167,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _startLatencyPolling() {
     _latencyTimer?.cancel();
     unawaited(_refreshActiveNodeLatency());
-    _latencyTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+    _latencyTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       unawaited(_refreshActiveNodeLatency());
     });
   }

@@ -691,34 +691,40 @@ private final class XrayTunnelBridge {
 }
 
 private final class PacketTunnelMetricsSampler {
+  private static let resourceSampleInterval: TimeInterval = 10
   private let queue = DispatchQueue(label: "plus.svc.xstream.PacketTunnel.metrics")
   private let store = PacketTunnelMetricsSnapshotStore()
   private var timer: DispatchSourceTimer?
   private var lastSample: InterfaceCounters?
+  private var lastResourceSampleAt: TimeInterval?
+  private var cachedCpuPercent: Double?
+  private var cachedMemoryBytes: Int64?
 
   func start(interfaceName: String?) {
     stop()
     guard let interfaceName = normalizeInterfaceName(interfaceName) else {
+      refreshResourceMetricsIfNeeded(force: true, timestamp: Date().timeIntervalSince1970)
       store.write(
         downloadBytesPerSecond: nil,
         uploadBytesPerSecond: nil,
-        memoryBytes: currentMemoryBytes(),
-        cpuPercent: currentCpuPercent()
+        memoryBytes: cachedMemoryBytes,
+        cpuPercent: cachedCpuPercent
       )
       return
     }
 
     let initialTimestamp = Date().timeIntervalSince1970
     lastSample = readCounters(interfaceName: interfaceName, timestamp: initialTimestamp)
+    refreshResourceMetricsIfNeeded(force: true, timestamp: initialTimestamp)
     store.write(
       downloadBytesPerSecond: 0,
       uploadBytesPerSecond: 0,
-      memoryBytes: currentMemoryBytes(),
-      cpuPercent: currentCpuPercent()
+      memoryBytes: cachedMemoryBytes,
+      cpuPercent: cachedCpuPercent
     )
 
     let timer = DispatchSource.makeTimerSource(queue: queue)
-    timer.schedule(deadline: .now() + .milliseconds(300), repeating: .milliseconds(500))
+    timer.schedule(deadline: .now() + .seconds(1), repeating: .seconds(1))
     timer.setEventHandler { [weak self] in
       self?.captureSnapshot(interfaceName: interfaceName)
     }
@@ -731,25 +737,27 @@ private final class PacketTunnelMetricsSampler {
     timer?.cancel()
     timer = nil
     lastSample = nil
+    lastResourceSampleAt = nil
+    cachedCpuPercent = nil
+    cachedMemoryBytes = nil
     store.clear()
   }
 
   private func captureSnapshot(interfaceName: String) {
     let timestamp = Date().timeIntervalSince1970
-    let memoryBytes = currentMemoryBytes()
-    let cpuPercent = currentCpuPercent()
+    refreshResourceMetricsIfNeeded(timestamp: timestamp)
     guard let current = readCounters(interfaceName: interfaceName, timestamp: timestamp) else {
       store.write(
         downloadBytesPerSecond: nil,
         uploadBytesPerSecond: nil,
-        memoryBytes: memoryBytes,
-        cpuPercent: cpuPercent
+        memoryBytes: cachedMemoryBytes,
+        cpuPercent: cachedCpuPercent
       )
       lastSample = nil
       return
     }
 
-    let elapsed = max(timestamp - (lastSample?.timestamp ?? timestamp), 0.5)
+    let elapsed = max(timestamp - (lastSample?.timestamp ?? timestamp), 1.0)
     let downloadBytesPerSecond: Int64?
     let uploadBytesPerSecond: Int64?
     if let previous = lastSample {
@@ -770,8 +778,8 @@ private final class PacketTunnelMetricsSampler {
     store.write(
       downloadBytesPerSecond: downloadBytesPerSecond,
       uploadBytesPerSecond: uploadBytesPerSecond,
-      memoryBytes: memoryBytes,
-      cpuPercent: cpuPercent
+      memoryBytes: cachedMemoryBytes,
+      cpuPercent: cachedCpuPercent
     )
   }
 
@@ -872,11 +880,29 @@ private final class PacketTunnelMetricsSampler {
     return min(totalUsage, 100.0)
   }
 
+  private func refreshResourceMetricsIfNeeded(force: Bool = false, timestamp: TimeInterval) {
+    let shouldRefresh: Bool
+    if force {
+      shouldRefresh = true
+    } else if let lastResourceSampleAt {
+      shouldRefresh = (timestamp - lastResourceSampleAt) >= Self.resourceSampleInterval
+    } else {
+      shouldRefresh = true
+    }
+    guard shouldRefresh else {
+      return
+    }
+    cachedCpuPercent = currentCpuPercent()
+    cachedMemoryBytes = currentMemoryBytes()
+    lastResourceSampleAt = timestamp
+  }
+
   private struct InterfaceCounters {
     let receivedBytes: UInt64
     let sentBytes: UInt64
     let timestamp: TimeInterval
   }
+
 }
 
 private final class PacketTunnelMetricsSnapshotStore {
