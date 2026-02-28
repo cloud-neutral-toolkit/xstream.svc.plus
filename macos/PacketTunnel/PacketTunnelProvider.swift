@@ -571,7 +571,7 @@ private final class PacketTunnelMetricsSampler {
         downloadBytesPerSecond: nil,
         uploadBytesPerSecond: nil,
         memoryBytes: currentMemoryBytes(),
-        cpuPercent: nil
+        cpuPercent: currentCpuPercent()
       )
       return
     }
@@ -582,7 +582,7 @@ private final class PacketTunnelMetricsSampler {
       downloadBytesPerSecond: 0,
       uploadBytesPerSecond: 0,
       memoryBytes: currentMemoryBytes(),
-      cpuPercent: nil
+      cpuPercent: currentCpuPercent()
     )
 
     let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -605,12 +605,13 @@ private final class PacketTunnelMetricsSampler {
   private func captureSnapshot(interfaceName: String) {
     let timestamp = Date().timeIntervalSince1970
     let memoryBytes = currentMemoryBytes()
+    let cpuPercent = currentCpuPercent()
     guard let current = readCounters(interfaceName: interfaceName, timestamp: timestamp) else {
       store.write(
         downloadBytesPerSecond: nil,
         uploadBytesPerSecond: nil,
         memoryBytes: memoryBytes,
-        cpuPercent: nil
+        cpuPercent: cpuPercent
       )
       lastSample = nil
       return
@@ -638,7 +639,7 @@ private final class PacketTunnelMetricsSampler {
       downloadBytesPerSecond: downloadBytesPerSecond,
       uploadBytesPerSecond: uploadBytesPerSecond,
       memoryBytes: memoryBytes,
-      cpuPercent: nil
+      cpuPercent: cpuPercent
     )
   }
 
@@ -701,6 +702,42 @@ private final class PacketTunnelMetricsSampler {
       return nil
     }
     return Int64(info.resident_size)
+  }
+
+  private func currentCpuPercent() -> Double? {
+    var threadList: thread_act_array_t?
+    var threadCount: mach_msg_type_number_t = 0
+    let result = task_threads(mach_task_self_, &threadList, &threadCount)
+    guard result == KERN_SUCCESS, let threadList else {
+      return nil
+    }
+    defer {
+      let size = vm_size_t(Int(threadCount) * MemoryLayout<thread_t>.stride)
+      vm_deallocate(mach_task_self_, vm_address_t(bitPattern: threadList), size)
+    }
+
+    var totalUsage = 0.0
+    for index in 0..<Int(threadCount) {
+      var info = thread_basic_info()
+      var count = mach_msg_type_number_t(
+        MemoryLayout<thread_basic_info_data_t>.size
+          / MemoryLayout<
+            integer_t
+          >.size)
+      let infoResult = withUnsafeMutablePointer(to: &info) { pointer in
+        pointer.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { rebound in
+          thread_info(threadList[index], thread_flavor_t(THREAD_BASIC_INFO), rebound, &count)
+        }
+      }
+      guard infoResult == KERN_SUCCESS else {
+        continue
+      }
+      if (info.flags & TH_FLAGS_IDLE) == 0 {
+        totalUsage += Double(info.cpu_usage) / Double(TH_USAGE_SCALE) * 100.0
+      }
+    }
+
+    return min(totalUsage, 100.0)
   }
 
   private struct InterfaceCounters {

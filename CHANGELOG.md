@@ -11,6 +11,7 @@ _Release Date: 2026-02-28_
 
 - Reworked the Home monitoring cards for iOS and macOS with a quieter Material 3 layout: a primary download/upload card, a latency card, a CPU card, and a thin memory strip without changing page flow or connection actions
 - Added a Darwin `PacketTunnelProvider -> App Group -> DarwinHostApi -> Home` monitoring snapshot path so the Home page can show live download/upload and memory data from the System VPN extension on iOS and macOS while CPU stays optional
+- Added macOS Packet Tunnel CPU sampling and Home-side millisecond latency probing for the active connection, so the Apple monitoring cards no longer rely on placeholder values during active sessions
 - Tightened the iOS monitoring snapshot cadence and Home polling interval so rate and memory cards feel more responsive during active Secure Tunnel sessions
 - Stripped local SOCKS and HTTP inbounds from iOS Packet Tunnel runtime configs and stop any lingering iOS app-process engine before System VPN startup, avoiding local port conflicts inside the Packet Tunnel extension
 - Switched the iOS Packet Tunnel target to statically link `libxray.a` and call the Go bridge exports directly from the Swift provider, while keeping the macOS bridge path unchanged

@@ -333,13 +333,14 @@ On macOS, the Packet Tunnel extension also writes a compact latest-value snapsho
 shared App Group state for the Home monitoring cards:
 
 1. `PacketTunnelMetricsSampler` reads interface byte counters from the active `utunX`.
-2. It samples resident memory from the extension process.
-3. It writes `downloadBytesPerSecond`, `uploadBytesPerSecond`, `memoryBytes`, and `updatedAt`
+2. It samples resident memory and process CPU usage from the extension process.
+3. It writes `downloadBytesPerSecond`, `uploadBytesPerSecond`, `memoryBytes`, `cpuPercent`, and `updatedAt`
    into `packet_tunnel_metrics_snapshot`.
 4. `darwin/MacosHostApi.swift` reads that snapshot and Flutter Home renders it without changing
    the startup or stop control path.
 
-CPU remains optional and can stay empty when there is no low-risk sampler.
+The latency card remains on the Flutter side and periodically measures the active connection in
+milliseconds without changing the Packet Tunnel control path.
 
 ### 5.2 Network settings that are applied
 

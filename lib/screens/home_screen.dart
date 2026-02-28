@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -31,16 +32,19 @@ class _LatencyVisual {
 
 class _HomeScreenState extends State<HomeScreen> {
   static const _emptyMetricValue = '— —';
+  static final Uri _latencyProbeUri = Uri.parse('https://example.com/');
   String _activeNode = '';
   String _selectedNode = '';
   String _hoveredNode = '';
   String _highlightNode = '';
   bool _isSwitchingNode = false;
+  bool _latencyProbeInFlight = false;
   List<VpnNode> vpnNodes = [];
   final Map<String, int> _latencyByNode = {};
   DateTime? _connectedAt;
   Timer? _durationTimer;
   Timer? _metricsTimer;
+  Timer? _latencyTimer;
   Duration _connectedDuration = Duration.zero;
   String _connectedLocation = '-';
   PacketTunnelMetricsSnapshot _packetTunnelMetrics =
@@ -60,12 +64,14 @@ class _HomeScreenState extends State<HomeScreen> {
     GlobalState.activeNodeName.addListener(_onActiveNodeChanged);
     _initializeConfig();
     _startMetricsPolling();
+    _startLatencyPolling();
   }
 
   @override
   void dispose() {
     _durationTimer?.cancel();
     _metricsTimer?.cancel();
+    _latencyTimer?.cancel();
     GlobalState.nodeListRevision.removeListener(_onNodeListRevisionChanged);
     GlobalState.activeNodeName.removeListener(_onActiveNodeChanged);
     super.dispose();
@@ -116,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
     _syncConnectedMeta();
+    unawaited(_refreshActiveNodeLatency());
   }
 
   void _syncConnectedMeta() {
@@ -157,6 +164,14 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _startLatencyPolling() {
+    _latencyTimer?.cancel();
+    unawaited(_refreshActiveNodeLatency());
+    _latencyTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      unawaited(_refreshActiveNodeLatency());
+    });
+  }
+
   Future<void> _refreshPacketTunnelMetrics() async {
     final snapshot = await NativeBridge.getPacketTunnelMetrics();
     if (!mounted) return;
@@ -171,6 +186,69 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _packetTunnelMetrics = snapshot;
     });
+  }
+
+  Future<void> _refreshActiveNodeLatency() async {
+    final nodeName = _activeNode.trim();
+    if (nodeName.isEmpty || _latencyProbeInFlight) {
+      return;
+    }
+
+    _latencyProbeInFlight = true;
+    try {
+      final latency = await _probeActiveConnectionLatency();
+      if (!mounted ||
+          _activeNode.trim() != nodeName ||
+          latency == null ||
+          latency < 0) {
+        return;
+      }
+      if (_latencyByNode[nodeName] == latency) {
+        return;
+      }
+      setState(() {
+        _latencyByNode[nodeName] = latency;
+      });
+    } finally {
+      _latencyProbeInFlight = false;
+    }
+  }
+
+  Future<int?> _probeActiveConnectionLatency() async {
+    if (Platform.isMacOS && !NativeBridge.isTunMode) {
+      final watch = Stopwatch()..start();
+      final result = await NativeBridge.verifySocks5Proxy();
+      watch.stop();
+      if (result.startsWith('success:')) {
+        return watch.elapsedMilliseconds;
+      }
+      return null;
+    }
+    return _probeSystemTunnelLatency();
+  }
+
+  Future<int?> _probeSystemTunnelLatency() async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
+    try {
+      final watch = Stopwatch()..start();
+      final request = await client.headUrl(_latencyProbeUri).timeout(
+            const Duration(seconds: 4),
+          );
+      request.followRedirects = false;
+      request.headers.set(HttpHeaders.cacheControlHeader, 'no-cache');
+      final response =
+          await request.close().timeout(const Duration(seconds: 4));
+      await response.drain<void>();
+      watch.stop();
+      if (response.statusCode >= 200 && response.statusCode < 500) {
+        return watch.elapsedMilliseconds;
+      }
+    } catch (_) {
+      return null;
+    } finally {
+      client.close(force: true);
+    }
+    return null;
   }
 
   void _scheduleClearHighlight() {
