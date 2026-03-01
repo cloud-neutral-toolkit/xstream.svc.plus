@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:archive/archive_io.dart';
 import '../../utils/global_config.dart'
-    show GlobalState, buildVersion, DnsConfig, GlobalApplicationConfig;
+    show GlobalState, DnsConfig, GlobalApplicationConfig;
 import '../../utils/native_bridge.dart';
+import '../../services/app_version_service.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/update/update_checker.dart';
@@ -416,8 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   String _currentVersion() {
-    final match = RegExp(r'v(\d+\.\d+\.\d+)').firstMatch(buildVersion);
-    return match?.group(1) ?? '0.0.0';
+    return AppVersionService.currentVersion;
   }
 
   Future<void> _onSyncConfig() async {
@@ -1564,7 +1564,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showTelemetryData() {
-    final data = TelemetryService.collectData(appVersion: buildVersion);
+    final data =
+        TelemetryService.collectData(appVersion: AppVersionService.shortLabel);
     final json = const JsonEncoder.withIndent('  ').convert(data);
     showDialog(
       context: context,

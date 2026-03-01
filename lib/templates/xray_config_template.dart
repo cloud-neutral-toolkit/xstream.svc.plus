@@ -6,16 +6,7 @@ const String defaultXrayJsonTemplate = r'''
     "loglevel": "info"
   },
   "dns": {
-    "servers": [
-      {
-        "address": "<DNS1>",
-        "queryStrategy": "UseIPv4"
-      },
-      {
-        "address": "<DNS2>",
-        "queryStrategy": "UseIPv4"
-      }
-    ],
+    "servers": [],
     "queryStrategy": "UseIPv4",
     "disableFallbackIfMatch": true
   },
@@ -59,10 +50,7 @@ const String defaultXrayJsonTemplate = r'''
     },
     {
       "tag": "dns",
-      "protocol": "dns",
-      "proxySettings": {
-        "tag": "proxy"
-      }
+      "protocol": "dns"
     }
   ],
   "routing": {

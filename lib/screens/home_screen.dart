@@ -43,10 +43,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final Map<String, int> _latencyByNode = {};
   DateTime? _connectedAt;
   Timer? _durationTimer;
+  Timer? _statusTimer;
   Timer? _metricsTimer;
   Timer? _latencyTimer;
   Duration _connectedDuration = Duration.zero;
   String _connectedLocation = '-';
+  PacketTunnelStatus _packetTunnelStatus =
+      const PacketTunnelStatus(status: 'unknown', utunInterfaces: []);
   PacketTunnelMetricsSnapshot _packetTunnelMetrics =
       const PacketTunnelMetricsSnapshot();
   AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
@@ -64,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     GlobalState.nodeListRevision.addListener(_onNodeListRevisionChanged);
     GlobalState.activeNodeName.addListener(_onActiveNodeChanged);
+    GlobalState.connectionMode.addListener(_onConnectionModeChanged);
     _initializeConfig();
     _updateMonitoringState();
   }
@@ -72,10 +76,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _durationTimer?.cancel();
+    _statusTimer?.cancel();
     _metricsTimer?.cancel();
     _latencyTimer?.cancel();
     GlobalState.nodeListRevision.removeListener(_onNodeListRevisionChanged);
     GlobalState.activeNodeName.removeListener(_onActiveNodeChanged);
+    GlobalState.connectionMode.removeListener(_onConnectionModeChanged);
     super.dispose();
   }
 
@@ -97,6 +103,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _durationTimer = null;
       GlobalState.activeNodeName.value = '';
       GlobalState.lastImportedNodeName.value = '';
+      _updateMonitoringState();
       return;
     }
 
@@ -108,10 +115,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
     _syncConnectedMeta();
     _scheduleClearHighlight();
+    _updateMonitoringState();
+    if (_shouldPollPacketTunnelStatus) {
+      unawaited(_refreshPacketTunnelStatus());
+    }
   }
 
   Future<void> _onNodeListRevisionChanged() async {
     await _initializeConfig();
+  }
+
+  void _onConnectionModeChanged() {
+    _updateMonitoringState();
+    if (_shouldPollPacketTunnelStatus) {
+      unawaited(_refreshPacketTunnelStatus());
+    }
   }
 
   @override
@@ -131,29 +149,133 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     });
     _syncConnectedMeta();
     _updateMonitoringState();
-    if (_shouldPollMonitoring) {
+    if (_shouldPollPacketTunnelStatus) {
+      unawaited(_refreshPacketTunnelStatus());
+    }
+    if (_shouldPollMetrics) {
       unawaited(_refreshPacketTunnelMetrics());
+    }
+    if (_shouldPollLatency) {
       unawaited(_refreshActiveNodeLatency());
-    } else if (_packetTunnelMetrics != const PacketTunnelMetricsSnapshot()) {
-      setState(() {
-        _packetTunnelMetrics = const PacketTunnelMetricsSnapshot();
-      });
+    } else {
+      _clearMonitoringData(clearLatency: true);
     }
   }
 
-  bool get _shouldPollMonitoring =>
-      _appLifecycleState == AppLifecycleState.resumed && _activeNode.isNotEmpty;
+  bool get _requiresPacketTunnelStatus =>
+      Platform.isIOS || (Platform.isMacOS && NativeBridge.isTunMode);
+
+  bool get _packetTunnelExplicitlyUnavailable =>
+      _packetTunnelStatus.status == 'disconnected' ||
+      _packetTunnelStatus.status == 'disconnecting' ||
+      _packetTunnelStatus.status == 'invalid' ||
+      _packetTunnelStatus.status == 'not_configured';
+
+  bool get _shouldPollPacketTunnelStatus =>
+      _appLifecycleState == AppLifecycleState.resumed &&
+      _activeNode.isNotEmpty &&
+      _requiresPacketTunnelStatus;
+
+  bool get _shouldPollMetrics =>
+      _appLifecycleState == AppLifecycleState.resumed &&
+      _activeNode.isNotEmpty &&
+      !_packetTunnelExplicitlyUnavailable;
+
+  bool get _shouldPollLatency {
+    if (_appLifecycleState != AppLifecycleState.resumed ||
+        _activeNode.isEmpty) {
+      return false;
+    }
+    if (Platform.isMacOS && !NativeBridge.isTunMode) {
+      return true;
+    }
+    if (_requiresPacketTunnelStatus) {
+      return !_packetTunnelExplicitlyUnavailable;
+    }
+    return true;
+  }
 
   void _updateMonitoringState() {
-    if (_shouldPollMonitoring) {
+    if (_shouldPollPacketTunnelStatus) {
+      _startStatusPolling();
+    } else {
+      _statusTimer?.cancel();
+      _statusTimer = null;
+    }
+
+    if (_shouldPollMetrics) {
       _startMetricsPolling();
+    } else {
+      _metricsTimer?.cancel();
+      _metricsTimer = null;
+    }
+
+    if (_shouldPollLatency) {
       _startLatencyPolling();
+    } else {
+      _latencyTimer?.cancel();
+      _latencyTimer = null;
+    }
+
+    if (!_shouldPollMetrics || !_shouldPollLatency) {
+      _clearMonitoringData(clearLatency: !_shouldPollLatency);
+    }
+  }
+
+  void _clearMonitoringData({required bool clearLatency}) {
+    final activeNode = _activeNode.trim();
+    final hadMetrics = _packetTunnelMetrics.updatedAt != null ||
+        _packetTunnelMetrics.downloadBytesPerSecond != null ||
+        _packetTunnelMetrics.uploadBytesPerSecond != null ||
+        _packetTunnelMetrics.memoryBytes != null ||
+        _packetTunnelMetrics.cpuPercent != null;
+    final hadLatency = clearLatency &&
+        activeNode.isNotEmpty &&
+        _latencyByNode.containsKey(activeNode);
+    if (!hadMetrics && !hadLatency) {
       return;
     }
-    _metricsTimer?.cancel();
-    _metricsTimer = null;
-    _latencyTimer?.cancel();
-    _latencyTimer = null;
+    setState(() {
+      _packetTunnelMetrics = const PacketTunnelMetricsSnapshot();
+      if (hadLatency) {
+        _latencyByNode.remove(activeNode);
+      }
+    });
+  }
+
+  void _startStatusPolling() {
+    _statusTimer?.cancel();
+    unawaited(_refreshPacketTunnelStatus());
+    _statusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      unawaited(_refreshPacketTunnelStatus());
+    });
+  }
+
+  Future<void> _refreshPacketTunnelStatus() async {
+    if (!_shouldPollPacketTunnelStatus) {
+      return;
+    }
+    final status = await NativeBridge.getPacketTunnelStatus();
+    if (!mounted) return;
+    final changed = status.status != _packetTunnelStatus.status ||
+        status.lastError != _packetTunnelStatus.lastError ||
+        status.startedAt != _packetTunnelStatus.startedAt ||
+        status.utunInterfaces.join(',') !=
+            _packetTunnelStatus.utunInterfaces.join(',');
+    if (!changed) {
+      return;
+    }
+    setState(() {
+      _packetTunnelStatus = status;
+      if (_packetTunnelExplicitlyUnavailable) {
+        _packetTunnelMetrics = const PacketTunnelMetricsSnapshot();
+        final activeNode = _activeNode.trim();
+        if (activeNode.isNotEmpty) {
+          _latencyByNode.remove(activeNode);
+        }
+      }
+    });
+    _updateMonitoringState();
   }
 
   void _syncConnectedMeta() {
@@ -204,6 +326,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _refreshPacketTunnelMetrics() async {
+    if (!_shouldPollMetrics) {
+      return;
+    }
     final snapshot = await NativeBridge.getPacketTunnelMetrics();
     if (!mounted) return;
     final previous = _packetTunnelMetrics;
@@ -221,17 +346,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> _refreshActiveNodeLatency() async {
     final nodeName = _activeNode.trim();
-    if (nodeName.isEmpty || _latencyProbeInFlight) {
+    if (nodeName.isEmpty || _latencyProbeInFlight || !_shouldPollLatency) {
       return;
     }
 
     _latencyProbeInFlight = true;
     try {
       final latency = await _probeActiveConnectionLatency();
-      if (!mounted ||
-          _activeNode.trim() != nodeName ||
-          latency == null ||
-          latency < 0) {
+      if (!mounted || _activeNode.trim() != nodeName) {
+        return;
+      }
+      if (latency == null || latency < 0) {
+        if (_latencyByNode.containsKey(nodeName)) {
+          setState(() {
+            _latencyByNode.remove(nodeName);
+          });
+        }
         return;
       }
       if (_latencyByNode[nodeName] == latency) {
@@ -259,6 +389,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<int?> _probeSystemTunnelLatency() async {
+    if (_requiresPacketTunnelStatus && _packetTunnelExplicitlyUnavailable) {
+      return null;
+    }
     final client = HttpClient()..connectionTimeout = const Duration(seconds: 4);
     try {
       final watch = Stopwatch()..start();
@@ -474,7 +607,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   PacketTunnelMetricsSnapshot get _visibleMetrics {
     final updatedAt = _packetTunnelMetrics.updatedAt;
-    if (_activeNode.isEmpty || updatedAt == null) {
+    if (_activeNode.isEmpty ||
+        updatedAt == null ||
+        !_requiresPacketTunnelStatus ||
+        _packetTunnelExplicitlyUnavailable) {
       return const PacketTunnelMetricsSnapshot();
     }
     final age = DateTime.now().millisecondsSinceEpoch - updatedAt;

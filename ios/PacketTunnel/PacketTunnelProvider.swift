@@ -225,11 +225,20 @@ public final class PacketTunnelProvider: NEPacketTunnelProvider {
       dnsServers.append(contentsOf: (options["dnsServers6"] as? [String]) ?? [])
     }
     if dnsServers.isEmpty {
-      dnsServers = enableIPv6 ? ["10.0.0.53", "fd00::53"] : ["10.0.0.53"]
+      dnsServers = enableIPv6
+        ? ["1.1.1.1", "8.8.8.8", "2606:4700:4700::1111", "2001:4860:4860::8888"]
+        : ["1.1.1.1", "8.8.8.8"]
     }
     settings.dnsSettings = NEDNSSettings(servers: dnsServers)
     settings.dnsSettings?.matchDomains = [""]
     settings.dnsSettings?.matchDomainsNoSearch = true
+    os_log(
+      "PacketTunnelProvider: DNS capture servers=%{public}@ matchDomains=%{public}@",
+      log: tunnelLog,
+      type: .info,
+      dnsServers.joined(separator: ","),
+      (settings.dnsSettings?.matchDomains ?? []).joined(separator: ",")
+    )
 
     let ipv4Addresses = (options["ipv4Addresses"] as? [String]) ?? ["10.0.0.2"]
     let ipv4Masks = (options["ipv4SubnetMasks"] as? [String]) ?? ["255.255.255.0"]

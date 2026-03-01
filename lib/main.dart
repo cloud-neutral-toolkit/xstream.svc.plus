@@ -14,6 +14,7 @@ import 'utils/app_theme.dart';
 import 'utils/native_bridge.dart';
 import 'utils/global_config.dart' show GlobalState, DnsConfig;
 import 'services/experimental/experimental_features.dart';
+import 'services/app_version_service.dart';
 import 'utils/app_logger.dart';
 import 'services/telemetry/telemetry_service.dart';
 import 'services/vpn_config_service.dart';
@@ -26,6 +27,7 @@ import 'widgets/log_console.dart' show LogLevel;
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppVersionService.init();
   await TelemetryService.init();
   await DnsConfig.init();
   await GlobalProxyService.init();

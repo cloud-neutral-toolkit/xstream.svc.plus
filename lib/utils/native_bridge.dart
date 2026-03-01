@@ -633,8 +633,8 @@ class NativeBridge {
       mtu: 1500,
       tun46Setting: 2,
       defaultNicSupport6: true,
-      dnsServers4: DnsConfig.darwinPacketTunnelDnsServers4,
-      dnsServers6: DnsConfig.darwinPacketTunnelDnsServers6,
+      dnsServers4: DnsConfig.systemTunnelDnsServers4(),
+      dnsServers6: DnsConfig.systemTunnelDnsServers6(),
       ipv4Addresses: <String>['10.0.0.2'],
       ipv4SubnetMasks: <String>['255.255.255.0'],
       ipv4IncludedRoutes: <darwin_host.TunnelRouteV4>[
@@ -664,8 +664,8 @@ class NativeBridge {
       'mtu': 1500,
       'tun46Setting': 2,
       'defaultNicSupport6': true,
-      'dnsServers4': DnsConfig.effectiveTunnelDnsServers4(),
-      'dnsServers6': DnsConfig.effectiveTunnelDnsServers6,
+      'dnsServers4': DnsConfig.systemTunnelDnsServers4(),
+      'dnsServers6': DnsConfig.systemTunnelDnsServers6(),
       'ipv4Addresses': <String>['10.0.0.2'],
       'ipv4SubnetMasks': <String>['255.255.255.0'],
       'ipv4IncludedRoutes': <Map<String, String>>[

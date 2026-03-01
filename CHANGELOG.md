@@ -9,8 +9,15 @@ _Release Date: 2026-02-28_
 
 ## ✅ Changes
 
+- Added a unified DNS control-plane model that now generates resolver policy, domain sets, DNS routing, and Darwin system DNS capture behavior from one source instead of maintaining separate DNS fragments
+- Kept Darwin Packet Tunnel full DNS capture with `matchDomains = [""]` while aligning the shipping default to the stable resolver-IP path validated by `release/v0.3.0`
+- Enabled tun inbound sniffing in route-only mode so domain-aware routing can stay aligned with the same Direct Resolver policy used by Secure DNS decisions
+- Added a default-off FakeDNS policy slot to the DNS control plane, including guarded config generation and operator-facing warning text for future explicit fake-domain use
+- Fixed the About page and update checks to read the real app version and build number from platform package metadata instead of only showing build-label strings
+- Tightened Home monitoring gating so Packet Tunnel metrics and latency now depend on the real connected status of the System VPN session, preventing stale or split monitoring cards during disconnected or transitional states
+- Aligned iOS Packet Tunnel build settings with Flutter build-name/build-number variables through dedicated extension xcconfig files so `Runner.app` and `PacketTunnel.appex` archives now materialize matching bundle versions
 - Unified DNS configuration into a single control model shared by Xray config generation and Darwin Packet Tunnel bootstrap DNS
-- Added Darwin Packet Tunnel local Secure DNS endpoints so system DNS now enters the Packet Tunnel on `10.0.0.53` / `fd00::53` and is routed by Xray DNS policy to Direct Resolver or Proxy Resolver upstreams
+- Kept the Darwin tunnel-local DNS endpoint path as a staged follow-up instead of the default shipping route, after comparing behavior with `release/v0.3.0`
 - Removed hardcoded runtime DNS fallback resolvers so Xray DNS and Packet Tunnel bootstrap DNS now derive from the same user-managed configuration
 - Replaced the inactive `DNS over TLS` settings switch with a real `DNS over HTTPS` control path and aligned Settings copy with actual Secure DNS behavior
 - Added `docs/dns-secure-tunnel-design.md` to document current DNS flow, target Secure Tunnel DNS architecture, and the staged DoH rollout plan

@@ -127,11 +127,6 @@ class VpnConfig {
   static const _dnsDirectSecondaryTag = 'dns-direct-secondary';
   static const _dnsProxyPrimaryTag = 'dns-proxy-primary';
   static const _dnsProxySecondaryTag = 'dns-proxy-secondary';
-  static const _directResolverDomains = <String>[
-    'full:localhost',
-    r'regexp:^.*\.local$',
-    'dotless:',
-  ];
 
   static List<VpnNode> _nodes = [];
 
@@ -589,20 +584,10 @@ class VpnConfig {
     );
 
     try {
-      final proxyResolvers = DnsConfig.proxyResolversForXray();
-      final primaryResolver = proxyResolvers.isNotEmpty
-          ? proxyResolvers.first
-          : DnsConfig.proxyPrimaryDefault;
-      final secondaryResolver = proxyResolvers.length > 1
-          ? proxyResolvers[1]
-          : DnsConfig.proxySecondaryDefault;
-
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
           .replaceAll('<UUID>', uuid)
-          .replaceAll('<DNS1>', primaryResolver)
-          .replaceAll('<DNS2>', secondaryResolver)
           .replaceAll('<INBOUNDS_CONFIG>', inboundsConfig);
 
       final jsonObj = Map<String, dynamic>.from(jsonDecode(replaced));
@@ -705,6 +690,34 @@ class VpnConfig {
         jsonObj['routing'],
         enableTunnelMode: enableTunnelMode,
       );
+      if (DnsConfig.fakeDnsEnabled.value) {
+        final fakeDnsConfig = _buildFakeDnsConfig();
+        if (fakeDnsConfig != null) {
+          jsonObj['fakeDns'] = fakeDnsConfig;
+        }
+      } else {
+        jsonObj.remove('fakeDns');
+      }
+
+      logMessage(
+        'DNS control plane applied: '
+        'direct=${DnsConfig.directResolversForXray().join(", ")} '
+        'proxy=${DnsConfig.proxyResolversForXray().join(", ")} '
+        'directDomains=${DnsConfig.directDomainSet.length} '
+        'darwinSystemDns=${DnsConfig.darwinSystemDnsMode} '
+        'fakeDns=${DnsConfig.fakeDnsEnabled.value ? "enabled" : "disabled"}',
+      );
+      if (DnsConfig.fakeDnsEnabled.value) {
+        final controlPlane = DnsConfig.controlPlane(
+          dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
+          dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
+          dnsProxyPrimaryTag: _dnsProxyPrimaryTag,
+          dnsProxySecondaryTag: _dnsProxySecondaryTag,
+        );
+        if (controlPlane.fakeDns.warning.isNotEmpty) {
+          logMessage(controlPlane.fakeDns.warning);
+        }
+      }
 
       final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
@@ -839,140 +852,66 @@ class VpnConfig {
   }
 
   static Map<String, dynamic> _buildSecureDnsConfig() {
-    final directResolvers = DnsConfig.directResolversForXray();
-    final proxyResolvers = DnsConfig.proxyResolversForXray();
+    final controlPlane = DnsConfig.controlPlane(
+      dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
+      dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
+      dnsProxyPrimaryTag: _dnsProxyPrimaryTag,
+      dnsProxySecondaryTag: _dnsProxySecondaryTag,
+    );
 
-    return <String, dynamic>{
-      'servers': <Map<String, dynamic>>[
-        ..._buildDirectDnsServers(directResolvers),
-        ..._buildProxyDnsServers(proxyResolvers),
-      ],
-      'queryStrategy': 'UseIPv4',
-      'disableFallbackIfMatch': true,
-    };
+    return controlPlane.dnsPolicy.toXrayDnsConfig();
   }
 
-  static List<Map<String, dynamic>> _buildDirectDnsServers(
-    List<String> resolvers,
-  ) {
-    final effectiveResolvers = resolvers.isNotEmpty
-        ? resolvers
-        : <String>[
-            DnsConfig.directPrimaryDefault,
-            DnsConfig.directSecondaryDefault,
-          ];
-
-    return <Map<String, dynamic>>[
-      _buildDnsServer(
-        address: effectiveResolvers.first,
-        tag: _dnsDirectPrimaryTag,
-        domains: _directResolverDomains,
-        skipFallback: true,
-      ),
-      _buildDnsServer(
-        address: effectiveResolvers.length > 1
-            ? effectiveResolvers[1]
-            : DnsConfig.directSecondaryDefault,
-        tag: _dnsDirectSecondaryTag,
-        domains: _directResolverDomains,
-        skipFallback: true,
-      ),
-    ];
-  }
-
-  static List<Map<String, dynamic>> _buildProxyDnsServers(
-    List<String> resolvers,
-  ) {
-    final effectiveResolvers = resolvers.isNotEmpty
-        ? resolvers
-        : <String>[
-            DnsConfig.proxyPrimaryDefault,
-            DnsConfig.proxySecondaryDefault,
-          ];
-
-    return <Map<String, dynamic>>[
-      _buildDnsServer(
-        address: effectiveResolvers.first,
-        tag: _dnsProxyPrimaryTag,
-      ),
-      _buildDnsServer(
-        address: effectiveResolvers.length > 1
-            ? effectiveResolvers[1]
-            : DnsConfig.proxySecondaryDefault,
-        tag: _dnsProxySecondaryTag,
-      ),
-    ];
-  }
-
-  static Map<String, dynamic> _buildDnsServer({
-    required String address,
-    required String tag,
-    List<String> domains = const [],
-    bool skipFallback = false,
-  }) {
-    final server = <String, dynamic>{
-      'address': address,
-      'tag': tag,
-      'queryStrategy': 'UseIPv4',
-    };
-    if (domains.isNotEmpty) {
-      server['domains'] = domains;
+  static List<Map<String, dynamic>>? _buildFakeDnsConfig() {
+    final controlPlane = DnsConfig.controlPlane(
+      dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
+      dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
+      dnsProxyPrimaryTag: _dnsProxyPrimaryTag,
+      dnsProxySecondaryTag: _dnsProxySecondaryTag,
+    );
+    if (!controlPlane.fakeDns.enabled || controlPlane.fakeDns.pools.isEmpty) {
+      return null;
     }
-    if (skipFallback) {
-      server['skipFallback'] = true;
-    }
-    return server;
+    return controlPlane.fakeDns.pools
+        .map((pool) => Map<String, dynamic>.from(pool))
+        .toList();
   }
 
   static Map<String, dynamic> _buildSecureDnsRoutingConfig(
     Object? existingRouting, {
     required bool enableTunnelMode,
   }) {
+    final controlPlane = DnsConfig.controlPlane(
+      dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
+      dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
+      dnsProxyPrimaryTag: _dnsProxyPrimaryTag,
+      dnsProxySecondaryTag: _dnsProxySecondaryTag,
+    );
     final routing = existingRouting is Map
         ? Map<String, dynamic>.from(existingRouting)
         : <String, dynamic>{};
     final existingRules = List<dynamic>.from(
       routing['rules'] as List<dynamic>? ?? const [],
     );
-    final secureDnsRules = <Map<String, dynamic>>[
-      if (enableTunnelMode)
-        <String, dynamic>{
-          'type': 'field',
-          'inboundTag': <String>[_tunInboundTag],
-          'network': 'tcp,udp',
-          'port': '53',
-          'ip': _packetTunnelLocalDnsCidrs(),
-          'outboundTag': 'dns',
-        },
-      <String, dynamic>{
-        'type': 'field',
-        'inboundTag': <String>[
-          _dnsDirectPrimaryTag,
-          _dnsDirectSecondaryTag,
-        ],
-        'outboundTag': 'direct',
-      },
-      <String, dynamic>{
-        'type': 'field',
-        'inboundTag': <String>[
-          _dnsProxyPrimaryTag,
-          _dnsProxySecondaryTag,
-        ],
-        'outboundTag': 'proxy',
-      },
-    ];
+    final secureDnsRules = controlPlane.routePolicy.buildSecureDnsRules(
+      enableTunnelMode: enableTunnelMode,
+      tunInboundTag: _tunInboundTag,
+      directResolverInboundTags: <String>[
+        _dnsDirectPrimaryTag,
+        _dnsDirectSecondaryTag,
+      ],
+      proxyResolverInboundTags: <String>[
+        _dnsProxyPrimaryTag,
+        _dnsProxySecondaryTag,
+      ],
+      fakeDnsEnabled: controlPlane.fakeDns.enabled,
+    );
+    routing['domainStrategy'] = 'AsIs';
     routing['rules'] = <dynamic>[
       ...secureDnsRules,
       ...existingRules,
     ];
     return routing;
-  }
-
-  static List<String> _packetTunnelLocalDnsCidrs() {
-    return <String>[
-      ...DnsConfig.darwinPacketTunnelDnsServers4.map((value) => '$value/32'),
-      ...DnsConfig.darwinPacketTunnelDnsServers6.map((value) => '$value/128'),
-    ];
   }
 
   /// Generate inbounds configuration based on proxy and tunnel settings
@@ -1014,10 +953,21 @@ class VpnConfig {
 
     // Tunnel mode configuration
     if (enableTunnelMode) {
+      final controlPlane = DnsConfig.controlPlane(
+        dnsDirectPrimaryTag: _dnsDirectPrimaryTag,
+        dnsDirectSecondaryTag: _dnsDirectSecondaryTag,
+        dnsProxyPrimaryTag: _dnsProxyPrimaryTag,
+        dnsProxySecondaryTag: _dnsProxySecondaryTag,
+      );
       inbounds.add({
         "tag": _tunInboundTag,
         "protocol": "tun",
-        "settings": {"mtu": 1500}
+        "settings": {"mtu": 1500},
+        "sniffing": {
+          "enabled": GlobalState.sniffingEnabled.value,
+          "routeOnly": true,
+          "destOverride": controlPlane.sniffingDestOverride(),
+        }
       });
     }
 

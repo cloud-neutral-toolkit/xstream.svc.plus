@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/dns/dns_control_plane.dart';
 import '../widgets/log_console.dart';
 
 const String kArtifactBaseUrl = 'https://artifact.svc.plus';
@@ -179,6 +180,7 @@ class DnsConfig {
   static const _directDns2Key = 'directDnsServer2';
   static const _transportModeKey = 'dnsTransportMode';
   static const _legacyDotEnabledKey = 'tunDnsOverTls';
+  static const _fakeDnsEnabledKey = 'fakeDnsEnabled';
   static const _defaultPlainDns1 = '1.1.1.1';
   static const _defaultPlainDns2 = '8.8.8.8';
   static const _defaultDohDns1 = 'https://1.1.1.1/dns-query';
@@ -189,6 +191,41 @@ class DnsConfig {
   ];
   static const _packetTunnelLocalDns4Servers = <String>['10.0.0.53'];
   static const _packetTunnelLocalDns6Servers = <String>['fd00::53'];
+  static const _darwinTunnelLocalDnsEnabled = false;
+  static const _defaultDirectDomains = <String>[
+    'full:localhost',
+    r'regexp:^.*\.local$',
+    'dotless:',
+    'domain:apple.com',
+    'domain:icloud.com',
+    'domain:apple-dns.net',
+    'full:captive.apple.com',
+    'full:connectivitycheck.gstatic.com',
+    'full:msftconnecttest.com',
+    'full:msftncsi.com',
+  ];
+  static const _defaultProxyDomains = <String>[];
+  static const _defaultFakeDomains = <String>[];
+  static const _defaultDirectIpCidrs = <String>[
+    '10.0.0.0/8',
+    '100.64.0.0/10',
+    '127.0.0.0/8',
+    '169.254.0.0/16',
+    '172.16.0.0/12',
+    '192.168.0.0/16',
+    '::1/128',
+    'fc00::/7',
+    'fe80::/10',
+    'ff00::/8',
+  ];
+  static const _fakeDnsPools = <Map<String, dynamic>>[
+    <String, dynamic>{'ipPool': '198.18.0.0/15', 'lruSize': 32768},
+    <String, dynamic>{'ipPool': 'fc00::/18', 'lruSize': 32768},
+  ];
+  static const _fakeDnsWarning =
+      'FakeDNS is disabled by default. When enabled, it should be limited '
+      'to explicit fake domains because stale fake mappings can affect '
+      'system DNS cache after the Secure Tunnel stops.';
 
   static final ValueNotifier<String> proxyDns1 =
       ValueNotifier<String>(_defaultDohDns1);
@@ -200,6 +237,7 @@ class DnsConfig {
       ValueNotifier<String>(_defaultPlainDns2);
   static final ValueNotifier<DnsTransportMode> transportMode =
       ValueNotifier<DnsTransportMode>(DnsTransportMode.doh);
+  static final ValueNotifier<bool> fakeDnsEnabled = ValueNotifier<bool>(false);
 
   static bool get dohEnabled => transportMode.value == DnsTransportMode.doh;
 
@@ -240,6 +278,7 @@ class DnsConfig {
       prefs.getString(_directDns2Key),
       primary: false,
     );
+    fakeDnsEnabled.value = prefs.getBool(_fakeDnsEnabledKey) ?? false;
 
     proxyDns1
         .addListener(() => prefs.setString(_proxyDns1Key, proxyDns1.value));
@@ -251,6 +290,9 @@ class DnsConfig {
         .addListener(() => prefs.setString(_directDns2Key, directDns2.value));
     transportMode.addListener(() {
       prefs.setString(_transportModeKey, transportMode.value.storageValue);
+    });
+    fakeDnsEnabled.addListener(() {
+      prefs.setBool(_fakeDnsEnabledKey, fakeDnsEnabled.value);
     });
   }
 
@@ -307,11 +349,119 @@ class DnsConfig {
   static List<String> get effectiveTunnelDnsServers6 =>
       _defaultDirectDns6Servers;
 
+  static List<String> systemTunnelDnsServers4() {
+    if ((Platform.isMacOS || Platform.isIOS) && _darwinTunnelLocalDnsEnabled) {
+      return darwinPacketTunnelDnsServers4;
+    }
+    return effectiveTunnelDnsServers4();
+  }
+
+  static List<String> systemTunnelDnsServers6() {
+    if ((Platform.isMacOS || Platform.isIOS) && _darwinTunnelLocalDnsEnabled) {
+      return darwinPacketTunnelDnsServers6;
+    }
+    return effectiveTunnelDnsServers6;
+  }
+
+  static bool get shouldCaptureSystemDnsToBuiltInDns =>
+      Platform.isMacOS || Platform.isIOS ? _darwinTunnelLocalDnsEnabled : false;
+
+  static String get darwinSystemDnsMode =>
+      _darwinTunnelLocalDnsEnabled ? 'tunnel-local-endpoint' : 'resolver-ip';
+
   static List<String> get darwinPacketTunnelDnsServers4 =>
       List<String>.from(_packetTunnelLocalDns4Servers);
 
   static List<String> get darwinPacketTunnelDnsServers6 =>
       List<String>.from(_packetTunnelLocalDns6Servers);
+
+  static List<String> get directDomainSet =>
+      List<String>.from(_defaultDirectDomains);
+
+  static List<String> get proxyDomainSet =>
+      List<String>.from(_defaultProxyDomains);
+
+  static List<String> get fakeDomainSet =>
+      List<String>.from(_defaultFakeDomains);
+
+  static List<String> get directIpCidrs =>
+      List<String>.from(_defaultDirectIpCidrs);
+
+  static DnsControlPlane controlPlane({
+    required String dnsDirectPrimaryTag,
+    required String dnsDirectSecondaryTag,
+    required String dnsProxyPrimaryTag,
+    required String dnsProxySecondaryTag,
+  }) {
+    final directResolvers = directResolversForXray();
+    final proxyResolvers = proxyResolversForXray();
+    final effectiveDirectResolvers = directResolvers.isNotEmpty
+        ? directResolvers
+        : <String>[directPrimaryDefault, directSecondaryDefault];
+    final effectiveProxyResolvers = proxyResolvers.isNotEmpty
+        ? proxyResolvers
+        : <String>[proxyPrimaryDefault, proxySecondaryDefault];
+
+    final directPolicies = <ResolverServerPolicy>[
+      ResolverServerPolicy(
+        address: effectiveDirectResolvers.first,
+        tag: dnsDirectPrimaryTag,
+        transport: ResolverTransport.plain,
+        domains: directDomainSet,
+        skipFallback: true,
+      ),
+      ResolverServerPolicy(
+        address: effectiveDirectResolvers.length > 1
+            ? effectiveDirectResolvers[1]
+            : directSecondaryDefault,
+        tag: dnsDirectSecondaryTag,
+        transport: ResolverTransport.plain,
+        domains: directDomainSet,
+        skipFallback: true,
+      ),
+    ];
+
+    final proxyTransport =
+        dohEnabled ? ResolverTransport.doh : ResolverTransport.plain;
+    final proxyPolicies = <ResolverServerPolicy>[
+      ResolverServerPolicy(
+        address: effectiveProxyResolvers.first,
+        tag: dnsProxyPrimaryTag,
+        transport: proxyTransport,
+      ),
+      ResolverServerPolicy(
+        address: effectiveProxyResolvers.length > 1
+            ? effectiveProxyResolvers[1]
+            : proxySecondaryDefault,
+        tag: dnsProxySecondaryTag,
+        transport: proxyTransport,
+      ),
+    ];
+
+    return DnsControlPlane(
+      dnsPolicy: DnsPolicy(
+        directResolvers: directPolicies,
+        proxyResolvers: proxyPolicies,
+        fakeDns: FakeDnsPolicy(
+          enabled: fakeDnsEnabled.value && fakeDomainSet.isNotEmpty,
+          domains: fakeDomainSet,
+          pools: _fakeDnsPools,
+          warning: _fakeDnsWarning,
+        ),
+      ),
+      routePolicy: RoutePolicy(
+        domainSets: DomainSets(
+          direct: directDomainSet,
+          proxy: proxyDomainSet,
+          fake: fakeDomainSet,
+          directIpCidrs: directIpCidrs,
+        ),
+        tunnelDnsServers4: systemTunnelDnsServers4(),
+        tunnelDnsServers6: systemTunnelDnsServers6(),
+        captureSystemDnsToBuiltInDns: shouldCaptureSystemDnsToBuiltInDns,
+      ),
+    );
+  }
 
   static String _normalizeProxyEndpoint(
     String? rawValue,

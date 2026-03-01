@@ -65,16 +65,7 @@ final class RunnerTests: XCTestCase {
           "loglevel": "info"
         },
         "dns": {
-          "servers": [
-            {
-              "address": "1.1.1.1",
-              "queryStrategy": "UseIPv4"
-            },
-            {
-              "address": "8.8.8.8",
-              "queryStrategy": "UseIPv4"
-            }
-          ],
+          "servers": [],
           "queryStrategy": "UseIPv4",
           "disableFallbackIfMatch": true
         },
@@ -129,10 +120,7 @@ final class RunnerTests: XCTestCase {
           },
           {
             "tag": "dns",
-            "protocol": "dns",
-            "proxySettings": {
-              "tag": "proxy"
-            }
+            "protocol": "dns"
           }
         ],
         "routing": {
