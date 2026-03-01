@@ -225,7 +225,7 @@ public final class PacketTunnelProvider: NEPacketTunnelProvider {
       dnsServers.append(contentsOf: (options["dnsServers6"] as? [String]) ?? [])
     }
     if dnsServers.isEmpty {
-      dnsServers = ["1.1.1.1", "8.8.8.8"]
+      dnsServers = enableIPv6 ? ["10.0.0.53", "fd00::53"] : ["10.0.0.53"]
     }
     settings.dnsSettings = NEDNSSettings(servers: dnsServers)
     settings.dnsSettings?.matchDomains = [""]

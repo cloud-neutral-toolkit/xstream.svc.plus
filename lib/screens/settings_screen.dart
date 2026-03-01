@@ -693,7 +693,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _onToggleDnsOverHttps(bool enabled) {
     setState(() => DnsConfig.setDohEnabled(enabled));
-    addAppLog('DNS over HTTPS: ${enabled ? "开启" : "关闭"}');
+    addAppLog('代理 DNS / DoH: ${enabled ? "开启" : "关闭"}');
   }
 
   Future<void> _refreshTunStatus() async {
@@ -955,9 +955,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.dns),
-                    title: Text(context.l10n.get('dnsConfig')),
+                    title: Text(context.l10n.get('proxyDnsConfig')),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: _showDnsDialog,
+                    onTap: _showProxyDnsDialog,
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(Icons.dns_outlined),
+                    title: Text(context.l10n.get('directDnsConfig')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: _showDirectDnsDialog,
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
@@ -1218,8 +1225,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildSection(context.l10n.get('advancedConfig'), [
                       _buildButton(
                         icon: Icons.dns,
-                        label: context.l10n.get('dnsConfig'),
-                        onPressed: _showDnsDialog,
+                        label: context.l10n.get('proxyDnsConfig'),
+                        onPressed: _showProxyDnsDialog,
+                      ),
+                      _buildButton(
+                        icon: Icons.dns_outlined,
+                        label: context.l10n.get('directDnsConfig'),
+                        onPressed: _showDirectDnsDialog,
                       ),
                       SizedBox(
                         width: double.infinity,
@@ -1437,13 +1449,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  void _showDnsDialog() {
-    final dns1Controller = TextEditingController(text: DnsConfig.dns1.value);
-    final dns2Controller = TextEditingController(text: DnsConfig.dns2.value);
+  void _showProxyDnsDialog() {
+    final dns1Controller =
+        TextEditingController(text: DnsConfig.proxyDns1.value);
+    final dns2Controller =
+        TextEditingController(text: DnsConfig.proxyDns2.value);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.l10n.get('dnsConfig')),
+        title: Text(context.l10n.get('proxyDnsConfig')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1480,7 +1494,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () {
-              DnsConfig.updateServers(
+              DnsConfig.updateProxyServers(
+                primary: dns1Controller.text,
+                secondary: dns2Controller.text,
+              );
+              Navigator.pop(context);
+            },
+            child: Text(context.l10n.get('confirm')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDirectDnsDialog() {
+    final dns1Controller =
+        TextEditingController(text: DnsConfig.directDns1.value);
+    final dns2Controller =
+        TextEditingController(text: DnsConfig.directDns2.value);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.l10n.get('directDnsConfig')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                context.l10n.get('dnsDialogHintDirect'),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey[700]),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: dns1Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('primaryDns')),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: dns2Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.l10n.get('cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              DnsConfig.updateDirectServers(
                 primary: dns1Controller.text,
                 secondary: dns2Controller.text,
               );

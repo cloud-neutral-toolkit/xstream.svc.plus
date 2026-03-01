@@ -120,6 +120,19 @@ class VpnNode {
 }
 
 class VpnConfig {
+  static const _tunInboundTag = 'tun-in';
+  static const _socksInboundTag = 'socks-in';
+  static const _httpInboundTag = 'http-in';
+  static const _dnsDirectPrimaryTag = 'dns-direct-primary';
+  static const _dnsDirectSecondaryTag = 'dns-direct-secondary';
+  static const _dnsProxyPrimaryTag = 'dns-proxy-primary';
+  static const _dnsProxySecondaryTag = 'dns-proxy-secondary';
+  static const _directResolverDomains = <String>[
+    'full:localhost',
+    r'regexp:^.*\.local$',
+    'dotless:',
+  ];
+
   static List<VpnNode> _nodes = [];
 
   static bool get _requiresPrivilegedPassword {
@@ -576,12 +589,20 @@ class VpnConfig {
     );
 
     try {
+      final proxyResolvers = DnsConfig.proxyResolversForXray();
+      final primaryResolver = proxyResolvers.isNotEmpty
+          ? proxyResolvers.first
+          : DnsConfig.proxyPrimaryDefault;
+      final secondaryResolver = proxyResolvers.length > 1
+          ? proxyResolvers[1]
+          : DnsConfig.proxySecondaryDefault;
+
       final replaced = defaultXrayJsonTemplate
           .replaceAll('<SERVER_DOMAIN>', domain)
           .replaceAll('<PORT>', port)
           .replaceAll('<UUID>', uuid)
-          .replaceAll('<DNS1>', DnsConfig.dns1.value)
-          .replaceAll('<DNS2>', DnsConfig.dns2.value)
+          .replaceAll('<DNS1>', primaryResolver)
+          .replaceAll('<DNS2>', secondaryResolver)
           .replaceAll('<INBOUNDS_CONFIG>', inboundsConfig);
 
       final jsonObj = Map<String, dynamic>.from(jsonDecode(replaced));
@@ -678,6 +699,12 @@ class VpnConfig {
         }
         streamSettings['xhttpSettings'] = xhttpSettings;
       }
+
+      jsonObj['dns'] = _buildSecureDnsConfig();
+      jsonObj['routing'] = _buildSecureDnsRoutingConfig(
+        jsonObj['routing'],
+        enableTunnelMode: enableTunnelMode,
+      );
 
       final formatted = const JsonEncoder.withIndent('  ').convert(jsonObj);
       logMessage('✅ XrayJson 配置内容生成完成');
@@ -811,6 +838,143 @@ class VpnConfig {
     return '/$normalized';
   }
 
+  static Map<String, dynamic> _buildSecureDnsConfig() {
+    final directResolvers = DnsConfig.directResolversForXray();
+    final proxyResolvers = DnsConfig.proxyResolversForXray();
+
+    return <String, dynamic>{
+      'servers': <Map<String, dynamic>>[
+        ..._buildDirectDnsServers(directResolvers),
+        ..._buildProxyDnsServers(proxyResolvers),
+      ],
+      'queryStrategy': 'UseIPv4',
+      'disableFallbackIfMatch': true,
+    };
+  }
+
+  static List<Map<String, dynamic>> _buildDirectDnsServers(
+    List<String> resolvers,
+  ) {
+    final effectiveResolvers = resolvers.isNotEmpty
+        ? resolvers
+        : <String>[
+            DnsConfig.directPrimaryDefault,
+            DnsConfig.directSecondaryDefault,
+          ];
+
+    return <Map<String, dynamic>>[
+      _buildDnsServer(
+        address: effectiveResolvers.first,
+        tag: _dnsDirectPrimaryTag,
+        domains: _directResolverDomains,
+        skipFallback: true,
+      ),
+      _buildDnsServer(
+        address: effectiveResolvers.length > 1
+            ? effectiveResolvers[1]
+            : DnsConfig.directSecondaryDefault,
+        tag: _dnsDirectSecondaryTag,
+        domains: _directResolverDomains,
+        skipFallback: true,
+      ),
+    ];
+  }
+
+  static List<Map<String, dynamic>> _buildProxyDnsServers(
+    List<String> resolvers,
+  ) {
+    final effectiveResolvers = resolvers.isNotEmpty
+        ? resolvers
+        : <String>[
+            DnsConfig.proxyPrimaryDefault,
+            DnsConfig.proxySecondaryDefault,
+          ];
+
+    return <Map<String, dynamic>>[
+      _buildDnsServer(
+        address: effectiveResolvers.first,
+        tag: _dnsProxyPrimaryTag,
+      ),
+      _buildDnsServer(
+        address: effectiveResolvers.length > 1
+            ? effectiveResolvers[1]
+            : DnsConfig.proxySecondaryDefault,
+        tag: _dnsProxySecondaryTag,
+      ),
+    ];
+  }
+
+  static Map<String, dynamic> _buildDnsServer({
+    required String address,
+    required String tag,
+    List<String> domains = const [],
+    bool skipFallback = false,
+  }) {
+    final server = <String, dynamic>{
+      'address': address,
+      'tag': tag,
+      'queryStrategy': 'UseIPv4',
+    };
+    if (domains.isNotEmpty) {
+      server['domains'] = domains;
+    }
+    if (skipFallback) {
+      server['skipFallback'] = true;
+    }
+    return server;
+  }
+
+  static Map<String, dynamic> _buildSecureDnsRoutingConfig(
+    Object? existingRouting, {
+    required bool enableTunnelMode,
+  }) {
+    final routing = existingRouting is Map
+        ? Map<String, dynamic>.from(existingRouting)
+        : <String, dynamic>{};
+    final existingRules = List<dynamic>.from(
+      routing['rules'] as List<dynamic>? ?? const [],
+    );
+    final secureDnsRules = <Map<String, dynamic>>[
+      if (enableTunnelMode)
+        <String, dynamic>{
+          'type': 'field',
+          'inboundTag': <String>[_tunInboundTag],
+          'network': 'tcp,udp',
+          'port': '53',
+          'ip': _packetTunnelLocalDnsCidrs(),
+          'outboundTag': 'dns',
+        },
+      <String, dynamic>{
+        'type': 'field',
+        'inboundTag': <String>[
+          _dnsDirectPrimaryTag,
+          _dnsDirectSecondaryTag,
+        ],
+        'outboundTag': 'direct',
+      },
+      <String, dynamic>{
+        'type': 'field',
+        'inboundTag': <String>[
+          _dnsProxyPrimaryTag,
+          _dnsProxySecondaryTag,
+        ],
+        'outboundTag': 'proxy',
+      },
+    ];
+    routing['rules'] = <dynamic>[
+      ...secureDnsRules,
+      ...existingRules,
+    ];
+    return routing;
+  }
+
+  static List<String> _packetTunnelLocalDnsCidrs() {
+    return <String>[
+      ...DnsConfig.darwinPacketTunnelDnsServers4.map((value) => '$value/32'),
+      ...DnsConfig.darwinPacketTunnelDnsServers6.map((value) => '$value/128'),
+    ];
+  }
+
   /// Generate inbounds configuration based on proxy and tunnel settings
   static String generateInboundsConfig({
     bool enableSocksProxy = true,
@@ -824,6 +988,7 @@ class VpnConfig {
       inbounds.add({
         "listen": "127.0.0.1",
         "port": 1080,
+        "tag": _socksInboundTag,
         "protocol": "socks",
         "settings": {"udp": true},
         "sniffing": {
@@ -838,6 +1003,7 @@ class VpnConfig {
       inbounds.add({
         "listen": "127.0.0.1",
         "port": 1081,
+        "tag": _httpInboundTag,
         "protocol": "http",
         "sniffing": {
           "enabled": true,
@@ -849,6 +1015,7 @@ class VpnConfig {
     // Tunnel mode configuration
     if (enableTunnelMode) {
       inbounds.add({
+        "tag": _tunInboundTag,
         "protocol": "tun",
         "settings": {"mtu": 1500}
       });

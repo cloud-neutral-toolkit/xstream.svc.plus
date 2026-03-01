@@ -10,6 +10,7 @@ _Release Date: 2026-02-28_
 ## ✅ Changes
 
 - Unified DNS configuration into a single control model shared by Xray config generation and Darwin Packet Tunnel bootstrap DNS
+- Added Darwin Packet Tunnel local Secure DNS endpoints so system DNS now enters the Packet Tunnel on `10.0.0.53` / `fd00::53` and is routed by Xray DNS policy to Direct Resolver or Proxy Resolver upstreams
 - Removed hardcoded runtime DNS fallback resolvers so Xray DNS and Packet Tunnel bootstrap DNS now derive from the same user-managed configuration
 - Replaced the inactive `DNS over TLS` settings switch with a real `DNS over HTTPS` control path and aligned Settings copy with actual Secure DNS behavior
 - Added `docs/dns-secure-tunnel-design.md` to document current DNS flow, target Secure Tunnel DNS architecture, and the staged DoH rollout plan

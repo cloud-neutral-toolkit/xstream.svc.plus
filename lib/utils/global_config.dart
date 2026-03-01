@@ -173,33 +173,45 @@ enum DnsTransportMode {
 }
 
 class DnsConfig {
-  static const _dns1Key = 'dnsServer1';
-  static const _dns2Key = 'dnsServer2';
+  static const _proxyDns1Key = 'dnsServer1';
+  static const _proxyDns2Key = 'dnsServer2';
+  static const _directDns1Key = 'directDnsServer1';
+  static const _directDns2Key = 'directDnsServer2';
   static const _transportModeKey = 'dnsTransportMode';
   static const _legacyDotEnabledKey = 'tunDnsOverTls';
   static const _defaultPlainDns1 = '1.1.1.1';
   static const _defaultPlainDns2 = '8.8.8.8';
   static const _defaultDohDns1 = 'https://1.1.1.1/dns-query';
   static const _defaultDohDns2 = 'https://8.8.8.8/dns-query';
-  static const _defaultDns6Servers = <String>[
+  static const _defaultDirectDns6Servers = <String>[
     '2606:4700:4700::1111',
     '2001:4860:4860::8888',
   ];
+  static const _packetTunnelLocalDns4Servers = <String>['10.0.0.53'];
+  static const _packetTunnelLocalDns6Servers = <String>['fd00::53'];
 
-  static final ValueNotifier<String> dns1 =
+  static final ValueNotifier<String> proxyDns1 =
       ValueNotifier<String>(_defaultDohDns1);
-  static final ValueNotifier<String> dns2 =
+  static final ValueNotifier<String> proxyDns2 =
       ValueNotifier<String>(_defaultDohDns2);
+  static final ValueNotifier<String> directDns1 =
+      ValueNotifier<String>(_defaultPlainDns1);
+  static final ValueNotifier<String> directDns2 =
+      ValueNotifier<String>(_defaultPlainDns2);
   static final ValueNotifier<DnsTransportMode> transportMode =
       ValueNotifier<DnsTransportMode>(DnsTransportMode.doh);
 
   static bool get dohEnabled => transportMode.value == DnsTransportMode.doh;
 
-  static String get primaryDefault =>
+  static String get proxyPrimaryDefault =>
       dohEnabled ? _defaultDohDns1 : _defaultPlainDns1;
 
-  static String get secondaryDefault =>
+  static String get proxySecondaryDefault =>
       dohEnabled ? _defaultDohDns2 : _defaultPlainDns2;
+
+  static String get directPrimaryDefault => _defaultPlainDns1;
+
+  static String get directSecondaryDefault => _defaultPlainDns2;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -210,19 +222,33 @@ class DnsConfig {
               ? DnsTransportMode.doh.storageValue
               : DnsTransportMode.plain.storageValue),
     );
-    dns1.value = _normalizeEndpoint(
-      prefs.getString(_dns1Key),
+    proxyDns1.value = _normalizeProxyEndpoint(
+      prefs.getString(_proxyDns1Key),
       transportMode.value,
       primary: true,
     );
-    dns2.value = _normalizeEndpoint(
-      prefs.getString(_dns2Key),
+    proxyDns2.value = _normalizeProxyEndpoint(
+      prefs.getString(_proxyDns2Key),
       transportMode.value,
       primary: false,
     );
+    directDns1.value = _normalizeDirectEndpoint(
+      prefs.getString(_directDns1Key),
+      primary: true,
+    );
+    directDns2.value = _normalizeDirectEndpoint(
+      prefs.getString(_directDns2Key),
+      primary: false,
+    );
 
-    dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
-    dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
+    proxyDns1
+        .addListener(() => prefs.setString(_proxyDns1Key, proxyDns1.value));
+    proxyDns2
+        .addListener(() => prefs.setString(_proxyDns2Key, proxyDns2.value));
+    directDns1
+        .addListener(() => prefs.setString(_directDns1Key, directDns1.value));
+    directDns2
+        .addListener(() => prefs.setString(_directDns2Key, directDns2.value));
     transportMode.addListener(() {
       prefs.setString(_transportModeKey, transportMode.value.storageValue);
     });
@@ -235,31 +261,59 @@ class DnsConfig {
     }
 
     transportMode.value = nextMode;
-    dns1.value = _normalizeEndpoint(dns1.value, nextMode, primary: true);
-    dns2.value = _normalizeEndpoint(dns2.value, nextMode, primary: false);
+    proxyDns1.value =
+        _normalizeProxyEndpoint(proxyDns1.value, nextMode, primary: true);
+    proxyDns2.value =
+        _normalizeProxyEndpoint(proxyDns2.value, nextMode, primary: false);
   }
 
-  static void updateServers({
+  static void updateProxyServers({
     required String primary,
     required String secondary,
   }) {
-    dns1.value =
-        _normalizeEndpoint(primary, transportMode.value, primary: true);
-    dns2.value =
-        _normalizeEndpoint(secondary, transportMode.value, primary: false);
+    proxyDns1.value =
+        _normalizeProxyEndpoint(primary, transportMode.value, primary: true);
+    proxyDns2.value =
+        _normalizeProxyEndpoint(secondary, transportMode.value, primary: false);
   }
 
-  static List<String> effectiveTunnelDnsServers4() {
+  static void updateDirectServers({
+    required String primary,
+    required String secondary,
+  }) {
+    directDns1.value = _normalizeDirectEndpoint(primary, primary: true);
+    directDns2.value = _normalizeDirectEndpoint(secondary, primary: false);
+  }
+
+  static List<String> proxyResolversForXray() {
+    return <String>[proxyDns1.value, proxyDns2.value]
+        .map((value) =>
+            _normalizeProxyEndpoint(value, transportMode.value, primary: true))
+        .where((value) => value.isNotEmpty)
+        .toSet()
+        .toList();
+  }
+
+  static List<String> directResolversForXray() {
     final servers = <String>[
-      _resolveTunnelBootstrapAddress(dns1.value, primary: true),
-      _resolveTunnelBootstrapAddress(dns2.value, primary: false),
+      _normalizeDirectEndpoint(directDns1.value, primary: true),
+      _normalizeDirectEndpoint(directDns2.value, primary: false),
     ].where((server) => server.isNotEmpty).toList();
     return servers.toSet().toList();
   }
 
-  static List<String> get effectiveTunnelDnsServers6 => _defaultDns6Servers;
+  static List<String> effectiveTunnelDnsServers4() => directResolversForXray();
 
-  static String _normalizeEndpoint(
+  static List<String> get effectiveTunnelDnsServers6 =>
+      _defaultDirectDns6Servers;
+
+  static List<String> get darwinPacketTunnelDnsServers4 =>
+      List<String>.from(_packetTunnelLocalDns4Servers);
+
+  static List<String> get darwinPacketTunnelDnsServers6 =>
+      List<String>.from(_packetTunnelLocalDns6Servers);
+
+  static String _normalizeProxyEndpoint(
     String? rawValue,
     DnsTransportMode mode, {
     required bool primary,
@@ -289,11 +343,11 @@ class DnsConfig {
     return trimmed;
   }
 
-  static String _resolveTunnelBootstrapAddress(
-    String endpoint, {
+  static String _normalizeDirectEndpoint(
+    String? endpoint, {
     required bool primary,
   }) {
-    final trimmed = endpoint.trim();
+    final trimmed = endpoint?.trim() ?? '';
     if (trimmed.isEmpty) {
       return primary ? _defaultPlainDns1 : _defaultPlainDns2;
     }

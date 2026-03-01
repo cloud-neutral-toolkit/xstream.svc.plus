@@ -1,225 +1,280 @@
 # DNS Secure Tunnel Design
 
-本文档定义 Xstream 当前 DNS 现状、推荐架构、真实生效链路，以及可落地的 DoH 改造方案。文中所有语义均以 Secure Tunnel / System VPN / Packet Tunnel 为前提，不引入其他系统级网络路径。
+本文档定义 Xstream 当前 DNS 控制面与数据面设计，并作为后续 Secure DNS 改造的权威基线。所有语义均以 Secure Tunnel / System VPN / Packet Tunnel 为前提，不引入其他系统级网络路径。
 
 ## 1. 目标
 
 Xstream 的 DNS 必须满足以下要求：
 
-- DNS 作为 Secure Tunnel 的组成部分统一管理。
+- DNS 是 Secure Tunnel 的组成部分，而不是独立旁路。
 - Apple 平台系统级网络入口只保留 `NEPacketTunnelProvider`。
-- 用户只维护一套 DNS 配置，避免 Xray 内置 DNS 与 Packet Tunnel 系统 DNS 分裂。
-- 控制面文案必须准确反映真实能力，不保留“已展示但未生效”的开关。
-- 为后续本地 Secure DNS proxy 预留清晰演进路径。
+- 设置页统一维护两组解析器：
+  - `Direct Resolver`
+  - `Proxy Resolver / DoH`
+- `DNS over HTTPS` 只控制 `Proxy Resolver` 的传输方式。
+- 系统 DNS、Xray Secure DNS、Packet Tunnel 本地 DNS 端点使用同一控制面来源。
+- 实现要优先满足长期合规、可审计、可维护。
 
-## 2. 当前实现现状
+## 2. 统一 DNS 模型
 
-当前仓库内同时存在两条 DNS 配置链路：
-
-1. Xray 内置 DNS
-   - Flutter 设置页的 `DNS Settings` 写入 `DnsConfig`
-   - 配置模板将其写入 Xray `dns.servers`
-   - 默认值已经是 `https://.../dns-query`
-   - 这一路当前实际属于 DoH
-
-2. Packet Tunnel 系统 DNS
-   - Darwin `TunnelProfile` 下发 `dnsServers4/dnsServers6`
-   - `PacketTunnelProvider` 用 `NEDNSSettings(servers:)` 应用到系统
-   - 这一层当前只支持服务器地址，不直接支持 `https://.../dns-query`
-   - 因此当前系统 DNS 仍是“通过 Packet Tunnel 传输的普通 DNS 上游”
-
-当前还存在一个控制面偏差：
-
-- 设置页中的 `DNS over TLS` 开关并未接入真实运行时
-- 它只保存本地状态和日志，没有改变 Xray DNS 模板或 Packet Tunnel 启动参数
-
-## 3. 当前真实生效图
-
-```mermaid
-flowchart TD
-    A["Settings: DNS Settings"] --> B["DnsConfig"]
-    B --> C["vpn_config_service.dart"]
-    C --> D["Xray dns.servers"]
-    D --> E["Xray DNS resolution"]
-    E --> F["Secure Tunnel outbound"]
-
-    G["Settings: DNS over TLS switch"] --> H["Legacy local state only"]
-    H --> I["No runtime effect"]
-
-    J["TunnelProfile.dnsServers4/dnsServers6"] --> K["DarwinHostApi.savePacketTunnelProfile"]
-    K --> L["PacketTunnelProvider.buildNetworkSettings"]
-    L --> M["NEDNSSettings(servers: IP/host list)"]
-    M --> N["System DNS queries stay inside Packet Tunnel"]
-    N --> O["Upstream transport is not DoH yet"]
-```
-
-## 4. 推荐架构
-
-推荐将 DNS 收敛为统一的 `DnsProfile` 概念，由同一组控制面字段驱动 Xray DNS 和 Packet Tunnel DNS：
+当前仓库以 `DnsConfig` 作为唯一 DNS 配置源，统一承载：
 
 ```text
-DnsProfile
-- transport: doh | plain
-- primaryEndpoint: string
-- secondaryEndpoint: string
-- effectiveTunnelDnsServers4: [string]
-- effectiveTunnelDnsServers6: [string]
+DnsConfig
+- directDns1 / directDns2
+- proxyDns1 / proxyDns2
+- transportMode: plain | doh
+- darwinPacketTunnelDnsServers4: [10.0.0.53]
+- darwinPacketTunnelDnsServers6: [fd00::53]
 ```
 
-设计原则：
+语义定义：
 
-- `transport` 决定 Xray 上游 DNS transport，是 DoH 还是普通 DNS。
-- `primaryEndpoint` / `secondaryEndpoint` 是唯一可编辑的上游端点。
-- Packet Tunnel 当前阶段不直接接收 DoH URL，而是接收由统一配置派生出的 bootstrap resolver 地址。
-- 后续引入本地 Secure DNS proxy 后，Packet Tunnel 只需要把系统 DNS 指向隧道内本地 DNS 入口。
+- `Direct Resolver`
+  - 用于直连 DNS policy
+  - 当前主要服务 `localhost`、`.local`、dotless 等本地化域名
+  - 在 Android 和其他尚未接入本地 Secure DNS 端点的平台上，也可继续作为系统 DNS 覆盖来源
 
-## 5. 最终真实生效图
+- `Proxy Resolver`
+  - 用于 Secure DNS 的默认上游
+  - 当 `DNS over HTTPS` 开启时，规范化为 `https://.../dns-query`
+  - 当 `DNS over HTTPS` 关闭时，规范化为普通 DNS 服务器地址
 
-这是目标完成后的最终形态，不是当前仓库已完成状态：
+## 3. 当前实现现状
+
+当前实现已经进入第二阶段的第一步，但只在 Darwin Packet Tunnel 路径上完成了本地 Secure DNS 端点接入。
+
+### 3.1 已实现
+
+1. `DnsConfig` 统一提供 Direct / Proxy 两组解析器和 `DNS over HTTPS` 开关。
+2. Xray `dns.servers` 已按两组上游生成：
+   - Direct Resolver
+   - Proxy Resolver / DoH
+3. Darwin `PacketTunnelProvider` 下发的系统 DNS 不再直接指向公网解析器，而是指向隧道内本地 DNS 端点：
+   - `10.0.0.53`
+   - `fd00::53`
+4. Xray 路由规则将 Packet Tunnel 内发往本地 DNS 端点的 `53` 端口查询导向 `dns` outbound。
+5. Xray nameserver tag 将 Direct Resolver 上游固定走 `direct` outbound，将 Proxy Resolver 上游固定走 `proxy` outbound。
+
+### 3.2 当前 Direct DNS policy
+
+当前默认的 Direct DNS policy 是保守策略，用于本地化和系统级基础域名：
+
+- `localhost`
+- `*.local`
+- dotless names
+
+其余未命中该策略的域名，默认交给 `Proxy Resolver`。
+
+这一步已经满足：
+
+- 系统 DNS 查询先进入 Packet Tunnel 内部本地 Secure DNS 端点
+- 本地 Secure DNS 逻辑再按 Direct / Proxy policy 选择上游
+
+### 3.3 尚未实现
+
+以下能力仍属于后续阶段，不应在 UI 或文档中误写为已完成：
+
+- 用户可编辑的 Direct / Proxy 域名策略集合
+- Android 上与 Darwin 同等级的本地 Secure DNS 端点
+- Windows / Linux 的系统级本地 Secure DNS 端点接入
+- 统一的 DNS 健康检查、上游探测与指标面板
+
+## 4. 当前真实生效图
 
 ```mermaid
 flowchart TD
-    A["Settings: Unified DNS Profile"] --> B["DnsProfile"]
-    B --> C["Xray dns.servers"]
-    B --> D["Packet Tunnel local DNS endpoint"]
+    A["Settings: Direct Resolver"] --> B["DnsConfig.directDns1/directDns2"]
+    A2["Settings: Proxy Resolver / DoH"] --> C["DnsConfig.proxyDns1/proxyDns2"]
+    A3["Settings: DNS over HTTPS"] --> D["DnsConfig.transportMode"]
 
-    C --> E["Xray internal DNS resolution"]
-    D --> F["System DNS resolution inside Packet Tunnel"]
+    B --> E["Xray dns.servers (direct-tagged resolvers)"]
+    C --> F["Xray dns.servers (proxy-tagged resolvers)"]
+    D --> F
 
-    E --> G["Primary DoH upstream"]
-    E --> H["Secondary DoH upstream"]
-    F --> G
-    F --> H
+    G["Darwin Packet Tunnel profile"] --> H["NEDNSSettings -> 10.0.0.53 / fd00::53"]
+    H --> I["System DNS queries enter Packet Tunnel"]
+    I --> J["tun-in -> routing rule -> dns outbound"]
+    J --> K["Xray Secure DNS"]
+
+    E --> L["direct outbound"]
+    F --> M["proxy outbound"]
 ```
 
-该目标架构有两个关键点：
+## 5. 推荐架构
 
-- 用户只维护一套 Secure DNS 配置
-- 系统 DNS 与 Xray DNS 使用同一套上游策略
+推荐架构保持一个事实边界：
 
-## 6. 真正可落地的 DoH 开关设计
+- Packet Tunnel 内不额外新增独立的用户态 DNS 守护进程
+- 本地 Secure DNS 端点直接由 Xray `dns` outbound 与路由规则承接
 
-### 6.1 控制面语义
+这样可以减少并行数据面，降低维护复杂度，同时保持 Secure Tunnel 语义集中。
 
-设置页开关应改为 `DNS over HTTPS`，而不是 `DNS over TLS`。
+推荐结构如下：
 
-原因：
+```mermaid
+flowchart TD
+    A["System DNS"] --> B["Packet Tunnel local DNS endpoint"]
+    B --> C["Xray dns outbound"]
+    C --> D["Direct Resolver via direct outbound"]
+    C --> E["Proxy Resolver / DoH via proxy outbound"]
 
-- 当前产品的用户可编辑端点是 `https://.../dns-query`
-- 这对应的是 DoH 语义，而不是 DoT
-- DoT 需要单独的上游模型与握手参数，当前仓库没有真正实现
+    F["Xray internal domain resolution"] --> C
+```
 
-### 6.2 开关行为
+## 6. 最终真实生效图
 
-`DNS over HTTPS` 开关应具备以下真实行为：
+最终目标不是增加新的系统级入口，而是在同一 Packet Tunnel 内继续扩展策略和可观测性：
 
-1. 开启时
-   - 将 `primaryEndpoint` / `secondaryEndpoint` 规范化为 `https://.../dns-query`
-   - Xray 模板输出 DoH resolver
-   - Packet Tunnel 继续使用由该 endpoint 推导出的 bootstrap resolver 作为系统 DNS
+```mermaid
+flowchart TD
+    A["Settings: Direct Resolver"] --> B["Direct DNS policy"]
+    A2["Settings: Proxy Resolver / DoH"] --> C["Proxy DNS policy"]
+    A3["Settings: DNS over HTTPS"] --> C
 
-2. 关闭时
-   - 将 `primaryEndpoint` / `secondaryEndpoint` 规范化为普通 DNS 服务器地址
-   - Xray 模板输出普通 DNS resolver
-   - Packet Tunnel 继续使用同一组普通 resolver
+    D["System DNS via Packet Tunnel"] --> E["Local Secure DNS endpoint"]
+    F["Xray internal DNS"] --> E
 
-### 6.3 第一阶段可落地边界
+    E --> B
+    E --> C
+    B --> G["direct outbound"]
+    C --> H["proxy outbound"]
+```
 
-在本地 Secure DNS proxy 尚未引入前，DoH 开关的真实能力边界如下：
+最终态的增强点应包括：
 
-- Xray 内置 DNS transport 会被真实切换
-- Packet Tunnel 系统 DNS 仍使用 bootstrap resolver 地址
-- 因此“System VPN 的系统 DNS 也完全使用 DoH”这一点，要等本地 Secure DNS proxy 落地后才能成立
+- Direct / Proxy 域名策略可编辑
+- 上游健康检查与切换可观测
+- 多平台系统 DNS 数据面保持一致
 
-这必须在文案和代码中都保持诚实。
+## 7. 真正可落地的 DoH 开关设计
 
-## 7. 可落地的改造方案
+### 7.1 控制面语义
+
+设置页中的 `DNS over HTTPS` 表示：
+
+- 只控制 `Proxy Resolver`
+- 不改变 `Direct Resolver`
+- 不改变 Packet Tunnel 本地 DNS 端点地址
+
+### 7.2 开关行为
+
+开启时：
+
+- `Proxy Resolver` 规范化为 `https://.../dns-query`
+- Xray Secure DNS 的默认上游改为 DoH
+- Darwin Packet Tunnel 中未命中 Direct policy 的系统 DNS 查询，也会经过该 DoH 上游
+
+关闭时：
+
+- `Proxy Resolver` 规范化为普通 DNS 服务器地址
+- Xray Secure DNS 的默认上游改为普通 DNS
+- Darwin Packet Tunnel 中未命中 Direct policy 的系统 DNS 查询，也会按同一 Proxy Resolver 逻辑处理
+
+### 7.3 当前真实边界
+
+`DNS over HTTPS` 现在已经不再是空开关，但它的真实覆盖范围是分平台的：
+
+- macOS / iOS:
+  - 覆盖 Xray Secure DNS
+  - 覆盖 Packet Tunnel 本地 Secure DNS 路径中的 Proxy Resolver 分支
+
+- Android:
+  - 目前覆盖 Xray Secure DNS
+  - 系统 VPN DNS 仍以 Direct Resolver 派生值为主
+
+- Windows / Linux:
+  - 目前覆盖 Xray Secure DNS
+  - 尚未接入统一的系统级本地 Secure DNS 端点
+
+## 8. 可落地的改造方案
 
 ### 第一阶段：统一配置模型与控制面
 
-第一阶段可以立即实施，目标是消除语义混乱和假开关：
+第一阶段已完成：
 
-1. 删除 `TunDnsConfig` 的独立 DNS 概念
-2. 统一由 `DnsConfig` 管理 DNS transport 与端点
-3. 设置页只保留一套 DNS 配置入口
-4. 将 `DNS over TLS` 改成 `DNS over HTTPS`
-5. 开关真正驱动 Xray DNS 端点格式和运行时配置
-6. Packet Tunnel 的 `dnsServers4/dnsServers6` 由统一配置派生
-7. 运行时不再并列追加硬编码公共 resolver 作为 fallback
+1. 删除独立的 `TunDnsConfig` 语义
+2. 统一由 `DnsConfig` 管理 Direct / Proxy / DoH
+3. 设置页提供 `Direct Resolver` 与 `Proxy Resolver`
+4. `DNS over HTTPS` 只控制 `Proxy Resolver`
+5. 去除运行时硬编码公共 fallback
 
-第一阶段收益：
+### 第二阶段：Packet Tunnel 本地 Secure DNS 端点
 
-- UI、配置、运行时语义一致
-- 用户只维护一套 DNS 配置
-- 为第二阶段本地 Secure DNS proxy 预留单一配置源
+第二阶段第一步已完成于 Darwin：
 
-### 第二阶段：本地 Secure DNS proxy
+1. 系统 DNS 指向 Packet Tunnel 内本地 DNS 端点
+2. Packet Tunnel 内 DNS 查询通过 `tun-in` 路由到 Xray `dns` outbound
+3. Direct Resolver 上游固定走 `direct` outbound
+4. Proxy Resolver 上游固定走 `proxy` outbound
 
-第二阶段补齐系统 DNS 的最终目标架构：
+### 第三阶段：策略与多平台扩展
 
-1. 在 Packet Tunnel 扩展或 Go runtime 内启动本地 DNS proxy
-2. `NEDNSSettings` 指向隧道内本地 DNS 入口
-3. 本地 DNS proxy 将查询转发到 DoH 上游
-4. 系统 DNS 与 Xray DNS 共享同一上游策略
+后续建议顺序：
 
-第二阶段完成后，DoH 将覆盖：
+1. 把 Direct / Proxy 域名策略从固定规则扩展为可配置模型
+2. 把 Android 接入与 Darwin 等价的本地 Secure DNS 端点
+3. 为 Windows / Linux 引入统一的系统级 DNS 数据面
+4. 增加 Secure DNS 健康检查、日志和指标
 
-- Xray 内置 DNS
-- System VPN 进入 Packet Tunnel 的系统 DNS
+## 9. 可实施的目标架构
 
-## 8. 可实施的目标架构
+### 9.1 Flutter 控制面
 
-从实施顺序看，推荐采用以下目标架构拆分：
+- `Proxy Resolver`
+- `Direct Resolver`
+- `DNS over HTTPS`
 
-### 8.1 Flutter 控制面
+### 9.2 Xray 配置生成
 
-- `DnsConfig` 统一承载：
-  - transport
-  - primary endpoint
-  - secondary endpoint
-- 设置页只展示：
-  - `DNS Settings`
-  - `DNS over HTTPS`
+- `dns.servers` 生成 Direct / Proxy 两组 nameserver
+- Direct nameserver 带固定 policy domains
+- Proxy nameserver 作为默认上游
+- routing rules:
+  - `tun-in` 的本地 DNS 端点流量 -> `dns`
+  - Direct nameserver tag -> `direct`
+  - Proxy nameserver tag -> `proxy`
 
-### 8.2 Xray 配置生成
+### 9.3 Packet Tunnel 启动参数
 
-- Xray `dns.servers` 只从统一 `DnsConfig` 生成
-- `transport == doh` 时输出 `https://.../dns-query`
-- `transport == plain` 时输出普通 DNS 服务器地址
+- Darwin:
+  - `dnsServers4 = [10.0.0.53]`
+  - `dnsServers6 = [fd00::53]`
 
-### 8.3 Packet Tunnel 启动参数
+- Android:
+  - 当前继续使用 Direct Resolver 派生的系统 DNS 值
 
-- 当前阶段：
-  - `TunnelProfile.dnsServers4/dnsServers6` 使用统一配置派生出的 bootstrap resolver
-- 目标阶段：
-  - `TunnelProfile.dnsServers4/dnsServers6` 改为本地 DNS endpoint
+### 9.4 本地 Secure DNS 数据面
 
-### 8.4 本地 Secure DNS proxy
+- 本地 DNS 端点由 Packet Tunnel 接管
+- DNS 查询由 Xray `dns` outbound 处理
+- 不新增第二套系统级网络入口
 
-- 监听 Packet Tunnel 内部地址
-- 接收系统 DNS 查询
-- 统一转发到 DoH 上游
-- 作为 Secure Tunnel 的组成部分运行
+## 10. 平台覆盖边界
 
-## 9. 本次代码改造范围
+### macOS / iOS
 
-本次改造只实现第一阶段，不声称第二阶段已完成：
+- 已接入 Packet Tunnel 本地 Secure DNS 端点
+- 系统 DNS 进入 Packet Tunnel 后按 Direct / Proxy policy 处理
+- `DNS over HTTPS` 已进入真实数据面
 
-- 已实现：
-  - 统一 DNS 配置模型
-  - 统一设置页文案与状态
-  - 真正可生效的 DoH 控制面
-  - Packet Tunnel bootstrap DNS 从统一配置派生
+### Android
 
-- 未实现：
-  - Packet Tunnel 内本地 Secure DNS proxy
-  - 系统 DNS 直接经本地 proxy 转 DoH 上游
+- `Proxy Resolver / DoH` 已进入 Xray Secure DNS
+- 系统 VPN DNS 仍由 Direct Resolver 派生
+- 尚未接入本地 Secure DNS 端点
 
-## 10. 后续实施建议
+### Windows / Linux
 
-后续若继续推进第二阶段，优先级建议如下：
+- 当前以运行时 Xray Secure DNS 为主
+- 尚未完成与 Apple Packet Tunnel 等价的系统级本地 Secure DNS 数据面
 
-1. 在 `go_core/` 侧实现本地 Secure DNS proxy，便于跨平台复用
-2. 将 Darwin `TunnelProfile.dnsServers4/dnsServers6` 固定为本地 DNS endpoint
-3. 统一 Xray DNS 与系统 DNS 的健康检查、主备切换和日志采样
-4. 补充 end-to-end System VPN DNS 验证用例
+## 11. 实施备注
+
+当前 Darwin 实现把“本地 Secure DNS proxy”收敛为 Packet Tunnel 内的本地 DNS 端点加 Xray `dns` outbound，而不是新增独立守护进程。这样做的原因是：
+
+- 保持 Secure Tunnel 数据面集中
+- 避免第二套 DNS 运行时
+- 继续使用现有 Xray DNS、routing、outbound 观测与维护路径
+
+后续若需要增强能力，应优先扩展该链路，而不是新增并行 DNS 组件。
