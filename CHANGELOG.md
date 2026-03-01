@@ -9,6 +9,10 @@ _Release Date: 2026-02-28_
 
 ## ✅ Changes
 
+- Unified DNS configuration into a single control model shared by Xray config generation and Darwin Packet Tunnel bootstrap DNS
+- Removed hardcoded runtime DNS fallback resolvers so Xray DNS and Packet Tunnel bootstrap DNS now derive from the same user-managed configuration
+- Replaced the inactive `DNS over TLS` settings switch with a real `DNS over HTTPS` control path and aligned Settings copy with actual Secure DNS behavior
+- Added `docs/dns-secure-tunnel-design.md` to document current DNS flow, target Secure Tunnel DNS architecture, and the staged DoH rollout plan
 - Reworked the Home monitoring cards for iOS and macOS with a quieter Material 3 layout: a primary download/upload card, a latency card, a CPU card, and a thin memory strip without changing page flow or connection actions
 - Added a Darwin `PacketTunnelProvider -> App Group -> DarwinHostApi -> Home` monitoring snapshot path so the Home page can show live download/upload and memory data from the System VPN extension on iOS and macOS while CPU stays optional
 - Added macOS Packet Tunnel CPU sampling and Home-side millisecond latency probing for the active connection, so the Apple monitoring cards no longer rely on placeholder values during active sessions

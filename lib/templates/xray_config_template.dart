@@ -14,14 +14,6 @@ const String defaultXrayJsonTemplate = r'''
       {
         "address": "<DNS2>",
         "queryStrategy": "UseIPv4"
-      },
-      {
-        "address": "1.1.1.1",
-        "queryStrategy": "UseIPv4"
-      },
-      {
-        "address": "8.8.8.8",
-        "queryStrategy": "UseIPv4"
       }
     ],
     "queryStrategy": "UseIPv4",

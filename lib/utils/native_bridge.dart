@@ -629,17 +629,14 @@ class NativeBridge {
   static Future<darwin_host.TunnelProfile> _buildDefaultTunnelProfile({
     required String configPath,
   }) async {
-    final dns4 = <String>[
-      TunDnsConfig.dns1.value.trim(),
-      TunDnsConfig.dns2.value.trim(),
-    ].where((s) => s.isNotEmpty).toList();
+    final dns4 = DnsConfig.effectiveTunnelDnsServers4();
 
     return darwin_host.TunnelProfile(
       mtu: 1500,
       tun46Setting: 2,
       defaultNicSupport6: true,
-      dnsServers4: dns4.isEmpty ? <String>['1.1.1.1', '8.8.8.8'] : dns4,
-      dnsServers6: <String>['2606:4700:4700::1111', '2001:4860:4860::8888'],
+      dnsServers4: dns4,
+      dnsServers6: DnsConfig.effectiveTunnelDnsServers6,
       ipv4Addresses: <String>['10.0.0.2'],
       ipv4SubnetMasks: <String>['255.255.255.0'],
       ipv4IncludedRoutes: <darwin_host.TunnelRouteV4>[
@@ -665,17 +662,14 @@ class NativeBridge {
   static Future<Map<String, Object?>> _buildDefaultTunnelProfileMap({
     String? configPath,
   }) async {
-    final dns4 = <String>[
-      TunDnsConfig.dns1.value.trim(),
-      TunDnsConfig.dns2.value.trim(),
-    ].where((s) => s.isNotEmpty).toList();
+    final dns4 = DnsConfig.effectiveTunnelDnsServers4();
 
     return <String, Object?>{
       'mtu': 1500,
       'tun46Setting': 2,
       'defaultNicSupport6': true,
-      'dnsServers4': dns4.isEmpty ? <String>['1.1.1.1', '8.8.8.8'] : dns4,
-      'dnsServers6': <String>['2606:4700:4700::1111', '2001:4860:4860::8888'],
+      'dnsServers4': dns4,
+      'dnsServers6': DnsConfig.effectiveTunnelDnsServers6,
       'ipv4Addresses': <String>['10.0.0.2'],
       'ipv4SubnetMasks': <String>['255.255.255.0'],
       'ipv4IncludedRoutes': <Map<String, String>>[

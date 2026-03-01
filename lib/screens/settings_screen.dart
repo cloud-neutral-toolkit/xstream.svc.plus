@@ -4,12 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:archive/archive_io.dart';
 import '../../utils/global_config.dart'
-    show
-        GlobalState,
-        buildVersion,
-        DnsConfig,
-        TunDnsConfig,
-        GlobalApplicationConfig;
+    show GlobalState, buildVersion, DnsConfig, GlobalApplicationConfig;
 import '../../utils/native_bridge.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
@@ -696,9 +691,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  void _onToggleDnsOverTls(bool enabled) {
-    setState(() => TunDnsConfig.dotEnabled.value = enabled);
-    addAppLog('DNS over TLS: ${enabled ? "开启" : "关闭"}');
+  void _onToggleDnsOverHttps(bool enabled) {
+    setState(() => DnsConfig.setDohEnabled(enabled));
+    addAppLog('DNS over HTTPS: ${enabled ? "开启" : "关闭"}');
   }
 
   Future<void> _refreshTunStatus() async {
@@ -967,11 +962,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   SwitchListTile(
                     secondary: const Icon(Icons.vpn_lock),
-                    value: TunDnsConfig.dotEnabled.value,
-                    onChanged: _onToggleDnsOverTls,
-                    title: Text(context.l10n.get('dnsOverTls')),
+                    value: DnsConfig.dohEnabled,
+                    onChanged: _onToggleDnsOverHttps,
+                    title: Text(context.l10n.get('dnsOverHttps')),
                     subtitle: Text(
-                      context.l10n.get('dnsOverTlsHint'),
+                      context.l10n.get('dnsOverHttpsHint'),
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
@@ -1229,14 +1224,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: SwitchListTile(
-                          value: TunDnsConfig.dotEnabled.value,
-                          onChanged: _onToggleDnsOverTls,
+                          value: DnsConfig.dohEnabled,
+                          onChanged: _onToggleDnsOverHttps,
                           title: Text(
-                            context.l10n.get('dnsOverTls'),
+                            context.l10n.get('dnsOverHttps'),
                             style: _menuTextStyle,
                           ),
                           subtitle: Text(
-                            context.l10n.get('dnsOverTlsHint'),
+                            context.l10n.get('dnsOverHttpsHint'),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
@@ -1316,11 +1311,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                           );
                         },
-                      ),
-                      _buildButton(
-                        icon: Icons.dns_outlined,
-                        label: context.l10n.get('tunDnsConfig'),
-                        onPressed: _showTunDnsDialog,
                       ),
                       Padding(
                         padding: const EdgeInsets.only(left: 16.0, top: 4),
@@ -1457,67 +1447,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: dns1Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('primaryDns')),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: dns2Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.get('cancel')),
-          ),
-          TextButton(
-            onPressed: () {
-              DnsConfig.dns1.value = dns1Controller.text.trim();
-              DnsConfig.dns2.value = dns2Controller.text.trim();
-              Navigator.pop(context);
-            },
-            child: Text(context.l10n.get('confirm')),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showTunDnsDialog() {
-    final dns1Controller = TextEditingController(text: TunDnsConfig.dns1.value);
-    final dns2Controller = TextEditingController(text: TunDnsConfig.dns2.value);
-    final tlsNameController =
-        TextEditingController(text: TunDnsConfig.tlsServerName.value);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(context.l10n.get('tunDnsConfig')),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: dns1Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('primaryDns')),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: dns2Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: tlsNameController,
-              decoration: InputDecoration(
-                labelText: context.l10n.get('dnsTlsServerName'),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                DnsConfig.dohEnabled
+                    ? context.l10n.get('dnsDialogHintDoh')
+                    : context.l10n.get('dnsDialogHintPlain'),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey[700]),
               ),
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: dns1Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('primaryDns')),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: dns2Controller,
+              decoration:
+                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
+            ),
           ],
         ),
         actions: [
@@ -1527,9 +1480,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           TextButton(
             onPressed: () {
-              TunDnsConfig.dns1.value = dns1Controller.text.trim();
-              TunDnsConfig.dns2.value = dns2Controller.text.trim();
-              TunDnsConfig.tlsServerName.value = tlsNameController.text.trim();
+              DnsConfig.updateServers(
+                primary: dns1Controller.text,
+                secondary: dns2Controller.text,
+              );
               Navigator.pop(context);
             },
             child: Text(context.l10n.get('confirm')),

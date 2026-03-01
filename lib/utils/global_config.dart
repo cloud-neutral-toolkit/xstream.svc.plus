@@ -158,51 +158,154 @@ class GlobalState {
 }
 
 /// 管理 DNS 配置，支持保存到本地
-class DnsConfig {
-  static const _dns1Key = 'dnsServer1';
-  static const _dns2Key = 'dnsServer2';
+enum DnsTransportMode {
+  plain('plain'),
+  doh('doh');
 
-  static final ValueNotifier<String> dns1 =
-      ValueNotifier<String>('https://1.1.1.1/dns-query');
-  static final ValueNotifier<String> dns2 =
-      ValueNotifier<String>('https://8.8.8.8/dns-query');
+  const DnsTransportMode(this.storageValue);
+  final String storageValue;
 
-  static Future<void> init() async {
-    final prefs = await SharedPreferences.getInstance();
-    dns1.value = prefs.getString(_dns1Key) ?? dns1.value;
-    dns2.value = prefs.getString(_dns2Key) ?? dns2.value;
-
-    dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
-    dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
+  static DnsTransportMode fromStorage(String? value) {
+    return value == DnsTransportMode.plain.storageValue
+        ? DnsTransportMode.plain
+        : DnsTransportMode.doh;
   }
 }
 
-/// Packet Tunnel DNS settings (DoT optional, always through tunnel)
-class TunDnsConfig {
-  static const _dns1Key = 'tunDnsServer1';
-  static const _dns2Key = 'tunDnsServer2';
-  static const _tlsNameKey = 'tunDnsTlsServerName';
-  static const _dotEnabledKey = 'tunDnsOverTls';
+class DnsConfig {
+  static const _dns1Key = 'dnsServer1';
+  static const _dns2Key = 'dnsServer2';
+  static const _transportModeKey = 'dnsTransportMode';
+  static const _legacyDotEnabledKey = 'tunDnsOverTls';
+  static const _defaultPlainDns1 = '1.1.1.1';
+  static const _defaultPlainDns2 = '8.8.8.8';
+  static const _defaultDohDns1 = 'https://1.1.1.1/dns-query';
+  static const _defaultDohDns2 = 'https://8.8.8.8/dns-query';
+  static const _defaultDns6Servers = <String>[
+    '2606:4700:4700::1111',
+    '2001:4860:4860::8888',
+  ];
 
-  static final ValueNotifier<String> dns1 = ValueNotifier<String>('1.1.1.1');
-  static final ValueNotifier<String> dns2 = ValueNotifier<String>('8.8.8.8');
-  static final ValueNotifier<String> tlsServerName =
-      ValueNotifier<String>('cloudflare-dns.com');
-  static final ValueNotifier<bool> dotEnabled = ValueNotifier<bool>(true);
+  static final ValueNotifier<String> dns1 =
+      ValueNotifier<String>(_defaultDohDns1);
+  static final ValueNotifier<String> dns2 =
+      ValueNotifier<String>(_defaultDohDns2);
+  static final ValueNotifier<DnsTransportMode> transportMode =
+      ValueNotifier<DnsTransportMode>(DnsTransportMode.doh);
+
+  static bool get dohEnabled => transportMode.value == DnsTransportMode.doh;
+
+  static String get primaryDefault =>
+      dohEnabled ? _defaultDohDns1 : _defaultPlainDns1;
+
+  static String get secondaryDefault =>
+      dohEnabled ? _defaultDohDns2 : _defaultPlainDns2;
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    dns1.value = prefs.getString(_dns1Key) ?? dns1.value;
-    dns2.value = prefs.getString(_dns2Key) ?? dns2.value;
-    tlsServerName.value = prefs.getString(_tlsNameKey) ?? tlsServerName.value;
-    dotEnabled.value = prefs.getBool(_dotEnabledKey) ?? dotEnabled.value;
+    final legacyDotEnabled = prefs.getBool(_legacyDotEnabledKey);
+    transportMode.value = DnsTransportMode.fromStorage(
+      prefs.getString(_transportModeKey) ??
+          ((legacyDotEnabled ?? true)
+              ? DnsTransportMode.doh.storageValue
+              : DnsTransportMode.plain.storageValue),
+    );
+    dns1.value = _normalizeEndpoint(
+      prefs.getString(_dns1Key),
+      transportMode.value,
+      primary: true,
+    );
+    dns2.value = _normalizeEndpoint(
+      prefs.getString(_dns2Key),
+      transportMode.value,
+      primary: false,
+    );
 
     dns1.addListener(() => prefs.setString(_dns1Key, dns1.value));
     dns2.addListener(() => prefs.setString(_dns2Key, dns2.value));
-    tlsServerName
-        .addListener(() => prefs.setString(_tlsNameKey, tlsServerName.value));
-    dotEnabled
-        .addListener(() => prefs.setBool(_dotEnabledKey, dotEnabled.value));
+    transportMode.addListener(() {
+      prefs.setString(_transportModeKey, transportMode.value.storageValue);
+    });
+  }
+
+  static void setDohEnabled(bool enabled) {
+    final nextMode = enabled ? DnsTransportMode.doh : DnsTransportMode.plain;
+    if (transportMode.value == nextMode) {
+      return;
+    }
+
+    transportMode.value = nextMode;
+    dns1.value = _normalizeEndpoint(dns1.value, nextMode, primary: true);
+    dns2.value = _normalizeEndpoint(dns2.value, nextMode, primary: false);
+  }
+
+  static void updateServers({
+    required String primary,
+    required String secondary,
+  }) {
+    dns1.value =
+        _normalizeEndpoint(primary, transportMode.value, primary: true);
+    dns2.value =
+        _normalizeEndpoint(secondary, transportMode.value, primary: false);
+  }
+
+  static List<String> effectiveTunnelDnsServers4() {
+    final servers = <String>[
+      _resolveTunnelBootstrapAddress(dns1.value, primary: true),
+      _resolveTunnelBootstrapAddress(dns2.value, primary: false),
+    ].where((server) => server.isNotEmpty).toList();
+    return servers.toSet().toList();
+  }
+
+  static List<String> get effectiveTunnelDnsServers6 => _defaultDns6Servers;
+
+  static String _normalizeEndpoint(
+    String? rawValue,
+    DnsTransportMode mode, {
+    required bool primary,
+  }) {
+    final fallback = primary
+        ? (mode == DnsTransportMode.doh ? _defaultDohDns1 : _defaultPlainDns1)
+        : (mode == DnsTransportMode.doh ? _defaultDohDns2 : _defaultPlainDns2);
+    final trimmed = rawValue?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return fallback;
+    }
+
+    final uri = Uri.tryParse(trimmed);
+    if (mode == DnsTransportMode.doh) {
+      if (uri != null && uri.hasScheme && uri.scheme == 'https') {
+        final normalizedPath =
+            uri.path.isEmpty || uri.path == '/' ? '/dns-query' : uri.path;
+        return uri.replace(path: normalizedPath).toString();
+      }
+      final host = uri != null && uri.host.isNotEmpty ? uri.host : trimmed;
+      return Uri(scheme: 'https', host: host, path: '/dns-query').toString();
+    }
+
+    if (uri != null && uri.hasScheme && uri.host.isNotEmpty) {
+      return uri.host;
+    }
+    return trimmed;
+  }
+
+  static String _resolveTunnelBootstrapAddress(
+    String endpoint, {
+    required bool primary,
+  }) {
+    final trimmed = endpoint.trim();
+    if (trimmed.isEmpty) {
+      return primary ? _defaultPlainDns1 : _defaultPlainDns2;
+    }
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null && uri.hasScheme && uri.host.isNotEmpty) {
+      final host = uri.host;
+      if (host.isNotEmpty) {
+        return host;
+      }
+    }
+    return trimmed;
   }
 }
 
