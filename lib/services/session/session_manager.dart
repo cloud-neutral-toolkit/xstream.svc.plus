@@ -112,6 +112,13 @@ class SessionManager {
         return LoginResult(success: false, message: lastError.value!);
       }
       if (response.statusCode == 404) {
+        final body404 = _parseBody(response.body);
+        final code404 = body404['code'] as String? ?? '';
+        final msg404 = body404['message'] as String? ?? '';
+        if (code404 == 'user_not_found' || msg404.contains('not found')) {
+          lastError.value = msg404.isNotEmpty ? msg404 : '用户不存在';
+          return LoginResult(success: false, message: lastError.value!);
+        }
         lastError.value = '登录接口未启用，请确认部署配置。';
         return LoginResult(success: false, message: lastError.value!);
       }
