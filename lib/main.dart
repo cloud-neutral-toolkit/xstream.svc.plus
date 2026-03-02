@@ -287,29 +287,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  void _showLanguageSelector() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        final current = GlobalState.locale.value;
-        return RadioGroup<Locale>(
-          groupValue: current,
-          onChanged: (loc) {
-            if (loc == null) return;
-            GlobalState.locale.value = loc;
-            Navigator.pop(context);
-          },
-          child: const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RadioListTile<Locale>(value: Locale('zh'), title: Text('中文')),
-              RadioListTile<Locale>(
-                  value: Locale('en'), title: Text('English')),
-            ],
-          ),
-        );
-      },
-    );
+  void _toggleLanguage() {
+    final current = GlobalState.locale.value;
+    GlobalState.locale.value =
+        current.languageCode == 'zh' ? const Locale('en') : const Locale('zh');
   }
 
   Future<void> _onConnectionModeChanged() async {
@@ -576,10 +557,22 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           appBar: AppBar(
             title: Text(isMobile ? _currentPageTitle(context) : ''),
             actions: [
-              IconButton(
-                tooltip: context.l10n.get('language'),
-                icon: const Icon(Icons.language),
-                onPressed: _showLanguageSelector,
+              ValueListenableBuilder<Locale>(
+                valueListenable: GlobalState.locale,
+                builder: (context, locale, _) {
+                  final label = locale.languageCode == 'zh' ? '中' : 'EN';
+                  return IconButton(
+                    tooltip: context.l10n.get('language'),
+                    icon: Text(
+                      label,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: _toggleLanguage,
+                  );
+                },
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
