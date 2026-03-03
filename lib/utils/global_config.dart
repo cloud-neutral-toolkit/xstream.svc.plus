@@ -9,15 +9,6 @@ import '../widgets/log_console.dart';
 // LogConsole Global Key
 final GlobalKey<LogConsoleState> logConsoleKey = GlobalKey<LogConsoleState>();
 
-String _normalizeReleaseLabel(String branch) {
-  final suffix = branch.replaceFirst('release/', '');
-  final dottedRelease = RegExp(r'^(v\d+\.\d+)\.(\d+)$').firstMatch(suffix);
-  if (dottedRelease != null) {
-    return '${dottedRelease.group(1)}-${dottedRelease.group(2)}';
-  }
-  return suffix;
-}
-
 String _displayBranchLabel(String branch) {
   if (branch.isEmpty) {
     return 'dev';
@@ -26,7 +17,11 @@ String _displayBranchLabel(String branch) {
     return 'latest';
   }
   if (branch.startsWith('release/')) {
-    return _normalizeReleaseLabel(branch);
+    final releaseVersion = branch.replaceFirst('release/', '');
+    if (releaseVersion.isNotEmpty) {
+      return releaseVersion.replaceAll('/', '-');
+    }
+    return 'release';
   }
   return branch.replaceAll('/', '-');
 }
