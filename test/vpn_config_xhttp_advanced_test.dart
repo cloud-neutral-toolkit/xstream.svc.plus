@@ -17,16 +17,17 @@ Map<String, dynamic> _proxyStreamSettingsFromConfig(String jsonText) {
 
 void main() {
   group('xhttp advanced config', () {
-    test('defaults to stream-up and removes h3', () async {
-      XhttpAdvancedConfig.setMode(XhttpAdvancedConfig.modeStreamUp);
-      XhttpAdvancedConfig.alpn.value = <String>[
+    test('defaults to auto and includes h3/h2/http1.1', () async {
+      XhttpAdvancedConfig.setMode(XhttpAdvancedConfig.modeAuto);
+      XhttpAdvancedConfig.setAlpn(<String>[
+        XhttpAdvancedConfig.alpnH3,
         XhttpAdvancedConfig.alpnH2,
         XhttpAdvancedConfig.alpnHttp11,
-      ];
+      ]);
 
       final jsonText = await VpnConfig.tryGenerateXrayJsonFromVlessUri(
         'vless://11111111-1111-1111-1111-111111111111@example.com:443'
-        '?type=xhttp&security=tls&mode=auto&alpn=h3,h2#example',
+        '?type=xhttp&security=tls&mode=stream-up&alpn=h2#example',
       );
       expect(jsonText, isNotNull);
 
@@ -39,17 +40,16 @@ void main() {
       );
       final alpn = List<String>.from(tlsSettings['alpn'] as List<dynamic>);
 
-      expect(xhttpSettings['mode'], XhttpAdvancedConfig.modeStreamUp);
-      expect(alpn, <String>['h2', 'http/1.1']);
+      expect(xhttpSettings['mode'], XhttpAdvancedConfig.modeAuto);
+      expect(alpn, <String>['h3', 'h2', 'http/1.1']);
     });
 
-    test('allows enabling h3 and mode auto from advanced config', () async {
-      XhttpAdvancedConfig.setMode(XhttpAdvancedConfig.modeAuto);
-      XhttpAdvancedConfig.alpn.value = <String>[
-        XhttpAdvancedConfig.alpnH3,
+    test('allows stream-up and removing h3 from advanced config', () async {
+      XhttpAdvancedConfig.setMode(XhttpAdvancedConfig.modeStreamUp);
+      XhttpAdvancedConfig.setAlpn(<String>[
         XhttpAdvancedConfig.alpnH2,
         XhttpAdvancedConfig.alpnHttp11,
-      ];
+      ]);
 
       final jsonText = await VpnConfig.tryGenerateXrayJsonFromVlessUri(
         'vless://22222222-2222-2222-2222-222222222222@example.com:443'
@@ -66,8 +66,8 @@ void main() {
       );
       final alpn = List<String>.from(tlsSettings['alpn'] as List<dynamic>);
 
-      expect(xhttpSettings['mode'], XhttpAdvancedConfig.modeAuto);
-      expect(alpn, <String>['h3', 'h2', 'http/1.1']);
+      expect(xhttpSettings['mode'], XhttpAdvancedConfig.modeStreamUp);
+      expect(alpn, <String>['h2', 'http/1.1']);
     });
   });
 }

@@ -569,9 +569,13 @@ class XhttpAdvancedConfig {
   static const String alpnH2 = 'h2';
   static const String alpnHttp11 = 'http/1.1';
   static const List<String> allowedAlpn = <String>[alpnH3, alpnH2, alpnHttp11];
-  static const List<String> defaultAlpn = <String>[alpnH2, alpnHttp11];
+  static const List<String> defaultAlpn = <String>[
+    alpnH3,
+    alpnH2,
+    alpnHttp11,
+  ];
 
-  static final ValueNotifier<String> mode = ValueNotifier<String>(modeStreamUp);
+  static final ValueNotifier<String> mode = ValueNotifier<String>(modeAuto);
   static final ValueNotifier<List<String>> alpn =
       ValueNotifier<List<String>>(List<String>.from(defaultAlpn));
 
@@ -592,6 +596,10 @@ class XhttpAdvancedConfig {
     mode.value = _normalizeMode(value);
   }
 
+  static void setAlpn(List<String> values) {
+    alpn.value = _normalizeAlpn(values);
+  }
+
   static void toggleAlpn(String value, bool enabled) {
     final current = List<String>.from(alpn.value);
     if (!allowedAlpn.contains(value)) return;
@@ -610,7 +618,7 @@ class XhttpAdvancedConfig {
     if (allowedModes.contains(value)) {
       return value;
     }
-    return modeStreamUp;
+    return modeAuto;
   }
 
   static List<String> _normalizeAlpn(List<String>? raw) {

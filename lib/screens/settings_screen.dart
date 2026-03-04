@@ -39,6 +39,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _mfaCodeController = TextEditingController();
+  String _draftXhttpMode = XhttpAdvancedConfig.mode.value;
+  Set<String> _draftXhttpAlpn = <String>{...XhttpAdvancedConfig.alpn.value};
+  bool _xhttpAdvancedDirty = false;
 
   static const TextStyle _menuTextStyle = TextStyle(fontSize: 14);
   static final ButtonStyle _menuButtonStyle = ElevatedButton.styleFrom(
@@ -49,6 +52,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
+    _loadXhttpAdvancedDraft();
     _baseUrlController.text = _sessionManager.baseUrl.value;
     _usernameController.text = _sessionManager.currentUser.value ?? '';
     _sessionManager.baseUrl.addListener(_syncBaseUrlFromSession);
@@ -736,6 +740,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  void _loadXhttpAdvancedDraft() {
+    _draftXhttpMode = XhttpAdvancedConfig.mode.value;
+    _draftXhttpAlpn = <String>{...XhttpAdvancedConfig.alpn.value};
+    _xhttpAdvancedDirty = false;
+  }
+
+  void _setDraftXhttpMode(String value) {
+    if (_draftXhttpMode == value) return;
+    setState(() {
+      _draftXhttpMode = value;
+      _xhttpAdvancedDirty = true;
+    });
+  }
+
+  void _toggleDraftXhttpAlpn(String value, bool enabled) {
+    final next = <String>{..._draftXhttpAlpn};
+    if (enabled) {
+      next.add(value);
+    } else {
+      next.remove(value);
+    }
+    final changed = next.length != _draftXhttpAlpn.length ||
+        next.any((item) => !_draftXhttpAlpn.contains(item));
+    if (!changed) return;
+    setState(() {
+      _draftXhttpAlpn = next;
+      _xhttpAdvancedDirty = true;
+    });
+  }
+
+  void _resetXhttpAdvancedDraft() {
+    setState(() {
+      _loadXhttpAdvancedDraft();
+    });
+  }
+
+  void _saveAndApplyXhttpAdvanced() {
+    final orderedAlpn = <String>[
+      for (final candidate in XhttpAdvancedConfig.allowedAlpn)
+        if (_draftXhttpAlpn.contains(candidate)) candidate,
+    ];
+    XhttpAdvancedConfig.setMode(_draftXhttpMode);
+    XhttpAdvancedConfig.setAlpn(orderedAlpn);
+    setState(() {
+      _xhttpAdvancedDirty = false;
+    });
+    addAppLog(
+      'XHTTP advanced config saved: '
+      'mode=${XhttpAdvancedConfig.mode.value}, '
+      'alpn=${XhttpAdvancedConfig.alpn.value.join(",")}',
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.get('xhttpSavedApplied'))),
+    );
+  }
+
   Widget _buildXhttpAdvancedConfig(BuildContext context) {
     return Container(
       width: double.infinity,
@@ -766,27 +826,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(fontSize: 13),
                 ),
               ),
-              ValueListenableBuilder<String>(
-                valueListenable: XhttpAdvancedConfig.mode,
-                builder: (context, selectedMode, _) {
-                  return DropdownButton<String>(
-                    value: selectedMode,
-                    items: [
-                      DropdownMenuItem(
-                        value: XhttpAdvancedConfig.modeStreamUp,
-                        child: Text(context.l10n.get('xhttpModeStreamUp')),
-                      ),
-                      DropdownMenuItem(
-                        value: XhttpAdvancedConfig.modeAuto,
-                        child: Text(context.l10n.get('xhttpModeAuto')),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value == null) return;
-                      XhttpAdvancedConfig.setMode(value);
-                      addAppLog('XHTTP mode: $value');
-                    },
-                  );
+              DropdownButton<String>(
+                value: _draftXhttpMode,
+                items: [
+                  DropdownMenuItem(
+                    value: XhttpAdvancedConfig.modeStreamUp,
+                    child: Text(context.l10n.get('xhttpModeStreamUp')),
+                  ),
+                  DropdownMenuItem(
+                    value: XhttpAdvancedConfig.modeAuto,
+                    child: Text(context.l10n.get('xhttpModeAuto')),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value == null) return;
+                  _setDraftXhttpMode(value);
                 },
               ),
             ],
@@ -797,53 +851,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: const TextStyle(fontSize: 13),
           ),
           const SizedBox(height: 8),
-          ValueListenableBuilder<List<String>>(
-            valueListenable: XhttpAdvancedConfig.alpn,
-            builder: (context, selectedAlpn, _) {
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  FilterChip(
-                    label: Text(context.l10n.get('xhttpAlpnH3')),
-                    selected: selectedAlpn.contains(XhttpAdvancedConfig.alpnH3),
-                    onSelected: (enabled) {
-                      XhttpAdvancedConfig.toggleAlpn(
-                        XhttpAdvancedConfig.alpnH3,
-                        enabled,
-                      );
-                      addAppLog('XHTTP ALPN h3: ${enabled ? "on" : "off"}');
-                    },
-                  ),
-                  FilterChip(
-                    label: Text(context.l10n.get('xhttpAlpnH2')),
-                    selected: selectedAlpn.contains(XhttpAdvancedConfig.alpnH2),
-                    onSelected: (enabled) {
-                      XhttpAdvancedConfig.toggleAlpn(
-                        XhttpAdvancedConfig.alpnH2,
-                        enabled,
-                      );
-                      addAppLog('XHTTP ALPN h2: ${enabled ? "on" : "off"}');
-                    },
-                  ),
-                  FilterChip(
-                    label: Text(context.l10n.get('xhttpAlpnHttp11')),
-                    selected: selectedAlpn.contains(
-                      XhttpAdvancedConfig.alpnHttp11,
-                    ),
-                    onSelected: (enabled) {
-                      XhttpAdvancedConfig.toggleAlpn(
-                        XhttpAdvancedConfig.alpnHttp11,
-                        enabled,
-                      );
-                      addAppLog(
-                        'XHTTP ALPN http/1.1: ${enabled ? "on" : "off"}',
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilterChip(
+                label: Text(context.l10n.get('xhttpAlpnH3')),
+                selected: _draftXhttpAlpn.contains(XhttpAdvancedConfig.alpnH3),
+                onSelected: (enabled) => _toggleDraftXhttpAlpn(
+                  XhttpAdvancedConfig.alpnH3,
+                  enabled,
+                ),
+              ),
+              FilterChip(
+                label: Text(context.l10n.get('xhttpAlpnH2')),
+                selected: _draftXhttpAlpn.contains(XhttpAdvancedConfig.alpnH2),
+                onSelected: (enabled) => _toggleDraftXhttpAlpn(
+                  XhttpAdvancedConfig.alpnH2,
+                  enabled,
+                ),
+              ),
+              FilterChip(
+                label: Text(context.l10n.get('xhttpAlpnHttp11')),
+                selected: _draftXhttpAlpn.contains(
+                  XhttpAdvancedConfig.alpnHttp11,
+                ),
+                onSelected: (enabled) => _toggleDraftXhttpAlpn(
+                  XhttpAdvancedConfig.alpnHttp11,
+                  enabled,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              TextButton(
+                onPressed:
+                    _xhttpAdvancedDirty ? _resetXhttpAdvancedDraft : null,
+                child: Text(context.l10n.get('xhttpResetDraft')),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed:
+                    _xhttpAdvancedDirty ? _saveAndApplyXhttpAdvanced : null,
+                icon: const Icon(Icons.save),
+                label: Text(context.l10n.get('xhttpSaveApply')),
+              ),
+            ],
           ),
         ],
       ),
