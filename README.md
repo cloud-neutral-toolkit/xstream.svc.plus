@@ -59,6 +59,6 @@
 
 ## 📚 许可证与致谢
 
-- 本项目整体遵循 [GNU GPLv3](LICENSE) 开源协议。
+- 本项目整体遵循 [Apache 2.0](LICENSE) 开源协议。
 - 核心网络功能依赖 [Xray-core](https://github.com/XTLS/Xray-core) ，遵循 Mozilla Public License 2.0。
 - 桥接库 [libXray](https://github.com/XTLS/libXray) 使用 MIT License 发布。

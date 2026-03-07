@@ -1,3 +1,11 @@
+# XStream v0.3.5
+
+_Release Date: 2026-03-07_
+
+## ✅ Changes
+- Updated project license from GNU GPLv3 to Apache 2.0
+- Realigned documentation and legal notices with Apache 2.0 terms
+
 # XStream v1.0.3
 
 _Release Date: 2026-03-02_
