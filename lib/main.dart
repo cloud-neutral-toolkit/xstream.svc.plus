@@ -111,7 +111,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         MediaQuery.of(context).size.width < _mobileBreakpoint;
   }
 
-  int _settingsIndex(BuildContext context) => _isMobileLayout(context) ? 3 : 3;
+
 
   @override
   void initState() {
@@ -244,14 +244,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
            await _pickImageAndScan();
         }
         break;
-      case _AddNodeMenuAction.pickFile:
-        if (mounted) {
-          setState(() => _currentIndex = _settingsIndex(context));
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.get('openSettingsImportHint'))),
-          );
-        }
-        break;
+
       case _AddNodeMenuAction.readClipboard:
         await _importFromClipboard();
         break;
@@ -664,12 +657,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                       icon: Icons.qr_code_scanner,
                       text: context.l10n.get('addNodeScanQr'),
                     ),
-                    _buildAddNodeItem(
-                      context,
-                      action: _AddNodeMenuAction.pickFile,
-                      icon: Icons.file_open,
-                      text: context.l10n.get('addNodePickFile'),
-                    ),
+
                     _buildAddNodeItem(
                       context,
                       action: _AddNodeMenuAction.readClipboard,
@@ -793,6 +781,6 @@ class _NavigationDestination {
 enum _AddNodeMenuAction {
   manualInput,
   scanQr,
-  pickFile,
+
   readClipboard,
 }
