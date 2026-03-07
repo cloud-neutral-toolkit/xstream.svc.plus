@@ -6,6 +6,22 @@ if [[ "${PLATFORM_NAME:-}" != "macosx" ]]; then
   exit 0
 fi
 
+# Add common Go paths for Xcode environment
+export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Find go binary
+GO_BIN=$(which go || echo "/opt/homebrew/bin/go")
+if ! command -v "$GO_BIN" &> /dev/null; then
+  if [[ -f "/usr/local/bin/go" ]]; then
+    GO_BIN="/usr/local/bin/go"
+  elif [[ -f "/opt/homebrew/bin/go" ]]; then
+    GO_BIN="/opt/homebrew/bin/go"
+  else
+    echo "error: go command not found. Please install Go." >&2
+    exit 1
+  fi
+fi
+
 ROOT_DIR="${SRCROOT}/.."
 GO_CORE_DIR="${ROOT_DIR}/go_core"
 OUTPUT_DIR="${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}"
@@ -15,11 +31,6 @@ TMP_LIB="${TMP_OUT_DIR}/libxray_bridge.dylib"
 
 if [[ ! -d "${GO_CORE_DIR}" ]]; then
   echo "error: go_core directory not found: ${GO_CORE_DIR}" >&2
-  exit 1
-fi
-
-if ! command -v go >/dev/null 2>&1; then
-  echo "error: go is not installed or not in PATH" >&2
   exit 1
 fi
 
@@ -49,7 +60,7 @@ echo "[xray-bridge] building for darwin/${ARCH} -> ${TMP_LIB}"
   export CC="$(xcrun --sdk macosx --find clang)"
   export CGO_CFLAGS="-isysroot $(xcrun --sdk macosx --show-sdk-path)"
   export CGO_LDFLAGS="-isysroot $(xcrun --sdk macosx --show-sdk-path)"
-  go build -trimpath -buildmode=c-shared -o "${TMP_LIB}" ./bridge_ios.go
+  "$GO_BIN" build -trimpath -buildmode=c-shared -o "${TMP_LIB}" ./bridge_ios.go
 )
 
 if [[ ! -f "${TMP_LIB}" ]]; then
