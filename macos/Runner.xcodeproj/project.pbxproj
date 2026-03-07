@@ -31,14 +31,6 @@
 		33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 33CC10F42044A3C60003C045 /* MainMenu.xib */; };
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		58E72ADC47724EE381E3CA64 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
-		972D45842DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
-		972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
-		972D45862DF2D0D700A356CC /* xray in Resources */ = {isa = PBXBuildFile; fileRef = 972D45822DF2D0D700A356CC /* xray */; };
-		972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */ = {isa = PBXBuildFile; fileRef = 972D45832DF2D0D700A356CC /* xray-x86_64 */; };
-		972D45882DF2D0D700A356CC /* geoip.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458A2DF2D0D700A356CC /* geoip.dat */; };
-		972D45892DF2D0D700A356CC /* geosite.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458B2DF2D0D700A356CC /* geosite.dat */; };
-		972D458C2DF2D0D700A356CC /* geoip.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458A2DF2D0D700A356CC /* geoip.dat */; };
-		972D458D2DF2D0D700A356CC /* geosite.dat in Resources */ = {isa = PBXBuildFile; fileRef = 972D458B2DF2D0D700A356CC /* geosite.dat */; };
 		9791702D2DED493800ABF9A6 /* NativeBridge+Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */; };
 		9791702E2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		9791702F2DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
@@ -47,8 +39,6 @@
 		979170322DED493800ABF9A6 /* NativeBridge+ServiceControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */; };
 		979170332DED493800ABF9A6 /* NativeBridge+XrayInit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */; };
 		979170342DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */; };
-		97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
-		97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */ = {isa = PBXBuildFile; fileRef = 97AB92F72DF3F9FA00393014 /* reset_xray.sh */; };
 		97AEB9BC2F4D2F8C00184384 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 34F5E2DC69227D14C4E9F911 /* Pods_Runner.framework */; };
 		97AEB9BD2F4D2F8C00184384 /* Pods_Runner.framework in Bundle Framework */ = {isa = PBXBuildFile; fileRef = 34F5E2DC69227D14C4E9F911 /* Pods_Runner.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AD1CF25792A845398FD69EA1 /* NativeBridge+SystemProxy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12EB1C85F2CA48B184A02A8A /* NativeBridge+SystemProxy.swift */; };
@@ -137,16 +127,11 @@
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		7FA6355859FAFE0D81470D6D /* PacketTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PacketTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		8EFE935E96A7076AE1965AC2 /* PacketTunnelProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PacketTunnelProvider.swift; sourceTree = "<group>"; };
-		972D45822DF2D0D700A356CC /* xray */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = xray; path = Resources/xray/xray; sourceTree = SOURCE_ROOT; };
-		972D45832DF2D0D700A356CC /* xray-x86_64 */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = "xray-x86_64"; path = "Resources/xray/xray-x86_64"; sourceTree = SOURCE_ROOT; };
-		972D458A2DF2D0D700A356CC /* geoip.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = geoip.dat; path = Resources/xray/geoip.dat; sourceTree = SOURCE_ROOT; };
-		972D458B2DF2D0D700A356CC /* geosite.dat */ = {isa = PBXFileReference; lastKnownFileType = file; name = geosite.dat; path = Resources/xray/geosite.dat; sourceTree = SOURCE_ROOT; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		979170292DED493800ABF9A6 /* NativeBridge+ConfigWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ConfigWriter.swift"; sourceTree = "<group>"; };
 		9791702A2DED493800ABF9A6 /* NativeBridge+Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+Logger.swift"; sourceTree = "<group>"; };
 		9791702B2DED493800ABF9A6 /* NativeBridge+ServiceControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+ServiceControl.swift"; sourceTree = "<group>"; };
 		9791702C2DED493800ABF9A6 /* NativeBridge+XrayInit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NativeBridge+XrayInit.swift"; sourceTree = "<group>"; };
-		97AB92F72DF3F9FA00393014 /* reset_xray.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; name = reset_xray.sh; path = Resources/xray/reset_xray.sh; sourceTree = SOURCE_ROOT; };
 		C85134DAB1776B901C2A061E /* PacketTunnel.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = PacketTunnel.entitlements; sourceTree = "<group>"; };
 		DA9EFDBF6919722EFB583897 /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		E7B9D3DA76B1887117E7E2FB /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -236,7 +221,6 @@
 		33CC11242044D66E0003C045 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				97A1D2B92DEC03E200278BA5 /* xray */,
 				33CC10F22044A3C60003C045 /* Assets.xcassets */,
 				33CC10F42044A3C60003C045 /* MainMenu.xib */,
 				33CC10F72044A3C60003C045 /* Info.plist */,
@@ -274,18 +258,6 @@
 				586152D4F7605B4D79850566 /* Messages.g.swift */,
 			);
 			path = Runner;
-			sourceTree = "<group>";
-		};
-		97A1D2B92DEC03E200278BA5 /* xray */ = {
-			isa = PBXGroup;
-			children = (
-				97AB92F72DF3F9FA00393014 /* reset_xray.sh */,
-				972D45822DF2D0D700A356CC /* xray */,
-				972D45832DF2D0D700A356CC /* xray-x86_64 */,
-				972D458A2DF2D0D700A356CC /* geoip.dat */,
-				972D458B2DF2D0D700A356CC /* geosite.dat */,
-			);
-			path = xray;
 			sourceTree = "<group>";
 		};
 		D73912EC22F37F3D000D13A0 /* Frameworks */ = {
@@ -451,9 +423,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				97AB92F82DF3F9FA00393014 /* reset_xray.sh in Resources */,
-				972D45842DF2D0D700A356CC /* xray in Resources */,
-				972D45852DF2D0D700A356CC /* xray-x86_64 in Resources */,
 				972D45882DF2D0D700A356CC /* geoip.dat in Resources */,
 				972D45892DF2D0D700A356CC /* geosite.dat in Resources */,
 			);
@@ -463,13 +432,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				972D45862DF2D0D700A356CC /* xray in Resources */,
-				972D45872DF2D0D700A356CC /* xray-x86_64 in Resources */,
 				972D458C2DF2D0D700A356CC /* geoip.dat in Resources */,
 				972D458D2DF2D0D700A356CC /* geosite.dat in Resources */,
 				33CC10F32044A3C60003C045 /* Assets.xcassets in Resources */,
 				33CC10F62044A3C60003C045 /* MainMenu.xib in Resources */,
-				97AB92F92DF3F9FA00393014 /* reset_xray.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

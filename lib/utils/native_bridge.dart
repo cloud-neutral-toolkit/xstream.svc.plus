@@ -26,6 +26,7 @@ class NativeBridge {
 
   static final bool _useFfi = Platform.isWindows ||
       Platform.isLinux ||
+      Platform.isMacOS ||
       Platform.isIOS ||
       Platform.isAndroid;
   static BridgeBindings? _bindings;
@@ -85,6 +86,8 @@ class NativeBridge {
       return ffi.DynamicLibrary.open('libgo_native_bridge.so');
     } else if (Platform.isAndroid) {
       return ffi.DynamicLibrary.open('libgo_native_bridge.so');
+    } else if (Platform.isMacOS) {
+      return ffi.DynamicLibrary.open('libxray_bridge.dylib');
     } else if (Platform.isIOS) {
       return ffi.DynamicLibrary.process();
     }

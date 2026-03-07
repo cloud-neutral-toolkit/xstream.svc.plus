@@ -123,7 +123,7 @@ run_macos_build() {
     return 1
   fi
 
-  ./build_scripts/build_macos_xray_from_vendor.sh
+
   "$flutter_bin" build macos --release \
     "${common_dart_defines[@]}"
 
@@ -132,16 +132,7 @@ run_macos_build() {
     return 1
   fi
 
-  if [[ "$target_arch" == "arm64" ]]; then
-    if [[ -f "${macos_app_bundle}/Contents/Resources/xray-x86_64" ]]; then
-      echo "Pruning non-target xray binary from ARM64 package: xray-x86_64"
-      rm -f "${macos_app_bundle}/Contents/Resources/xray-x86_64"
-    fi
-    if [[ -f "${macos_app_bundle}/Contents/Resources/xray.x86_64" ]]; then
-      echo "Pruning non-target xray binary from ARM64 package: xray.x86_64"
-      rm -f "${macos_app_bundle}/Contents/Resources/xray.x86_64"
-    fi
-  fi
+
 
   ./scripts/install-runtime-mcp.sh "$macos_app_bundle" "$runtime_arch"
 
@@ -264,9 +255,7 @@ case "$TARGET" in
       echo "macOS debug run is only supported on macOS"
     fi
     ;;
-  macos-vendor-xray)
-    ./build_scripts/build_macos_xray_from_vendor.sh
-    ;;
+
   windows-x64)
     if [[ "$uname_s" == "Windows_NT" || "${OS:-}" == "Windows_NT" ]]; then
       echo "Building for Windows (native)..."

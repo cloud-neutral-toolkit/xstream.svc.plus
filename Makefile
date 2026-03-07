@@ -54,7 +54,7 @@ endef
 	build\:android build\:android\:apk build\:android\:libxray \
 	run\:macos\:debug fix\:macos\:signing \
 	all build-all build-desktop build-mobile \
-	build-macos build-macos-intel build-macos-arm64 run-macos-debug fix-macos-signing macos-vendor-xray windows-icon \
+	build-macos build-macos-intel build-macos-arm64 run-macos-debug fix-macos-signing windows-icon \
 	build-windows build-windows-x64 build-linux build-linux-x64 build-linux-arm64 \
 	build-ios build-ios-app build-ios-ipa install-ios-debug install-ios-release deploy-ios-device \
 	build-android build-android-apk build-android-libxray \
@@ -207,9 +207,6 @@ run-macos-debug:
 
 fix-macos-signing:
 	@$(MAKE) 'fix:macos:signing'
-
-macos-vendor-xray:
-	$(call run_target,$(COMMON_ENV),macos-vendor-xray)
 
 build-windows:
 	@$(MAKE) 'build:windows'

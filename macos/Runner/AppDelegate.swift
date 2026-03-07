@@ -27,9 +27,6 @@ class AppDelegate: FlutterAppDelegate {
   private var menuState = MenuState()
   private var menuLanguage: MenuLanguage = .zh
 
-  /// The managed xray child process (proxy mode).
-  var xrayProcess: Process?
-
   private var statusLineItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
   private var nodeLineItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
   private var startStopItem = NSMenuItem(title: "", action: #selector(toggleAcceleration), keyEquivalent: "")
@@ -86,10 +83,7 @@ class AppDelegate: FlutterAppDelegate {
   }
 
   override func applicationWillTerminate(_ notification: Notification) {
-    // Stop the managed xray process.
-    _ = stopDirectXray()
-    // Kill any orphaned xray processes left from previous runs.
-    killOrphanXrayProcesses()
+    // Rely on Dart FFI to stop node service if needed, or it simply exits with the app.
   }
 
   override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {

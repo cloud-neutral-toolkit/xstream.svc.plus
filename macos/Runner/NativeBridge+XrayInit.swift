@@ -31,8 +31,7 @@ extension AppDelegate {
       return
     }
 
-    _ = stopDirectXray()
-    killOrphanXrayProcesses()
+    // Let Dart side handle stopping Xray via FFI before calling this method if needed.
 
     do {
       let fm = FileManager.default

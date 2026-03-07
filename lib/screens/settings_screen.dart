@@ -1264,38 +1264,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // Show unlock button toggle
-            if (!Platform.isIOS)
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
-                ),
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: GlobalState.showUnlockButton,
-                  builder: (context, show, _) {
-                    return SwitchListTile(
-                      secondary: const Icon(Icons.lock),
-                      value: show,
-                      onChanged: (value) {
-                        setState(
-                            () => GlobalState.showUnlockButton.value = value);
-                        if (!value) {
-                          GlobalState.isUnlocked.value = false;
-                          GlobalState.sudoPassword.value = '';
-                        }
-                      },
-                      title: Text(context.l10n.get('showUnlockButton')),
-                      subtitle: Text(
-                        context.l10n.get('showUnlockButtonHint'),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            const SizedBox(height: 20),
             // Permission Guide & Reset
             SizedBox(
               width: double.infinity,
