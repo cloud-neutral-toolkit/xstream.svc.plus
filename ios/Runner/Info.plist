@@ -22,6 +22,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>Xstream needs camera access to scan QR codes for server configuration.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Xstream needs photo library access to scan QR codes from your gallery.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
