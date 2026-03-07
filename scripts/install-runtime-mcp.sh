@@ -89,9 +89,14 @@ README
 # Re-sign the app bundle after injecting runtime tools to preserve code
 # signature integrity.  Without this, macOS will refuse to launch the
 # PacketTunnel Network Extension (NEVPNConnectionErrorDomain code 12).
-SIGN_IDENTITY=$(codesign -dvvv "$APP_BUNDLE" 2>&1 | grep '^Authority=' | head -1 | sed 's/^Authority=//')
-if [ -n "$SIGN_IDENTITY" ] && [ "$SIGN_IDENTITY" != "-" ]; then
-  echo "re-signing app bundle with: $SIGN_IDENTITY"
+AUTHORITY=$(codesign -dvvv "$APP_BUNDLE" 2>&1 | grep '^Authority=' | head -1 | sed 's/^Authority=//')
+if [ -n "$AUTHORITY" ] && [ "$AUTHORITY" != "-" ]; then
+  # Workaround for ambiguous certificates (e.g. multiple "Apple Development: Name" in keychain)
+  SIGN_IDENTITY=$(security find-identity -v -p codesigning | grep "$AUTHORITY" | head -n 1 | awk '{print $2}')
+  if [ -z "$SIGN_IDENTITY" ]; then
+    SIGN_IDENTITY="$AUTHORITY"
+  fi
+  echo "re-signing app bundle with: $SIGN_IDENTITY ($AUTHORITY)"
   codesign --force --deep --sign "$SIGN_IDENTITY" --timestamp=none "$APP_BUNDLE"
 else
   echo "⚠️  no signing identity found on app bundle; skipping re-sign"
