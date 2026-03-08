@@ -1,3 +1,8 @@
+---
+name: release-branch-policy
+description: Use this skill when managing Xstream release branches, applying GitHub branch protection rulesets, cherry-picking fixes onto production release lines, generating cross-repo release manifests, or verifying that release/* branches follow the no-force-push / linear-history policy. Apply at the start of any release cut, hotfix, or branch governance audit.
+---
+
 # Skill: release-branch-policy
 
 ## Purpose

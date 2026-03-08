@@ -1,49 +1,53 @@
 # Runbook 目录
 
-本目录包含该项目的运维手册和故障排查文档。
+本目录包含 Xstream 项目的运维手册和故障排查文档。
 
-## 📚 文档分类
+---
 
-### 🔧 部署相关
-- 部署流程
-- 环境配置
-- 依赖管理
+## 📚 文档列表
+
+### 🚀 发版流程
+
+| 文档 | 说明 |
+|------|------|
+| [Release-Version-Cut.md](./Release-Version-Cut.md) | 完整版本发布流程：更新版本号、切 release 分支、打 tag |
+| [Release-macOS-Archive.md](./Release-macOS-Archive.md) | Xcode Archive 归档发布：配置同步、签名、公证、DMG 打包 |
+
+### 🔍 质量保障
+
+| 文档 | 说明 |
+|------|------|
+| [Code-Quality-Check.md](./Code-Quality-Check.md) | PR 合并前代码质量验收：lint、格式化、l10n、页面渲染 |
 
 ### 🚨 故障排查
-- 常见问题
-- 错误诊断
-- 应急处理
-- Tunnel Mode 与 Proxy Mode 站点可访问性差异排查
 
-### 🔄 运维操作
-- 日常维护
-- 备份恢复
-- 性能优化
+| 文档 | 说明 |
+|------|------|
+| [Tunnel-Mode-Site-Diff-From-Proxy-Mode.md](./Tunnel-Mode-Site-Diff-From-Proxy-Mode.md) | Tunnel Mode 与 Proxy Mode 站点可访问性差异排查 |
 
-### 📊 监控告警
-- 监控指标
-- 告警规则
-- 日志分析
+---
 
-## 📝 文档规范
+## 📝 Runbook 编写规范
 
 每个 Runbook 应包含：
 
-1. **问题描述**: 清晰描述问题现象
-2. **影响范围**: 说明影响的功能和用户
-3. **诊断步骤**: 详细的问题定位方法
-4. **修复方案**: 具体的解决步骤
-5. **验证方法**: 确认问题已解决的检查清单
-6. **回滚计划**: 如果修复失败的应急方案
+1. **标题 + 适用场景**：说明何时使用本手册
+2. **前置条件**：执行前需满足的环境要求
+3. **步骤（Step N）**：有序、可重复执行的操作
+4. **验证方法**：确认步骤成功的检查命令或标准
+5. **回滚计划**：操作失败时的应急方案
 
 ## 🎯 命名规范
 
-- 使用描述性的文件名
-- 格式: `[类型]-[简短描述].md`
-- 示例: `Deploy-Database-Migration.md`, `Fix-API-Timeout.md`
+```
+[领域]-[动作描述].md
+示例：Release-macOS-Archive.md / Fix-API-Timeout.md
+```
 
-## 📅 维护说明
+---
 
-- 定期更新文档
-- 记录最后更新时间
-- 标注负责人和审核人
+## 🔗 相关参考
+
+- 开发约束规范：[`skills/xstream-dev-constraints/SKILL.md`](../skills/xstream-dev-constraints/SKILL.md)
+- 分支策略：[`skills/release-branch-policy/SKILL.md`](../skills/release-branch-policy/SKILL.md)
+- 全局协作说明：[`AGENTS.md`](../AGENTS.md)

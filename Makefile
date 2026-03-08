@@ -48,13 +48,14 @@ endef
 	help clean icon \
 	build\:all build\:desktop build\:mobile \
 	build\:macos build\:macos\:x64 build\:macos\:arm64 build\:windows\:icon \
+	sync\:macos\:config \
 	build\:windows build\:windows\:x64 \
 	build\:linux build\:linux\:x64 build\:linux\:arm64 \
 	build\:ios build\:ios\:app build\:ios\:ipa install\:ios\:debug install\:ios\:release deploy\:ios\:device \
 	build\:android build\:android\:apk build\:android\:libxray \
 	run\:macos\:debug fix\:macos\:signing \
 	all build-all build-desktop build-mobile \
-	build-macos build-macos-intel build-macos-arm64 run-macos-debug fix-macos-signing windows-icon \
+	build-macos build-macos-intel build-macos-arm64 run-macos-debug fix-macos-signing sync-macos-config windows-icon \
 	build-windows build-windows-x64 build-linux build-linux-x64 build-linux-arm64 \
 	build-ios build-ios-app build-ios-ipa install-ios-debug install-ios-release deploy-ios-device \
 	build-android build-android-apk build-android-libxray \
@@ -78,6 +79,7 @@ help:
 		'  build:macos:arm64         Build the macOS ARM64 release app and DMG on Apple Silicon' \
 		'  run:macos:debug           Launch the macOS app in Flutter debug mode' \
 		'  fix:macos:signing         Reset macOS signing-related state before a fresh build' \
+		'  sync:macos:config         Sync pubspec.yaml version → Generated.xcconfig (run before Xcode Archive)' \
 		'' \
 		'Windows' \
 		'  build:windows             Build all Windows targets supported on the host' \
@@ -135,6 +137,12 @@ run\:macos\:debug:
 
 fix\:macos\:signing:
 	$(call run_target,FLUTTER="$(FLUTTER)",fix-macos-signing)
+
+sync\:macos\:config:
+	$(call run_target,FLUTTER="$(FLUTTER)",sync-macos-config)
+
+sync-macos-config:
+	@$(MAKE) 'sync:macos:config'
 
 build\:windows:
 	@$(MAKE) 'build:windows:x64'

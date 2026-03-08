@@ -267,168 +267,179 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginForm(BuildContext context, bool isMfaRequired) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 48),
-              const Icon(Icons.cloud_outlined,
-                  size: 64, color: Color(0xFF5C6BC0)),
-              const SizedBox(height: 16),
-              Text(
-                context.l10n.get('accountLogin'),
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF222222),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                context.l10n.get('syncNotLoggedIn'),
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-
-              // Server address
-              TextField(
-                controller: _baseUrlController,
-                decoration: InputDecoration(
-                  labelText: context.l10n.get('serverAddress'),
-                  prefixIcon: const Icon(Icons.dns_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onSubmitted: (_) =>
-                    _sessionManager.setBaseUrl(_baseUrlController.text),
-              ),
-              const SizedBox(height: 16),
-
-              // Username / email
-              TextField(
-                controller: _usernameController,
-                enabled: !isMfaRequired,
-                keyboardType: TextInputType.emailAddress,
-                autofillHints: const [
-                  AutofillHints.username,
-                  AutofillHints.email,
-                ],
-                decoration: InputDecoration(
-                  labelText: context.l10n.get('accountOrEmail'),
-                  prefixIcon: const Icon(Icons.person_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Password
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                enabled: !isMfaRequired,
-                autofillHints: const [AutofillHints.password],
-                decoration: InputDecoration(
-                  labelText: context.l10n.get('password'),
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onSubmitted: (_) => _handleLogin(),
-              ),
-
-              // MFA code field
-              if (isMfaRequired) ...[
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _mfaCodeController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(6),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: context.l10n.get('mfaCode'),
-                    helperText: context.l10n.get('mfaRequiredHint'),
-                    prefixIcon: const Icon(Icons.verified_user_outlined),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onSubmitted: (_) => _handleLogin(),
-                ),
-              ],
-
-              const SizedBox(height: 24),
-
-              // Login button
-              ValueListenableBuilder<bool>(
-                valueListenable: _sessionManager.loading,
-                builder: (context, loading, _) {
-                  return ElevatedButton(
-                    onPressed: loading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5C6BC0),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_outlined,
+                          size: 64, color: Color(0xFF5C6BC0)),
+                      const SizedBox(height: 16),
+                      Text(
+                        context.l10n.get('accountLogin'),
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF222222),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    child: loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            context.l10n.get(
-                                isMfaRequired ? 'verifyMfa' : 'login'),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(height: 8),
+                      Text(
+                        context.l10n.get('syncNotLoggedIn'),
+                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Server address
+                      TextField(
+                        controller: _baseUrlController,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.get('serverAddress'),
+                          prefixIcon: const Icon(Icons.dns_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onSubmitted: (_) =>
+                            _sessionManager.setBaseUrl(_baseUrlController.text),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Username / email
+                      TextField(
+                        controller: _usernameController,
+                        enabled: !isMfaRequired,
+                        keyboardType: TextInputType.emailAddress,
+                        autofillHints: const [
+                          AutofillHints.username,
+                          AutofillHints.email,
+                        ],
+                        decoration: InputDecoration(
+                          labelText: context.l10n.get('accountOrEmail'),
+                          prefixIcon: const Icon(Icons.person_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Password
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        enabled: !isMfaRequired,
+                        autofillHints: const [AutofillHints.password],
+                        decoration: InputDecoration(
+                          labelText: context.l10n.get('password'),
+                          prefixIcon: const Icon(Icons.lock_outline),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onSubmitted: (_) => _handleLogin(),
+                      ),
+
+                      // MFA code field
+                      if (isMfaRequired) ...[
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _mfaCodeController,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(6),
+                          ],
+                          decoration: InputDecoration(
+                            labelText: context.l10n.get('mfaCode'),
+                            helperText: context.l10n.get('mfaRequiredHint'),
+                            prefixIcon:
+                                const Icon(Icons.verified_user_outlined),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                  );
-                },
-              ),
+                          onSubmitted: (_) => _handleLogin(),
+                        ),
+                      ],
 
-              // Error message
-              ValueListenableBuilder<String?>(
-                valueListenable: _sessionManager.lastError,
-                builder: (context, error, _) {
-                  if (error == null) return const SizedBox.shrink();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      error,
-                      style: const TextStyle(
-                        color: Colors.redAccent,
-                        fontSize: 13,
+                      const SizedBox(height: 24),
+
+                      // Login button
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _sessionManager.loading,
+                        builder: (context, loading, _) {
+                          return ElevatedButton(
+                            onPressed: loading ? null : _handleLogin,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF5C6BC0),
+                              foregroundColor: Colors.white,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: loading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(
+                                    context.l10n.get(
+                                        isMfaRequired ? 'verifyMfa' : 'login'),
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                          );
+                        },
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  );
-                },
-              ),
 
-              const SizedBox(height: 48),
-            ],
+                      // Error message
+                      ValueListenableBuilder<String?>(
+                        valueListenable: _sessionManager.lastError,
+                        builder: (context, error, _) {
+                          if (error == null) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: Text(
+                              error,
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 13,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

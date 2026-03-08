@@ -2,257 +2,146 @@
 
 本文件为整个仓库的协作说明，适用于 `Xstream/` 下的所有文件与子目录。请在修改代码或文档前阅读并遵循以下约定。
 
-## Global Semantics & Usage Constraints (Mandatory)
-
-All analysis, design, implementation, documentation, UI copy, and code comments **must** comply with the following non‑negotiable constraints.
-
-### Platform & Architecture
-
-* Xstream **must** use Apple’s official **Network Extension** framework.
-* System‑wide networking **must** be implemented **only** via **NEPacketTunnelProvider (Packet Tunnel)**.
-* No alternative system networking paths are allowed.
-
-### Product Semantics
-
-* Xstream is a **legal system VPN / Secure Network Tunnel**.
-* Acceptable purposes: **network security, privacy protection, connection stability, and network acceleration**.
-* All features and descriptions must align with the **normal technical definition** of a system‑level VPN / secure tunnel.
-
-### Prohibited Meanings & References
-
-* Do **not** reference or imply any country, region, or specific network environment.
-* Do **not** reference or imply censorship, blocking, bypassing, restrictions, or similar concepts.
-* Do **not** use language such as “bypass”, “circumvent”, “break through”, or any equivalent.
-
-### Approved Vocabulary (Use Only)
-
-* Secure Tunnel
-* System VPN
-* Encrypted Network
-* Packet Tunnel
-* Network Acceleration
-* Network Reliability
-* Privacy Protection
-* System‑level Networking
-
-### Disallowed Vocabulary
-
-* Any country/region names
-* Censorship‑related terms
-* Restriction/bypass terminology
-* Political or regulatory insinuations
-
-### Implementation Constraints
-
-* Do **not** use or depend on:
-
-* user-space TUN + SOCKS forwarding helpers
-  * user‑space TUN hacks
-  * sudo‑based route manipulation
-  * non‑standard networking workarounds
-* DNS handling (including DNS over TLS) must be described as **part of the secure tunnel**, never as a bypass or workaround.
-
-### App Store Objective
-
-* Target release: **December 2025**.
-* Xstream is intended for **macOS App Store distribution**.
-* All design decisions must prioritize **long‑term compliance, auditability, and maintainability**.
-
-### Scope Discipline
-
-* Keep all discussions within the scope of a compliant **system VPN / secure network tunnel**.
-* Avoid introducing features, narratives, or terminology that could shift the product’s meaning outside this scope.
-
-> These constraints
-
----
-
-## 6. Global Semantics & Compliance (AI-Critical)
-
-> This section defines **non-negotiable semantic and architectural constraints**.
-> All human contributors and **all AI agents** must follow these rules.
-
-### 6.1 English Version (Authoritative)
-
-**Platform & Architecture**
-
-* Xstream **must** use Apple’s official **Network Extension** framework.
-* System-wide networking **must be implemented only** via **NEPacketTunnelProvider (Packet Tunnel)**.
-* Packet Tunnel is the **sole system-level network entry point**.
-* No alternative mechanisms (user-space TUN hacks, user-space TUN + SOCKS forwarding, sudo routing, proxy environment variables) are permitted.
-
-**Product Semantics**
-
-* Xstream is a **legal System VPN / Secure Network Tunnel**.
-* Acceptable purposes are limited to:
-
-  * Network security
-  * Privacy protection
-  * Connection stability
-  * Network acceleration
-* All features, APIs, UI copy, documentation, and code comments **must align with the standard technical definition** of a system-level VPN / secure tunnel.
-
-**Language & Meaning Constraints**
-
-* Do **not** reference or imply any specific country, region, or network environment.
-* Do **not** reference censorship, blocking, restrictions, or bypassing mechanisms.
-* Do **not** use wording such as “bypass”, “circumvent”, “break through”, or equivalent expressions.
-
-**Approved Vocabulary (Use Only)**
-
-* Secure Tunnel
-* System VPN
-* Packet Tunnel
-* Encrypted Network
-* Network Acceleration
-* Network Reliability
-* Privacy Protection
-* System-level Networking
-
-**Disallowed Vocabulary**
-
-* Any country or region names
-* Censorship-related terms
-* Restriction / bypass terminology
-* Political or regulatory insinuations
-
-**DNS Semantics**
-
-* DNS (including DNS over TLS) is treated as **part of the secure tunnel**, never as a workaround or bypass.
-* DNS configuration exists solely for **security, integrity, and reliability**.
-
-**App Store Objective**
-
-* Xstream is designed for **macOS App Store distribution**.
-* Target release: **December 2025**.
-* All design decisions must prioritize **long-term compliance, auditability, and maintainability**.
-
----
-
-### 6.2 中文版本（权威约束）
-
-**平台与架构**
-
-* Xstream **必须**使用 Apple 官方 **Network Extension** 框架。
-* 系统级网络接管 **仅允许**通过 **NEPacketTunnelProvider（Packet Tunnel）** 实现。
-* Packet Tunnel 是 **唯一的系统级网络入口**。
-* 禁止使用任何替代方案，包括但不限于：
-
-  * 用户态 TUN hack
-* user-space TUN + SOCKS forwarding helpers
-  * sudo 路由修改
-  * 代理环境变量方式
-
-**产品语义**
-
-* Xstream 被定义为 **合法的系统级 VPN / Secure Network Tunnel**。
-* 合法用途仅包括：
-
-  * 网络安全
-  * 隐私保护
-  * 连接稳定性
-  * 网络加速
-* 所有功能、API、UI 文案、文档与代码注释，**必须符合系统级 VPN / 安全隧道的常规技术定义**。
-
-**语言与语义约束**
-
-* 不得出现或暗示任何国家、地区或特定网络环境。
-* 不得提及或影射审查、封锁、限制或绕过行为。
-* 禁止使用“绕过”“突破”“翻越”等非中性表述。
-
-**允许使用的术语（仅限以下）**
-
-* Secure Tunnel
-* System VPN
-* Packet Tunnel
-* Encrypted Network
-* Network Acceleration
-* Network Reliability
-* Privacy Protection
-* System-level Networking
-
-**禁止使用的术语**
-
-* 国家 / 地区名称
-* 与审查相关的词汇
-* 绕过 / 规避类表述
-* 政治或监管暗示
-
-**DNS 语义说明**
-
-* DNS（包括 DNS over TLS）被视为 **安全隧道的一部分**，而非旁路或变通方案。
-* DNS 配置仅用于 **安全性、完整性与可靠性提升**。
-
-**App Store 目标**
-
-* Xstream 以 **macOS App Store 上架** 为明确目标。
-* 计划在 **2025 年 12 月前完成上架**。
-* 所有设计决策需优先满足 **长期合规、可审计、可维护** 的要求。
-
-> **Note:** Any AI-generated output that violates this section must be treated as invalid and rejected.
-
+> **⚠️ AI-Critical:** Any AI-generated output that violates Section 5 (Compliance) must be treated as invalid and rejected.
 
 ---
 
 ## 1. 项目概览
+
 - **前端/客户端：** Flutter 应用位于 `lib/`，通过多屏幕（`screens/`）、服务层（`services/`）、工具库（`utils/`）以及组件库（`widgets/`）组织代码。
-- **原生桥接：** `lib/utils/native_bridge.dart` 与 `lib/bindings/` 负责动态库调用，`go_core/` 提供 Go 编写的跨平台桥接逻辑，通过 FFI 暴露到 Flutter。
+- **原生桥接：** `lib/utils/native_bridge.dart` 负责 Swift ↔ Flutter 通信；`go_core/` 提供 Go 编写的跨平台 FFI 桥接（iOS / Android / Linux / Windows），通过 `lib/bindings/bridge_bindings.dart` 暴露到 Flutter。
 - **模板与配置：** `lib/templates/` 保存生成 Xray 配置的文本模板；`assets/` 存放静态资源与默认配置；`docs/` 内含平台构建与使用文档。
-- **构建脚本：** `Makefile` 和 `build_scripts/` 提供多平台打包流程，需根据目标平台执行不同命令。
+- **构建脚本：** `Makefile` 和 `scripts/` 提供多平台打包流程，`make help` 查看所有可用目标。
 
 ---
 
 ## 2. 目录速览
-- `lib/main.dart`：应用入口与导航容器。
-- `lib/utils/`：共享工具，包括 `app_theme.dart`（主题）、`app_logger.dart`（日志）、`global_config.dart`（全局状态）。
-- `lib/services/`：业务服务（VPN 配置、全局代理、权限引导、同步等），与原生操作分离。
-- `lib/widgets/`：跨界面复用的小部件，优先复用而非在 `screens/` 内重复布局。
-- `lib/l10n/app_localizations.dart`：中英双语字符串表；新增 UI 文案必须在此维护并通过 `context.l10n.get(...)` 读取。
-- `go_core/*.go`：FFI 导出函数。所有 `//export` 函数需保持 C 兼容签名，并负责释放由 Go 分配的内存。
+
+| 路径 | 说明 |
+|------|------|
+| `lib/main.dart` | 应用入口、`MainPage` 导航容器 |
+| `lib/screens/` | 各功能页面（home / settings / subscription / login / logs / about / help） |
+| `lib/services/` | 业务服务层（VPN 配置、账号同步、DNS、遥测等） |
+| `lib/utils/` | 共享工具（`app_theme` / `app_logger` / `global_config` / `native_bridge`） |
+| `lib/widgets/` | 跨界面复用组件（`app_breadcrumb` / `log_console` / `permission_guide_dialog` 等） |
+| `lib/l10n/` | 中英双语字符串表 |
+| `lib/templates/` | Xray 及 launchd/systemctl 配置文本模板 |
+| `go_core/` | Go FFI 层（bridge.go + bridge_\<platform\>.go），macOS 走 Swift 原生，无对应 .go |
+| `Runbook/` | 运维手册（发版、归档、代码质量检查等） |
+| `skills/` | AI 辅助开发的可调用 skill 集合 |
 
 ---
 
 ## 3. 开发约定
+
 ### 3.1 通用流程
+
 1. 修改前确认是否已有同类模块可复用，避免重复实现。
 2. 所有代码变更必须通过格式化与静态检查：
-   - Flutter/Dart：`dart format .`（或 `flutter format`）与 `flutter analyze`。
-   - Go：`go fmt ./...` 与必要的 `go test`（若添加测试）。
-3. 若改动影响构建流程或原生行为，应在 PR 描述中注明目标平台及验证方式。
-4. 文档、脚本或模板的行为改变需同步更新相关 `docs/*.md` 或脚本注释。
+   - Flutter/Dart：`dart format .` 与 `flutter analyze`（零 issue）。
+   - Go：`go fmt ./...` 与 `go vet ./...`。
+3. 改动影响构建流程或原生行为时，PR 描述中注明目标平台及验证命令。
+4. 文档、脚本或模板的行为变更需同步更新 `docs/` 或脚本注释。
 
-### 3.2 Flutter/Dart 代码
-- 遵循 `analysis_options.yaml` 中的 lint（基于 `flutter_lints`），避免在全局关闭规则；局部例外请使用 `// ignore` 并附原因。
-- UI 组件中的文本必须通过 `context.l10n.get(key)` 获取，确保中英文同步更新。新增键值同时添加 `en` 与 `zh` 译文。
-- 复用 `ValueNotifier` 和 `GlobalState` 提供的状态，不直接操作底层服务对象。
-- 通过 `addAppLog` 写入日志，禁止直接在生产逻辑中使用 `print`。
-- 在与原生交互时，优先使用服务层方法（如 `VpnConfig`, `NativeBridge`）；避免在视图层直接处理文件路径、权限或 FFI 细节。
-- 处理异步调用时务必使用 `await` 并捕获错误，界面层应提供用户反馈（SnackBar/Dialog）。
+### 3.2 Flutter / Dart 代码
+
+- **lint**：遵循 `analysis_options.yaml`（基于 `flutter_lints`），不得全局关闭规则；局部例外用 `// ignore: <rule> — <reason>`。
+- **l10n**：UI 文本必须通过 `context.l10n.get('key')` 获取；新增 key 必须同时添加 `en` 与 `zh` 两个译文。
+- **状态管理**：复用 `GlobalState` / `ValueNotifier`，不直接操作底层服务对象。
+- **日志**：通过 `addAppLog(...)` 写入；**禁止** 在生产代码中使用 `print`；不得记录密码、token 等敏感信息。
+- **异步**：所有 async 调用必须 `await` 并捕获异常；界面层用 `SnackBar` / `Dialog` 反馈错误。
+- **原生交互**：优先通过服务层（`VpnConfigService` / `NativeBridge`）交互；Screen widget 不得直接处理文件路径、权限或 FFI 细节。
+- **Screen AppBar 规范**：嵌入 `MainPage`（`IndexedStack`）的 Screen **不得**渲染自己的 `AppBar`（由外层统一提供面包屑）；通过构造参数（如 `breadcrumbItems`）区分"嵌入"和"独立 push"两种场景。
 
 ### 3.3 Go FFI 代码
-- 每个暴露给 Flutter 的函数都应以字符串或明确的错误码反馈结果；错误信息请保持英文或双语，便于前端显示。
-- 所有通过 `C.CString` 或 `C.malloc` 创建的指针必须在 Go 端提供释放方法（参见 `FreeCString`）。Flutter 侧调用后务必释放。
-- 平台差异逻辑放在 `bridge_*.go` 中，保持 `bridge.go` 仅负责公共导出函数。
-- 在新增系统调用或需要特权操作时，请在 `docs/` 中补充对应平台的部署说明。
+
+- 每个导出函数必须返回字符串结果或明确的错误码，不允许 panic 传出到 Dart。
+- `C.CString` / `C.malloc` 分配的指针必须在 Go 端提供释放函数（参见 `FreeCString`）；Dart 侧调用后务必释放。
+- 平台差异逻辑放 `bridge_<platform>.go`；`bridge.go` 仅保留公共导出函数声明。
+- **macOS 无对应 Go 桥接**：macOS 系统网络由 Swift `PacketTunnelProvider` 实现，`go_core/` 中不存在 `bridge_macos.go`。
 
 ### 3.4 资源与模板
-- 修改 `lib/templates/` 内文件后，确保对应的 `services/vpn_config_service.dart` 或相关生成逻辑同步更新。
-- 新增静态资源（图标、配置示例等）需放置于 `assets/` 并在 `pubspec.yaml` 中登记。
-- 若调整默认配置或示例节点，更新 `README.md`、`docs/user-manual.md` 等对外文档。
+
+- 修改 `lib/templates/` 后同步更新 `services/vpn_config_service.dart` 中的生成逻辑。
+- 新增静态资源放 `assets/` 并在 `pubspec.yaml` 中声明。
+- 调整默认配置或示例节点时同步更新 `docs/user-manual.md`。
 
 ---
 
-## 4. 构建与测试
-- Flutter 应用默认使用 `flutter run` 或平台特定命令进行本地验证，确保关键页面（首页、节点列表、设置、日志）可正常渲染。
-- 桌面平台需要验证 `NativeBridge` 写入配置、启动/停止服务的流程，至少使用模拟路径运行到返回结果。
-- 更改 Makefile 或构建脚本后，请在 PR 中注明已在对应平台执行的命令（如 `make macos-arm64`、`make windows-x64`）。
+## 4. 构建与版本
+
+### 4.1 版本号
+
+版本唯一来源：`pubspec.yaml` 中的 `version: X.Y.Z-BUILD`。
+
+- `X.Y.Z` → Xcode `MARKETING_VERSION`
+- `BUILD` → Xcode `CURRENT_PROJECT_VERSION`（整数，每发布递增）
+
+**Xcode Archive 前置步骤（必须执行）：**
+
+```bash
+make sync:macos:config
+```
+
+此命令重新生成 `macos/Flutter/ephemeral/Flutter-Generated.xcconfig`，确保 Xcode 读取到正确的版本号。
+
+### 4.2 常用 Make 目标
+
+| 目标 | 说明 |
+|------|------|
+| `make build:macos:arm64` | Apple Silicon macOS release + DMG |
+| `make build:macos:x64` | Intel macOS release + DMG |
+| `make sync:macos:config` | 同步 pubspec.yaml 版本 → Generated.xcconfig |
+| `make build:ios:ipa` | iOS release IPA（需 macOS + Xcode） |
+| `make build:windows:x64` | Windows x64 release |
+| `make build:linux:x64` | Linux x64 release |
+| `make clean` | 清理 Flutter 及生成物 |
+| `make fix:macos:signing` | 清理 xattr，修复签名状态 |
+
+### 4.3 PR Checklist
+
+- [ ] `flutter analyze` 零 issue
+- [ ] `dart format .` 已应用
+- [ ] `CHANGELOG.md` 已更新（若为用户可见变更）
+- [ ] 对应平台构建已在本地验证，PR 描述注明所用命令
 
 ---
 
-## 5. 文档与日志
+## 5. 合规约束（AI-Critical，不可协商）
+
+> All human contributors and **all AI agents** must follow these rules without exception.
+
+### 5.1 产品定位
+
+Xstream 是面向 **macOS App Store** 发行的 **合法系统级 VPN / Secure Network Tunnel**。
+
+合法用途：网络安全 · 隐私保护 · 连接稳定性 · 网络加速
+
+### 5.2 架构约束
+
+- 系统网络接管**仅允许**通过 **NEPacketTunnelProvider（Packet Tunnel）** 实现。
+- **禁止**：用户态 TUN hack、TUN + SOCKS forwarding、sudo 路由修改、代理环境变量。
+- DNS（含 DoT）是安全隧道的组成部分，不得描述为旁路或变通手段。
+
+### 5.3 语言约束
+
+| ✅ 允许使用 | ❌ 禁止使用 |
+|------------|------------|
+| Secure Tunnel | bypass / circumvent / break through |
+| System VPN | 任何国家 / 地区名称 |
+| Packet Tunnel | 审查 / 封锁 / 绕过 / 翻越 |
+| Encrypted Network | 政治或监管暗示 |
+| Network Acceleration / Reliability | — |
+| Privacy Protection | — |
+| System-level Networking | — |
+
+---
+
+## 6. 文档与日志
+
 - 新增功能或显著行为更改必须同步更新 `CHANGELOG.md`。
-- 面向用户的流程变更，请补充或修改 `docs/` 目录下的相关指南。
-- 代码中日志请保持简洁、可检索，并避免泄露敏感信息（密码、UUID 等）。
+- 面向用户的流程说明请补充或修改 `docs/` 目录下的相关指南。
+- 运维操作请参考 `Runbook/` 目录；技能知识请参考 `skills/` 目录。
 
 ---
 

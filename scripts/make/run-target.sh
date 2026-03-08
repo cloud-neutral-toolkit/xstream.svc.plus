@@ -124,6 +124,10 @@ run_macos_build() {
   fi
 
 
+  # Sync Generated.xcconfig so Xcode Archive picks up the correct version from pubspec.yaml.
+  echo "Syncing Flutter build config (pubspec.yaml → Generated.xcconfig)..."
+  "$flutter_bin" build macos --config-only
+
   "$flutter_bin" build macos --release \
     "${common_dart_defines[@]}"
 
@@ -338,6 +342,13 @@ case "$TARGET" in
     ;;
   xstream-mcp-start-runtime)
     MCP_MODE=start-runtime run_mcp
+    ;;
+  sync-macos-config)
+    # Sync Generated.xcconfig from pubspec.yaml without building.
+    # Run this before doing a manual Xcode Archive to ensure the version is correct.
+    echo "Syncing Flutter build config (pubspec.yaml → Generated.xcconfig)..."
+    "$flutter_bin" build macos --config-only
+    echo "✅ Config synced. Xcode Archive will now use the correct version."
     ;;
   mcp)
     run_mcp

@@ -54,142 +54,146 @@ class _HelpScreenState extends State<HelpScreen> {
     );
   }
 
+  Widget _buildBody(BuildContext context) {
+    return FutureBuilder<_HelpPaths>(
+      future: _pathsFuture,
+      builder: (context, snapshot) {
+        final paths = snapshot.data;
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpSupportTitle'),
+              children: [
+                Text(context.l10n.get('helpSupportIntro')),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _openManual,
+                      child: Text(context.l10n.get('openManual')),
+                    ),
+                    OutlinedButton(
+                      onPressed: _openSupportDocs,
+                      child: Text(context.l10n.get('helpOpenRunbook')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpQuickCheckTitle'),
+              children: [
+                _buildBullet(context.l10n.get('helpQuickCheckItem1')),
+                _buildBullet(context.l10n.get('helpQuickCheckItem2')),
+                _buildBullet(context.l10n.get('helpQuickCheckItem3')),
+                _buildBullet(context.l10n.get('helpQuickCheckItem4')),
+              ],
+            ),
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpModeDiffTitle'),
+              children: [
+                Text(context.l10n.get('helpModeDiffIntro')),
+                const SizedBox(height: 8),
+                _buildBullet(context.l10n.get('helpModeDiffItem1')),
+                _buildBullet(context.l10n.get('helpModeDiffItem2')),
+                _buildBullet(context.l10n.get('helpModeDiffItem3')),
+              ],
+            ),
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpDnsTlsTitle'),
+              children: [
+                Text(context.l10n.get('helpDnsTlsIntro')),
+                const SizedBox(height: 8),
+                _buildBullet(context.l10n.get('helpDnsTlsItem1')),
+                _buildBullet(context.l10n.get('helpDnsTlsItem2')),
+                _buildBullet(context.l10n.get('helpDnsTlsItem3')),
+              ],
+            ),
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpPathsTitle'),
+              children: [
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    OutlinedButton(
+                      onPressed: paths == null
+                          ? null
+                          : () => _openDirectory(paths.configsDir),
+                      child: Text(context.l10n.get('helpOpenConfigDir')),
+                    ),
+                    OutlinedButton(
+                      onPressed: paths == null
+                          ? null
+                          : () => _openDirectory(paths.logsDir),
+                      child: Text(context.l10n.get('helpOpenLogsDir')),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildPathRow(
+                  context,
+                  context.l10n.get('helpNodesPathLabel'),
+                  paths?.nodesPath ?? context.l10n.get('helpLoading'),
+                ),
+                const SizedBox(height: 12),
+                _buildPathRow(
+                  context,
+                  context.l10n.get('helpRuntimeConfigLabel'),
+                  paths?.runtimeConfigPath ?? context.l10n.get('helpLoading'),
+                ),
+                const SizedBox(height: 12),
+                _buildPathRow(
+                  context,
+                  context.l10n.get('helpRuntimeLogLabel'),
+                  paths?.logsPath ?? context.l10n.get('helpLoading'),
+                ),
+              ],
+            ),
+            _buildSectionCard(
+              context,
+              title: context.l10n.get('helpCommandsTitle'),
+              children: [
+                Text(context.l10n.get('helpCommandsIntro')),
+                const SizedBox(height: 12),
+                SelectableText(
+                  context.l10n.get('helpCommandsBlock'),
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: AppBreadcrumb(
-          items: widget.breadcrumbItems ??
-              [
-                context.l10n.get('home'),
-                context.l10n.get('help'),
-              ],
+    // When breadcrumbItems is provided, this screen is pushed standalone
+    // and needs its own AppBar.
+    // When null, it is embedded in MainPage which already has a top AppBar.
+    if (widget.breadcrumbItems != null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: AppBreadcrumb(items: widget.breadcrumbItems!),
         ),
-      ),
-      body: FutureBuilder<_HelpPaths>(
-        future: _pathsFuture,
-        builder: (context, snapshot) {
-          final paths = snapshot.data;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpSupportTitle'),
-                children: [
-                  Text(context.l10n.get('helpSupportIntro')),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      ElevatedButton(
-                        onPressed: _openManual,
-                        child: Text(context.l10n.get('openManual')),
-                      ),
-                      OutlinedButton(
-                        onPressed: _openSupportDocs,
-                        child: Text(context.l10n.get('helpOpenRunbook')),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpQuickCheckTitle'),
-                children: [
-                  _buildBullet(context.l10n.get('helpQuickCheckItem1')),
-                  _buildBullet(context.l10n.get('helpQuickCheckItem2')),
-                  _buildBullet(context.l10n.get('helpQuickCheckItem3')),
-                  _buildBullet(context.l10n.get('helpQuickCheckItem4')),
-                ],
-              ),
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpModeDiffTitle'),
-                children: [
-                  Text(context.l10n.get('helpModeDiffIntro')),
-                  const SizedBox(height: 8),
-                  _buildBullet(context.l10n.get('helpModeDiffItem1')),
-                  _buildBullet(context.l10n.get('helpModeDiffItem2')),
-                  _buildBullet(context.l10n.get('helpModeDiffItem3')),
-                ],
-              ),
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpDnsTlsTitle'),
-                children: [
-                  Text(context.l10n.get('helpDnsTlsIntro')),
-                  const SizedBox(height: 8),
-                  _buildBullet(context.l10n.get('helpDnsTlsItem1')),
-                  _buildBullet(context.l10n.get('helpDnsTlsItem2')),
-                  _buildBullet(context.l10n.get('helpDnsTlsItem3')),
-                ],
-              ),
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpPathsTitle'),
-                children: [
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: [
-                      OutlinedButton(
-                        onPressed: paths == null
-                            ? null
-                            : () => _openDirectory(paths.configsDir),
-                        child: Text(context.l10n.get('helpOpenConfigDir')),
-                      ),
-                      OutlinedButton(
-                        onPressed: paths == null
-                            ? null
-                            : () => _openDirectory(paths.logsDir),
-                        child: Text(context.l10n.get('helpOpenLogsDir')),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPathRow(
-                    context,
-                    context.l10n.get('helpNodesPathLabel'),
-                    paths?.nodesPath ?? context.l10n.get('helpLoading'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPathRow(
-                    context,
-                    context.l10n.get('helpRuntimeConfigLabel'),
-                    paths?.runtimeConfigPath ?? context.l10n.get('helpLoading'),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildPathRow(
-                    context,
-                    context.l10n.get('helpRuntimeLogLabel'),
-                    paths?.logsPath ?? context.l10n.get('helpLoading'),
-                  ),
-                ],
-              ),
-              _buildSectionCard(
-                context,
-                title: context.l10n.get('helpCommandsTitle'),
-                children: [
-                  Text(context.l10n.get('helpCommandsIntro')),
-                  const SizedBox(height: 12),
-                  SelectableText(
-                    context.l10n.get('helpCommandsBlock'),
-                    style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 13,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
+        body: _buildBody(context),
+      );
+    }
+    return _buildBody(context);
   }
 
   Widget _buildSectionCard(
