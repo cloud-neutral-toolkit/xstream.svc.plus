@@ -80,7 +80,7 @@
 **Xcode Archive 前置步骤（必须执行）：**
 
 ```bash
-make sync:macos:config
+make sync-macos-config
 ```
 
 此命令重新生成 `macos/Flutter/ephemeral/Flutter-Generated.xcconfig`，确保 Xcode 读取到正确的版本号。
@@ -89,14 +89,14 @@ make sync:macos:config
 
 | 目标 | 说明 |
 |------|------|
-| `make build:macos:arm64` | Apple Silicon macOS release + DMG |
-| `make build:macos:x64` | Intel macOS release + DMG |
-| `make sync:macos:config` | 同步 pubspec.yaml 版本 → Generated.xcconfig |
-| `make build:ios:ipa` | iOS release IPA（需 macOS + Xcode） |
-| `make build:windows:x64` | Windows x64 release |
-| `make build:linux:x64` | Linux x64 release |
+| `make build-macos-arm64` | Apple Silicon macOS release + DMG |
+| `make build-macos-x64` | Intel macOS release + DMG |
+| `make sync-macos-config` | 同步 pubspec.yaml 版本 → Generated.xcconfig |
+| `make build-ios-ipa` | iOS release IPA（需 macOS + Xcode） |
+| `make build-windows-x64` | Windows x64 release |
+| `make build-linux-x64` | Linux x64 release |
 | `make clean` | 清理 Flutter 及生成物 |
-| `make fix:macos:signing` | 清理 xattr，修复签名状态 |
+| `make fix-macos-signing` | 清理 xattr，修复签名状态 |
 
 ### 4.3 PR Checklist
 

@@ -33,7 +33,7 @@ version: X.Y.Z-BUILD   # 例：0.3.6-1
 ## Step 2：同步 Xcode 配置
 
 ```bash
-make sync:macos:config
+make sync-macos-config
 ```
 
 **验证**：检查生成文件中版本号是否正确：
@@ -50,7 +50,7 @@ grep "FLUTTER_BUILD" macos/Flutter/ephemeral/Flutter-Generated.xcconfig
 ## Step 3：清理 Extended Attributes（避免签名报错）
 
 ```bash
-make fix:macos:signing
+make fix-macos-signing
 # 等价于：xattr -rc .
 ```
 
@@ -78,7 +78,7 @@ make fix:macos:signing
 ### 公证 DMG（直接分发）
 
 ```bash
-make build:macos:arm64   # 或 build:macos:x64（Intel）
+make build-macos-arm64   # 或 build-macos-x64（Intel）
 ```
 
 脚本会自动：

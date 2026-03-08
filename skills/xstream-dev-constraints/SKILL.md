@@ -90,7 +90,7 @@ Use **only** these terms in UI copy, docs, code comments, and variable names:
 - Version is defined **only** in `pubspec.yaml` (format: `MAJOR.MINOR.PATCH+BUILD`).
 - Before an Xcode Archive, run:
   ```
-  make sync:macos:config
+  make sync-macos-config
   ```
   This regenerates `macos/Flutter/ephemeral/Flutter-Generated.xcconfig` so Xcode picks up the correct `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION`.
 
@@ -98,12 +98,12 @@ Use **only** these terms in UI copy, docs, code comments, and variable names:
 
 | Goal | Command |
 |------|---------|
-| macOS ARM64 release + DMG | `make build:macos:arm64` |
-| macOS x64 release + DMG | `make build:macos:x64` |
-| Sync Xcode config | `make sync:macos:config` |
-| iOS release IPA | `make build:ios:ipa` |
-| Windows x64 | `make build:windows:x64` |
-| Linux x64 | `make build:linux:x64` |
+| macOS ARM64 release + DMG | `make build-macos-arm64` |
+| macOS x64 release + DMG | `make build-macos-x64` |
+| Sync Xcode config | `make sync-macos-config` |
+| iOS release IPA | `make build-ios-ipa` |
+| Windows x64 | `make build-windows-x64` |
+| Linux x64 | `make build-linux-x64` |
 | Clean | `make clean` |
 
 ### 4.3 PR Checklist

@@ -46,13 +46,13 @@ endef
 
 .PHONY: \
 	help clean icon \
-	build\:all build\:desktop build\:mobile \
-	build\:macos build\:macos\:x64 build\:macos\:arm64 \
-	run\:macos\:debug fix\:macos\:signing sync\:macos\:config \
-	build\:windows build\:windows\:x64 build\:windows\:icon \
-	build\:linux build\:linux\:x64 build\:linux\:arm64 \
-	build\:ios build\:ios\:app build\:ios\:ipa install\:ios\:debug install\:ios\:release deploy\:ios\:device \
-	build\:android build\:android\:apk build\:android\:libxray \
+	build-all build-desktop build-mobile \
+	build-macos build-macos-x64 build-macos-arm64 \
+	run-macos-debug fix-macos-signing sync-macos-config \
+	build-windows build-windows-x64 build-windows-icon \
+	build-linux build-linux-x64 build-linux-arm64 \
+	build-ios build-ios-app build-ios-ipa install-ios-debug install-ios-release deploy-ios-device \
+	build-android build-android-apk build-android-libxray \
 	mcp mcp-bootstrap mcp-doctor mcp-install mcp-start-dev mcp-start-runtime
 
 help:
@@ -61,40 +61,40 @@ help:
 		'Usage: make <target>' \
 		'' \
 		'Build' \
-		'  build:all                 Build all supported desktop and mobile targets' \
-		'  build:desktop             Build macOS, Windows, and Linux targets' \
-		'  build:mobile              Build iOS and Android targets' \
+		'  build-all                 Build all supported desktop and mobile targets' \
+		'  build-desktop             Build macOS, Windows, and Linux targets' \
+		'  build-mobile              Build iOS and Android targets' \
 		'' \
 		'macOS' \
-		'  build:macos               Build all macOS release targets supported on the host' \
-		'  build:macos:x64           Build the macOS x64 release app and DMG on Intel Mac' \
-		'  build:macos:arm64         Build the macOS ARM64 release app and DMG on Apple Silicon' \
-		'  run:macos:debug           Launch the macOS app in Flutter debug mode' \
-		'  fix:macos:signing         Reset macOS signing-related state before a fresh build' \
-		'  sync:macos:config         Sync pubspec.yaml version → Generated.xcconfig (run before Xcode Archive)' \
+		'  build-macos               Build all macOS release targets supported on the host' \
+		'  build-macos-x64           Build the macOS x64 release app and DMG on Intel Mac' \
+		'  build-macos-arm64         Build the macOS ARM64 release app and DMG on Apple Silicon' \
+		'  run-macos-debug           Launch the macOS app in Flutter debug mode' \
+		'  fix-macos-signing         Reset macOS signing-related state before a fresh build' \
+		'  sync-macos-config         Sync pubspec.yaml version → Generated.xcconfig (run before Xcode Archive)' \
 		'' \
 		'Windows' \
-		'  build:windows             Build all Windows targets supported on the host' \
-		'  build:windows:x64         Build the Windows x64 release bundle on native Windows' \
-		'  build:windows:icon        Regenerate the Windows .ico asset' \
+		'  build-windows             Build all Windows targets supported on the host' \
+		'  build-windows-x64         Build the Windows x64 release bundle on native Windows' \
+		'  build-windows-icon        Regenerate the Windows .ico asset' \
 		'' \
 		'Linux' \
-		'  build:linux               Build all Linux targets supported on the host' \
-		'  build:linux:x64           Build the Linux x64 release bundle on Linux' \
-		'  build:linux:arm64         Build the Linux ARM64 release bundle on Linux ARM64' \
+		'  build-linux               Build all Linux targets supported on the host' \
+		'  build-linux-x64           Build the Linux x64 release bundle on Linux' \
+		'  build-linux-arm64         Build the Linux ARM64 release bundle on Linux ARM64' \
 		'' \
 		'iOS' \
-		'  build:ios                 Build the iOS app bundle and IPA on macOS' \
-		'  build:ios:app             Build the iOS release Runner.app bundle and zip payload' \
-		'  build:ios:ipa             Build the iOS release IPA package' \
-		'  install:ios:debug         Install a debug build to an attached iPhone' \
-		'  install:ios:release       Build and install a release build to an attached iPhone' \
-		'  deploy:ios:device         Run the custom iOS device deployment helper' \
+		'  build-ios                 Build the iOS app bundle and IPA on macOS' \
+		'  build-ios-app             Build the iOS release Runner.app bundle and zip payload' \
+		'  build-ios-ipa             Build the iOS release IPA package' \
+		'  install-ios-debug         Install a debug build to an attached iPhone' \
+		'  install-ios-release       Build and install a release build to an attached iPhone' \
+		'  deploy-ios-device         Run the custom iOS device deployment helper' \
 		'' \
 		'Android' \
-		'  build:android             Build Android release artifacts' \
-		'  build:android:apk         Build the Android release APK' \
-		'  build:android:libxray     Build Android libxray artifacts only' \
+		'  build-android             Build Android release artifacts' \
+		'  build-android-apk         Build the Android release APK' \
+		'  build-android-libxray     Build Android libxray artifacts only' \
 		'' \
 		'Utility' \
 		'  icon                      Regenerate application icons for Flutter targets' \
@@ -106,76 +106,76 @@ clean:
 icon:
 	$(call run_target,FLUTTER="$(FLUTTER)",icon)
 
-build\:all:
-	@$(MAKE) 'build:desktop' 'build:mobile'
+build-all:
+	@$(MAKE) 'build-desktop' 'build-mobile'
 
-build\:desktop:
-	@$(MAKE) 'build:macos' 'build:windows' 'build:linux'
+build-desktop:
+	@$(MAKE) 'build-macos' 'build-windows' 'build-linux'
 
-build\:mobile:
-	@$(MAKE) 'build:ios' 'build:android'
+build-mobile:
+	@$(MAKE) 'build-ios' 'build-android'
 
-build\:macos:
-	@$(MAKE) 'build:macos:x64' 'build:macos:arm64'
+build-macos:
+	@$(MAKE) 'build-macos-x64' 'build-macos-arm64'
 
-build\:macos\:x64:
+build-macos-x64:
 	$(call run_target,$(MACOS_ENV),macos-intel)
 
-build\:macos\:arm64:
+build-macos-arm64:
 	$(call run_target,$(MACOS_ENV),macos-arm64)
 
-run\:macos\:debug:
+run-macos-debug:
 	$(call run_target,UNAME_S="$(UNAME_S)" FLUTTER="$(FLUTTER)" BRANCH="$(BRANCH)" BUILD_ID="$(BUILD_ID)" BUILD_DATE="$(BUILD_DATE)",macos-debug-run)
 
-fix\:macos\:signing:
+fix-macos-signing:
 	$(call run_target,FLUTTER="$(FLUTTER)",fix-macos-signing)
 
-sync\:macos\:config:
+sync-macos-config:
 	$(call run_target,FLUTTER="$(FLUTTER)",sync-macos-config)
 
-build\:windows:
-	@$(MAKE) 'build:windows:x64'
+build-windows:
+	@$(MAKE) 'build-windows-x64'
 
-build\:windows\:x64:
+build-windows-x64:
 	$(call run_target,$(WINDOWS_ENV),windows-x64)
 
-build\:windows\:icon:
+build-windows-icon:
 	$(call run_target,$(COMMON_ENV),windows-icon)
 
-build\:linux:
-	@$(MAKE) 'build:linux:x64' 'build:linux:arm64'
+build-linux:
+	@$(MAKE) 'build-linux-x64' 'build-linux-arm64'
 
-build\:linux\:x64:
+build-linux-x64:
 	$(call run_target,$(LINUX_ENV),linux-x64)
 
-build\:linux\:arm64:
+build-linux-arm64:
 	$(call run_target,$(LINUX_ENV),linux-arm64)
 
-build\:ios:
-	@$(MAKE) 'build:ios:app' 'build:ios:ipa'
+build-ios:
+	@$(MAKE) 'build-ios-app' 'build-ios-ipa'
 
-build\:ios\:app:
+build-ios-app:
 	$(call run_target,$(IOS_ENV),ios-arm64)
 
-build\:ios\:ipa:
+build-ios-ipa:
 	$(call run_target,$(COMMON_ENV),ios-ipa)
 
-install\:ios\:debug:
+install-ios-debug:
 	$(call run_target,$(IOS_ENV),ios-install-debug)
 
-install\:ios\:release:
+install-ios-release:
 	$(call run_target,$(IOS_ENV),ios-install-release)
 
-deploy\:ios\:device:
+deploy-ios-device:
 	$(call run_target,$(COMMON_ENV),ios-deploy-device)
 
-build\:android:
-	@$(MAKE) 'build:android:apk'
+build-android:
+	@$(MAKE) 'build-android-apk'
 
-build\:android\:apk:
+build-android-apk:
 	$(call run_target,$(ANDROID_ENV),android-apk)
 
-build\:android\:libxray:
+build-android-libxray:
 	$(call run_target,$(COMMON_ENV),android-libxray)
 
 mcp:
