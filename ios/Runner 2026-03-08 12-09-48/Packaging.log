@@ -1,0 +1,1189 @@
+2026-03-08 04:09:11 +0000  Initial pipeline context: <IDEDistributionProcessingPipelineContext: 0xa4bb1bc00; archive(resolved)="<IDEArchive: 0xa13273720>", distributionTask(resolved)="2", distributionDestination(resolved)="1", distributionMethod(resolved)="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team(resolved)="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	Chain (16, self inclusive):
+	<IDEDistributionProcessingPipelineContext: 0xa4bb1bc00; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionProcessingPipelineContext: 0xa4bb1b300; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12910a00; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12906800; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12906a80; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12905680; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12905900; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12904f00; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12905400; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="<IDEProvisioningDisambiguatableBasicTeam: 0xa26440a80; teamID='N3G9T67W78', teamName='Haitao Pan', teamType='Individual', username='haitaopanhq@foxmail.com', isFreeProvisioningTeam='0'>">
+	<IDEDistributionContext: 0xa12907200; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="(null)">
+	<IDEDistributionContext: 0xa12905180; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="(null)">
+	<IDEDistributionContext: 0xa12906d00; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="(null)">
+	<IDEDistributionContext: 0xa12905e00; archive = "<IDEArchive: 0xa13273720>", distributionMethod="<IDEDistributionMethodiOSAdHoc: 0xa253c5340>", team="(null)">
+	<IDEDistributionContext: 0xa12906300; archive = "<IDEArchive: 0xa13273720>", distributionMethod="(null)", team="(null)">
+	<IDEDistributionContext: 0xa1534b200; archive = "<IDEArchive: 0xa13273720>", distributionMethod="(null)", team="(null)">
+	<IDEDistributionContext: 0xa1534a300; archive = "<IDEArchive: 0xa13273720>", distributionMethod="(null)", team="(null)">
+</IDEDistributionProcessingPipelineContext: 0xa4bb1bc00>
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionCreateDestRootStep
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionCopyItemStep
+2026-03-08 04:09:11 +0000  Running /usr/bin/ditto '-V' '/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app' '/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app'
+2026-03-08 04:09:11 +0000  >>> Copying /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app 
+2026-03-08 04:09:11 +0000  copying file ./_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  45642 bytes for ./_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./PlugIns/PacketTunnel.appex/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2040 bytes for ./PlugIns/PacketTunnel.appex/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./PlugIns/PacketTunnel.appex/PacketTunnel ... 
+2026-03-08 04:09:11 +0000  28443824 bytes for ./PlugIns/PacketTunnel.appex/PacketTunnel
+2026-03-08 04:09:11 +0000  copying file ./PlugIns/PacketTunnel.appex/embedded.mobileprovision ... 
+2026-03-08 04:09:11 +0000  15315 bytes for ./PlugIns/PacketTunnel.appex/embedded.mobileprovision
+2026-03-08 04:09:11 +0000  copying file ./PlugIns/PacketTunnel.appex/Info.plist ... 
+2026-03-08 04:09:11 +0000  943 bytes for ./PlugIns/PacketTunnel.appex/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./AppIcon60x60@2x.png ... 
+2026-03-08 04:09:11 +0000  13463 bytes for ./AppIcon60x60@2x.png
+2026-03-08 04:09:11 +0000  copying file ./Runner ... 
+2026-03-08 04:09:11 +0000  211904 bytes for ./Runner
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib ... 
+2026-03-08 04:09:11 +0000  951 bytes for ./Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib ... 
+2026-03-08 04:09:11 +0000  1835 bytes for ./Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/Main.storyboardc/Info.plist ... 
+2026-03-08 04:09:11 +0000  258 bytes for ./Base.lproj/Main.storyboardc/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib ... 
+2026-03-08 04:09:11 +0000  2281 bytes for ./Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib ... 
+2026-03-08 04:09:11 +0000  924 bytes for ./Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib
+2026-03-08 04:09:11 +0000  copying file ./Base.lproj/LaunchScreen.storyboardc/Info.plist ... 
+2026-03-08 04:09:11 +0000  258 bytes for ./Base.lproj/LaunchScreen.storyboardc/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Assets.car ... 
+2026-03-08 04:09:11 +0000  1231144 bytes for ./Assets.car
+2026-03-08 04:09:11 +0000  copying file ./AppFrameworkInfo.plist ... 
+2026-03-08 04:09:11 +0000  347 bytes for ./AppFrameworkInfo.plist
+2026-03-08 04:09:11 +0000  copying file ./AppIcon76x76@2x~ipad.png ... 
+2026-03-08 04:09:11 +0000  21459 bytes for ./AppIcon76x76@2x~ipad.png
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  7070 bytes for ./Frameworks/Flutter.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/icudtl.dat ... 
+2026-03-08 04:09:11 +0000  862304 bytes for ./Frameworks/Flutter.framework/icudtl.dat
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Flutter ... 
+2026-03-08 04:09:11 +0000  8941360 bytes for ./Frameworks/Flutter.framework/Flutter
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterSceneDelegate.h ... 
+2026-03-08 04:09:11 +0000  893 bytes for ./Frameworks/Flutter.framework/Headers/FlutterSceneDelegate.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterEngine.h ... 
+2026-03-08 04:09:11 +0000  21724 bytes for ./Frameworks/Flutter.framework/Headers/FlutterEngine.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterChannels.h ... 
+2026-03-08 04:09:11 +0000  18414 bytes for ./Frameworks/Flutter.framework/Headers/FlutterChannels.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterPlugin.h ... 
+2026-03-08 04:09:11 +0000  18306 bytes for ./Frameworks/Flutter.framework/Headers/FlutterPlugin.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterAppDelegate.h ... 
+2026-03-08 04:09:11 +0000  1821 bytes for ./Frameworks/Flutter.framework/Headers/FlutterAppDelegate.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterTexture.h ... 
+2026-03-08 04:09:11 +0000  2263 bytes for ./Frameworks/Flutter.framework/Headers/FlutterTexture.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterEngineGroup.h ... 
+2026-03-08 04:09:11 +0000  4755 bytes for ./Frameworks/Flutter.framework/Headers/FlutterEngineGroup.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterPlatformViews.h ... 
+2026-03-08 04:09:11 +0000  1966 bytes for ./Frameworks/Flutter.framework/Headers/FlutterPlatformViews.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterHeadlessDartRunner.h ... 
+2026-03-08 04:09:11 +0000  3927 bytes for ./Frameworks/Flutter.framework/Headers/FlutterHeadlessDartRunner.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterCodecs.h ... 
+2026-03-08 04:09:11 +0000  15290 bytes for ./Frameworks/Flutter.framework/Headers/FlutterCodecs.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/Flutter.h ... 
+2026-03-08 04:09:11 +0000  921 bytes for ./Frameworks/Flutter.framework/Headers/Flutter.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterViewController.h ... 
+2026-03-08 04:09:11 +0000  10734 bytes for ./Frameworks/Flutter.framework/Headers/FlutterViewController.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterMacros.h ... 
+2026-03-08 04:09:11 +0000  1823 bytes for ./Frameworks/Flutter.framework/Headers/FlutterMacros.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterDartProject.h ... 
+2026-03-08 04:09:11 +0000  3914 bytes for ./Frameworks/Flutter.framework/Headers/FlutterDartProject.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterHourFormat.h ... 
+2026-03-08 04:09:11 +0000  536 bytes for ./Frameworks/Flutter.framework/Headers/FlutterHourFormat.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterPluginAppLifeCycleDelegate.h ... 
+2026-03-08 04:09:11 +0000  5318 bytes for ./Frameworks/Flutter.framework/Headers/FlutterPluginAppLifeCycleDelegate.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterBinaryMessenger.h ... 
+2026-03-08 04:09:11 +0000  3761 bytes for ./Frameworks/Flutter.framework/Headers/FlutterBinaryMessenger.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterCallbackCache.h ... 
+2026-03-08 04:09:11 +0000  1724 bytes for ./Frameworks/Flutter.framework/Headers/FlutterCallbackCache.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Headers/FlutterSceneLifeCycle.h ... 
+2026-03-08 04:09:11 +0000  8387 bytes for ./Frameworks/Flutter.framework/Headers/FlutterSceneLifeCycle.h
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  845 bytes for ./Frameworks/Flutter.framework/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Modules/module.modulemap ... 
+2026-03-08 04:09:11 +0000  95 bytes for ./Frameworks/Flutter.framework/Modules/module.modulemap
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/Flutter.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  1081 bytes for ./Frameworks/Flutter.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  11408 bytes for ./Frameworks/DKImagePickerController.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/de.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  920 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/de.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ur.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  1114 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ur.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ar.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  1018 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ar.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hans.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  782 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hans.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ja.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  967 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ja.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/en.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  865 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/en.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nb-NO.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  844 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nb-NO.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/es.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  886 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/es.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/pt_BR.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  865 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/pt_BR.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/da.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  883 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/da.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/it.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  891 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/it.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ko.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  931 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ko.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Base.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  837 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Base.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hant.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  778 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hant.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/hu.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  886 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/hu.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Assets.car ... 
+2026-03-08 04:09:11 +0000  55080 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Assets.car
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/tr.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  885 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/tr.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/vi.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  909 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/vi.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  599 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ru.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  1037 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ru.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/fr.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  942 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/fr.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nl.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:11 +0000  893 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nl.lproj/DKImagePickerController.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  795 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/DKImagePickerController ... 
+2026-03-08 04:09:11 +0000  1084880 bytes for ./Frameworks/DKImagePickerController.framework/DKImagePickerController
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKImagePickerController.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  820 bytes for ./Frameworks/DKImagePickerController.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SwiftyGif.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2308 bytes for ./Frameworks/SwiftyGif.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SwiftyGif.framework/SwiftyGif.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  373 bytes for ./Frameworks/SwiftyGif.framework/SwiftyGif.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SwiftyGif.framework/SwiftyGif.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  765 bytes for ./Frameworks/SwiftyGif.framework/SwiftyGif.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SwiftyGif.framework/SwiftyGif ... 
+2026-03-08 04:09:11 +0000  235072 bytes for ./Frameworks/SwiftyGif.framework/SwiftyGif
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SwiftyGif.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  790 bytes for ./Frameworks/SwiftyGif.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  4180 bytes for ./Frameworks/App.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/App ... 
+2026-03-08 04:09:11 +0000  8437056 bytes for ./Frameworks/App.framework/App
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/NOTICES.Z ... 
+2026-03-08 04:09:11 +0000  117419 bytes for ./Frameworks/App.framework/flutter_assets/NOTICES.Z
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json ... 
+2026-03-08 04:09:11 +0000  45 bytes for ./Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/FontManifest.json ... 
+2026-03-08 04:09:11 +0000  208 bytes for ./Frameworks/App.framework/flutter_assets/FontManifest.json
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf ... 
+2026-03-08 04:09:11 +0000  257628 bytes for ./Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag ... 
+2026-03-08 04:09:11 +0000  11992 bytes for ./Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/shaders/stretch_effect.frag ... 
+2026-03-08 04:09:11 +0000  10192 bytes for ./Frameworks/App.framework/flutter_assets/shaders/stretch_effect.frag
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/AssetManifest.bin ... 
+2026-03-08 04:09:11 +0000  162 bytes for ./Frameworks/App.framework/flutter_assets/AssetManifest.bin
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf ... 
+2026-03-08 04:09:11 +0000  1645184 bytes for ./Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/flutter_assets/assets/logo.png ... 
+2026-03-08 04:09:11 +0000  907593 bytes for ./Frameworks/App.framework/flutter_assets/assets/logo.png
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/App.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  754 bytes for ./Frameworks/App.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/mobile_scanner.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2360 bytes for ./Frameworks/mobile_scanner.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  373 bytes for ./Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  793 bytes for ./Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/mobile_scanner.framework/mobile_scanner ... 
+2026-03-08 04:09:11 +0000  355440 bytes for ./Frameworks/mobile_scanner.framework/mobile_scanner
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/mobile_scanner.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  800 bytes for ./Frameworks/mobile_scanner.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/url_launcher_ios.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2368 bytes for ./Frameworks/url_launcher_ios.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/url_launcher_ios.framework/url_launcher_ios ... 
+2026-03-08 04:09:11 +0000  201408 bytes for ./Frameworks/url_launcher_ios.framework/url_launcher_ios
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  373 bytes for ./Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  797 bytes for ./Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/url_launcher_ios.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  806 bytes for ./Frameworks/url_launcher_ios.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/path_provider_foundation.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2400 bytes for ./Frameworks/path_provider_foundation.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  373 bytes for ./Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  813 bytes for ./Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/path_provider_foundation.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  822 bytes for ./Frameworks/path_provider_foundation.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/path_provider_foundation.framework/path_provider_foundation ... 
+2026-03-08 04:09:11 +0000  152768 bytes for ./Frameworks/path_provider_foundation.framework/path_provider_foundation
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  3795 bytes for ./Frameworks/DKPhotoGallery.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/zh-Hans.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:11 +0000  839 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/zh-Hans.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/en.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:11 +0000  825 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/en.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Base.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:11 +0000  824 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Base.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Assets.car ... 
+2026-03-08 04:09:11 +0000  54840 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Assets.car
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  599 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  776 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery ... 
+2026-03-08 04:09:11 +0000  808256 bytes for ./Frameworks/DKPhotoGallery.framework/DKPhotoGallery
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/DKPhotoGallery.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  801 bytes for ./Frameworks/DKPhotoGallery.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/package_info_plus.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2372 bytes for ./Frameworks/package_info_plus.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/package_info_plus.framework/package_info_plus ... 
+2026-03-08 04:09:11 +0000  92192 bytes for ./Frameworks/package_info_plus.framework/package_info_plus
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/package_info_plus.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  808 bytes for ./Frameworks/package_info_plus.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  373 bytes for ./Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  799 bytes for ./Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/shared_preferences_foundation.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2420 bytes for ./Frameworks/shared_preferences_foundation.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  598 bytes for ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  823 bytes for ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation ... 
+2026-03-08 04:09:11 +0000  215952 bytes for ./Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/shared_preferences_foundation.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  832 bytes for ./Frameworks/shared_preferences_foundation.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SDWebImage.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2312 bytes for ./Frameworks/SDWebImage.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SDWebImage.framework/SDWebImage.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  599 bytes for ./Frameworks/SDWebImage.framework/SDWebImage.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SDWebImage.framework/SDWebImage.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  768 bytes for ./Frameworks/SDWebImage.framework/SDWebImage.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SDWebImage.framework/SDWebImage ... 
+2026-03-08 04:09:11 +0000  865424 bytes for ./Frameworks/SDWebImage.framework/SDWebImage
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/SDWebImage.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  793 bytes for ./Frameworks/SDWebImage.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/file_picker.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:11 +0000  2364 bytes for ./Frameworks/file_picker.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:11 +0000  372 bytes for ./Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:11 +0000  795 bytes for ./Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/file_picker.framework/file_picker ... 
+2026-03-08 04:09:11 +0000  157856 bytes for ./Frameworks/file_picker.framework/file_picker
+2026-03-08 04:09:11 +0000  copying file ./Frameworks/file_picker.framework/Info.plist ... 
+2026-03-08 04:09:11 +0000  794 bytes for ./Frameworks/file_picker.framework/Info.plist
+2026-03-08 04:09:11 +0000  copying file ./embedded.mobileprovision ... 
+2026-03-08 04:09:11 +0000  15228 bytes for ./embedded.mobileprovision
+2026-03-08 04:09:11 +0000  copying file ./Info.plist ... 
+2026-03-08 04:09:11 +0000  1987 bytes for ./Info.plist
+2026-03-08 04:09:11 +0000  copying file ./PkgInfo ... 
+2026-03-08 04:09:11 +0000  8 bytes for ./PkgInfo
+2026-03-08 04:09:11 +0000  /usr/bin/ditto exited with 0
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionEmbedProfileStep
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e5c20; bundleID='io.flutter.flutter.app', path='<DVTFilePath:0xa135c2460:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e58c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter.app', executablePath='<DVTFilePath:0xa135c1a40:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework/App'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e6220; bundleID='org.cocoapods.DKImagePickerController', path='<DVTFilePath:0xa136cfa00:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e60a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKImagePickerController', executablePath='<DVTFilePath:0xa1501ccb0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e6400; bundleID='org.cocoapods.DKPhotoGallery', path='<DVTFilePath:0xa13057aa0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e64c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKPhotoGallery', executablePath='<DVTFilePath:0xa1286a280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e7ae0; bundleID='io.flutter.flutter', path='<DVTFilePath:0xa162132c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter', executablePath='<DVTFilePath:0xa1286b060:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework/Flutter'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e7c00; bundleID='org.cocoapods.SDWebImage', path='<DVTFilePath:0xa132724c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e57a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SDWebImage', executablePath='<DVTFilePath:0xa12870d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework/SDWebImage'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e63a0; bundleID='org.cocoapods.SwiftyGif', path='<DVTFilePath:0xa13272140:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6340; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SwiftyGif', executablePath='<DVTFilePath:0xa12871680:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e61c0; bundleID='org.cocoapods.file-picker', path='<DVTFilePath:0xa16212c30:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6280; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.file-picker', executablePath='<DVTFilePath:0xa1286ab80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework/file_picker'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e78a0; bundleID='org.cocoapods.mobile-scanner', path='<DVTFilePath:0xa132733a0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5f20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.mobile-scanner', executablePath='<DVTFilePath:0xa135c1ec0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e5620; bundleID='org.cocoapods.package-info-plus', path='<DVTFilePath:0xa13270af0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7ba0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.package-info-plus', executablePath='<DVTFilePath:0xa13271570:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework/package_info_plus'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e5f80; bundleID='org.cocoapods.path-provider-foundation', path='<DVTFilePath:0xa136cfb80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5ec0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.path-provider-foundation', executablePath='<DVTFilePath:0xa13273950:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e7b40; bundleID='org.cocoapods.shared-preferences-foundation', path='<DVTFilePath:0xa136cfc80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a80; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.shared-preferences-foundation', executablePath='<DVTFilePath:0xa13270d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Skipping profile for item: <IDEDistributionItem: 0xa128e6460; bundleID='org.cocoapods.url-launcher-ios', path='<DVTFilePath:0xa132732c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e62e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.url-launcher-ios', executablePath='<DVTFilePath:0xa13273330:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios'>', hardenedRuntime='0'>'>
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionInfoPlistStep
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionInfoPlistStep because it said so
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionAppThinningPlistStep
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionAppThinningPlistStep because it said so
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionSymbolsStep
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionSymbolsStep because it said so
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionAppThinningStep
+2026-03-08 04:09:11 +0000  Skipping step: IDEDistributionAppThinningStep because it said so
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionArchThinningStep
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex are []
+2026-03-08 04:09:11 +0000  Archs to thin for item /Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app are []
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionODRStep
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionStripXattrsStep
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Skipping stripping extended attributes because the codesign step will strip them.
+2026-03-08 04:09:11 +0000  Processing step: IDEDistributionCodesignStep
+2026-03-08 04:09:11 +0000  Entitlements for <IDEDistributionItem: 0xa128e5c20; bundleID='io.flutter.flutter.app', path='<DVTFilePath:0xa135c2460:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e58c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter.app', executablePath='<DVTFilePath:0xa135c1a40:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework/App'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:11 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:11 +0000  Entitlements for <IDEDistributionItem: 0xa128e5c20; bundleID='io.flutter.flutter.app', path='<DVTFilePath:0xa135c2460:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e58c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter.app', executablePath='<DVTFilePath:0xa135c1a40:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework/App'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:11 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e5c20; bundleID='io.flutter.flutter.app', path='<DVTFilePath:0xa135c2460:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e58c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter.app', executablePath='<DVTFilePath:0xa135c1a40:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/App.framework/App'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~QuRDjd
+2026-03-08 04:09:11 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~QuRDjd",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/App.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/App.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/App.framework: signed bundle with Mach-O universal (arm64) [io.flutter.flutter.app]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6220; bundleID='org.cocoapods.DKImagePickerController', path='<DVTFilePath:0xa136cfa00:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e60a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKImagePickerController', executablePath='<DVTFilePath:0xa1501ccb0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6220; bundleID='org.cocoapods.DKImagePickerController', path='<DVTFilePath:0xa136cfa00:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e60a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKImagePickerController', executablePath='<DVTFilePath:0xa1501ccb0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e6220; bundleID='org.cocoapods.DKImagePickerController', path='<DVTFilePath:0xa136cfa00:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e60a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKImagePickerController', executablePath='<DVTFilePath:0xa1501ccb0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~D8iETE
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~D8iETE",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKImagePickerController.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKImagePickerController.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKImagePickerController.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.DKImagePickerController]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6400; bundleID='org.cocoapods.DKPhotoGallery', path='<DVTFilePath:0xa13057aa0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e64c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKPhotoGallery', executablePath='<DVTFilePath:0xa1286a280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6400; bundleID='org.cocoapods.DKPhotoGallery', path='<DVTFilePath:0xa13057aa0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e64c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKPhotoGallery', executablePath='<DVTFilePath:0xa1286a280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e6400; bundleID='org.cocoapods.DKPhotoGallery', path='<DVTFilePath:0xa13057aa0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e64c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.DKPhotoGallery', executablePath='<DVTFilePath:0xa1286a280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~5VnalC
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~5VnalC",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKPhotoGallery.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKPhotoGallery.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKPhotoGallery.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.DKPhotoGallery]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7ae0; bundleID='io.flutter.flutter', path='<DVTFilePath:0xa162132c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter', executablePath='<DVTFilePath:0xa1286b060:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework/Flutter'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7ae0; bundleID='io.flutter.flutter', path='<DVTFilePath:0xa162132c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter', executablePath='<DVTFilePath:0xa1286b060:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework/Flutter'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e7ae0; bundleID='io.flutter.flutter', path='<DVTFilePath:0xa162132c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='io.flutter.flutter', executablePath='<DVTFilePath:0xa1286b060:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/Flutter.framework/Flutter'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~x1y8RY
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~x1y8RY",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/Flutter.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/Flutter.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/Flutter.framework: signed bundle with Mach-O thin (arm64) [io.flutter.flutter]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7c00; bundleID='org.cocoapods.SDWebImage', path='<DVTFilePath:0xa132724c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e57a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SDWebImage', executablePath='<DVTFilePath:0xa12870d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework/SDWebImage'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7c00; bundleID='org.cocoapods.SDWebImage', path='<DVTFilePath:0xa132724c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e57a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SDWebImage', executablePath='<DVTFilePath:0xa12870d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework/SDWebImage'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e7c00; bundleID='org.cocoapods.SDWebImage', path='<DVTFilePath:0xa132724c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e57a0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SDWebImage', executablePath='<DVTFilePath:0xa12870d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SDWebImage.framework/SDWebImage'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~j2BWvC
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~j2BWvC",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SDWebImage.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SDWebImage.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SDWebImage.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.SDWebImage]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e63a0; bundleID='org.cocoapods.SwiftyGif', path='<DVTFilePath:0xa13272140:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6340; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SwiftyGif', executablePath='<DVTFilePath:0xa12871680:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e63a0; bundleID='org.cocoapods.SwiftyGif', path='<DVTFilePath:0xa13272140:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6340; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SwiftyGif', executablePath='<DVTFilePath:0xa12871680:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e63a0; bundleID='org.cocoapods.SwiftyGif', path='<DVTFilePath:0xa13272140:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6340; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.SwiftyGif', executablePath='<DVTFilePath:0xa12871680:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~LQyuZm
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~LQyuZm",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SwiftyGif.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SwiftyGif.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SwiftyGif.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.SwiftyGif]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e61c0; bundleID='org.cocoapods.file-picker', path='<DVTFilePath:0xa16212c30:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6280; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.file-picker', executablePath='<DVTFilePath:0xa1286ab80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework/file_picker'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e61c0; bundleID='org.cocoapods.file-picker', path='<DVTFilePath:0xa16212c30:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6280; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.file-picker', executablePath='<DVTFilePath:0xa1286ab80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework/file_picker'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e61c0; bundleID='org.cocoapods.file-picker', path='<DVTFilePath:0xa16212c30:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e6280; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.file-picker', executablePath='<DVTFilePath:0xa1286ab80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/file_picker.framework/file_picker'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~GKUx1j
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~GKUx1j",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/file_picker.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/file_picker.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/file_picker.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.file-picker]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e78a0; bundleID='org.cocoapods.mobile-scanner', path='<DVTFilePath:0xa132733a0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5f20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.mobile-scanner', executablePath='<DVTFilePath:0xa135c1ec0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e78a0; bundleID='org.cocoapods.mobile-scanner', path='<DVTFilePath:0xa132733a0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5f20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.mobile-scanner', executablePath='<DVTFilePath:0xa135c1ec0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e78a0; bundleID='org.cocoapods.mobile-scanner', path='<DVTFilePath:0xa132733a0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5f20; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.mobile-scanner', executablePath='<DVTFilePath:0xa135c1ec0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~zYUUQy
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~zYUUQy",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/mobile_scanner.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/mobile_scanner.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/mobile_scanner.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.mobile-scanner]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e5620; bundleID='org.cocoapods.package-info-plus', path='<DVTFilePath:0xa13270af0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7ba0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.package-info-plus', executablePath='<DVTFilePath:0xa13271570:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework/package_info_plus'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e5620; bundleID='org.cocoapods.package-info-plus', path='<DVTFilePath:0xa13270af0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7ba0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.package-info-plus', executablePath='<DVTFilePath:0xa13271570:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework/package_info_plus'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e5620; bundleID='org.cocoapods.package-info-plus', path='<DVTFilePath:0xa13270af0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7ba0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.package-info-plus', executablePath='<DVTFilePath:0xa13271570:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/package_info_plus.framework/package_info_plus'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~MKaY9D
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~MKaY9D",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/package_info_plus.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/package_info_plus.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/package_info_plus.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.package-info-plus]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e5f80; bundleID='org.cocoapods.path-provider-foundation', path='<DVTFilePath:0xa136cfb80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5ec0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.path-provider-foundation', executablePath='<DVTFilePath:0xa13273950:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e5f80; bundleID='org.cocoapods.path-provider-foundation', path='<DVTFilePath:0xa136cfb80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5ec0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.path-provider-foundation', executablePath='<DVTFilePath:0xa13273950:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e5f80; bundleID='org.cocoapods.path-provider-foundation', path='<DVTFilePath:0xa136cfb80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e5ec0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.path-provider-foundation', executablePath='<DVTFilePath:0xa13273950:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~mpvtwY
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~mpvtwY",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/path_provider_foundation.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/path_provider_foundation.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/path_provider_foundation.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.path-provider-foundation]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7b40; bundleID='org.cocoapods.shared-preferences-foundation', path='<DVTFilePath:0xa136cfc80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a80; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.shared-preferences-foundation', executablePath='<DVTFilePath:0xa13270d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e7b40; bundleID='org.cocoapods.shared-preferences-foundation', path='<DVTFilePath:0xa136cfc80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a80; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.shared-preferences-foundation', executablePath='<DVTFilePath:0xa13270d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e7b40; bundleID='org.cocoapods.shared-preferences-foundation', path='<DVTFilePath:0xa136cfc80:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e7a80; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.shared-preferences-foundation', executablePath='<DVTFilePath:0xa13270d20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~YNDpDV
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~YNDpDV",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/shared_preferences_foundation.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/shared_preferences_foundation.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/shared_preferences_foundation.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.shared-preferences-foundation]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6460; bundleID='org.cocoapods.url-launcher-ios', path='<DVTFilePath:0xa132732c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e62e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.url-launcher-ios', executablePath='<DVTFilePath:0xa13273330:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios'>', hardenedRuntime='0'>'>: {
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e6460; bundleID='org.cocoapods.url-launcher-ios', path='<DVTFilePath:0xa132732c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e62e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.url-launcher-ios', executablePath='<DVTFilePath:0xa13273330:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios'>', hardenedRuntime='0'>'> are: {
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e6460; bundleID='org.cocoapods.url-launcher-ios', path='<DVTFilePath:0xa132732c0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e62e0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='(null)', teamID='N3G9T67W78', identifier='org.cocoapods.url-launcher-ios', executablePath='<DVTFilePath:0xa13273330:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~4lXZNj
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~4lXZNj",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/url_launcher_ios.framework"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/url_launcher_ios.framework: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/url_launcher_ios.framework: signed bundle with Mach-O thin (arm64) [org.cocoapods.url-launcher-ios]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e49c0; bundleID='plus.svc.xstream.PacketTunnel', path='<DVTFilePath:0xa132735d0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e40c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream.PacketTunnel";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream.PacketTunnel', executablePath='<DVTFilePath:0xa12872280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex/PacketTunnel'>', hardenedRuntime='0'>'>: {
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream.PacketTunnel";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 0;
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e49c0; bundleID='plus.svc.xstream.PacketTunnel', path='<DVTFilePath:0xa132735d0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e40c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream.PacketTunnel";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream.PacketTunnel', executablePath='<DVTFilePath:0xa12872280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex/PacketTunnel'>', hardenedRuntime='0'>'> are: {
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream.PacketTunnel";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 0;
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e49c0; bundleID='plus.svc.xstream.PacketTunnel', path='<DVTFilePath:0xa132735d0:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e40c0; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream.PacketTunnel";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream.PacketTunnel', executablePath='<DVTFilePath:0xa12872280:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/PlugIns/PacketTunnel.appex/PacketTunnel'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~wSICLI
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~wSICLI",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/PlugIns/PacketTunnel.appex"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/PlugIns/PacketTunnel.appex: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/PlugIns/PacketTunnel.appex: signed bundle with Mach-O thin (arm64) [plus.svc.xstream.PacketTunnel]
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e42a0; bundleID='plus.svc.xstream', path='<DVTFilePath:0xa14ec1f20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e4180; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1ab80; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream', executablePath='<DVTFilePath:0xa135c2100:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Runner'>', hardenedRuntime='0'>'>: {
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 0;
+}
+2026-03-08 04:09:12 +0000  Associated App Clip Identifiers Filter: Skipping because "com.apple.developer.associated-appclip-app-identifiers" is not present
+2026-03-08 04:09:12 +0000  Entitlements for <IDEDistributionItem: 0xa128e42a0; bundleID='plus.svc.xstream', path='<DVTFilePath:0xa14ec1f20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e4180; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream', executablePath='<DVTFilePath:0xa135c2100:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Runner'>', hardenedRuntime='0'>'> are: {
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 0;
+}
+2026-03-08 04:09:12 +0000  Writing entitlements for <IDEDistributionItem: 0xa128e42a0; bundleID='plus.svc.xstream', path='<DVTFilePath:0xa14ec1f20:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app'>', codeSigningInfo='<_DVTCodeSigningInformation_Path: 0xa128e4180; isSigned='1', isAdHocSigned='0', signingCertificate='<DVTSigningCertificate: 0xa12a1a580; name='Apple Development: Haitao Pan (9KDXLLZA93)', hash='4210A6B30378A55B224066C5BA6C2E376B7F88E0', serialNumber='7DE2129506249F9F671060465700CD2A', certificateKinds='(
+    "1.2.840.113635.100.6.1.12",
+    "1.2.840.113635.100.6.1.2"
+), issueDate='2026-03-07 15:55:25 +0000''>', entitlements='{
+    "application-identifier" = "N3G9T67W78.plus.svc.xstream";
+    "com.apple.developer.networking.networkextension" =     (
+        "packet-tunnel-provider"
+    );
+    "com.apple.developer.team-identifier" = N3G9T67W78;
+    "com.apple.security.application-groups" =     (
+        "group.plus.svc.xstream"
+    );
+    "get-task-allow" = 1;
+}', teamID='N3G9T67W78', identifier='plus.svc.xstream', executablePath='<DVTFilePath:0xa135c2100:'/Users/shenlan/Library/Developer/Xcode/Archives/2026-03-08/Runner 2026-3-8, 12.08.xcarchive/Products/Applications/Runner.app/Runner'>', hardenedRuntime='0'>'> to: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~OjxaAo
+2026-03-08 04:09:12 +0000  invoking codesign: <NSConcreteTask: 0xa4a7dc3c0; launchPath='/usr/bin/codesign', arguments='(
+    "-f",
+    "-s",
+    F3CF07B6B3DBDD70D3E85DF28F8F9FE4DAA5160D,
+    "--entitlements",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/entitlements~~~OjxaAo",
+    "--preserve-metadata=identifier,flags,runtime,launch-constraints,library-constraints",
+    "--generate-entitlement-der",
+    "--strip-disallowed-xattrs",
+    "-vvv",
+    "/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app"
+)'>
+2026-03-08 04:09:12 +0000  codesign output: /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app: replacing existing signature
+/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app: signed app bundle with Mach-O thin (arm64) [plus.svc.xstream]
+2026-03-08 04:09:12 +0000  Processing step: IDEDistributionZipODRItemStep
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Skipping step: IDEDistributionZipODRItemStep because it said so
+2026-03-08 04:09:12 +0000  Processing step: IDEDistributionCreateIPAStep
+2026-03-08 04:09:12 +0000  Running /usr/bin/ditto '-V' '-c' '-k' '--norsrc' '/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root' '/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Packages/xstream.ipa'
+2026-03-08 04:09:12 +0000  >>> Copying /var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root 
+2026-03-08 04:09:12 +0000  copying file ./Payload/Runner.app/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:12 +0000  45642 bytes for ./Payload/Runner.app/_CodeSignature/CodeResources
+2026-03-08 04:09:12 +0000  copying file ./Payload/Runner.app/PlugIns/PacketTunnel.appex/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:12 +0000  2040 bytes for ./Payload/Runner.app/PlugIns/PacketTunnel.appex/_CodeSignature/CodeResources
+2026-03-08 04:09:12 +0000  copying file ./Payload/Runner.app/PlugIns/PacketTunnel.appex/PacketTunnel ... 
+2026-03-08 04:09:13 +0000  28443824 bytes for ./Payload/Runner.app/PlugIns/PacketTunnel.appex/PacketTunnel
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/PlugIns/PacketTunnel.appex/embedded.mobileprovision ... 
+17391 bytes for ./Payload/Runner.app/PlugIns/PacketTunnel.appex/embedded.mobileprovision
+copying file ./Payload/Runner.app/PlugIns/PacketTunnel.appex/Info.plist ... 
+943 bytes for ./Payload/Runner.app/PlugIns/PacketTunnel.appex/Info.plist
+copying file ./Payload/Runner.app/AppIcon60x60@2x.png ... 
+2026-03-08 04:09:13 +0000  13463 bytes for ./Payload/Runner.app/AppIcon60x60@2x.png
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Runner ... 
+2026-03-08 04:09:13 +0000  211920 bytes for ./Payload/Runner.app/Runner
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib ... 
+2026-03-08 04:09:13 +0000  951 bytes for ./Payload/Runner.app/Base.lproj/Main.storyboardc/UIViewController-BYZ-38-t0r.nib
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib ... 
+2026-03-08 04:09:13 +0000  1835 bytes for ./Payload/Runner.app/Base.lproj/Main.storyboardc/BYZ-38-t0r-view-8bC-Xf-vdC.nib
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/Main.storyboardc/Info.plist ... 
+2026-03-08 04:09:13 +0000  258 bytes for ./Payload/Runner.app/Base.lproj/Main.storyboardc/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib ... 
+2026-03-08 04:09:13 +0000  2281 bytes for ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/01J-lp-oVM-view-Ze5-6b-2t3.nib
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib ... 
+2026-03-08 04:09:13 +0000  924 bytes for ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/UIViewController-01J-lp-oVM.nib
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/Info.plist ... 
+2026-03-08 04:09:13 +0000  258 bytes for ./Payload/Runner.app/Base.lproj/LaunchScreen.storyboardc/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Assets.car ... 
+2026-03-08 04:09:13 +0000  1231144 bytes for ./Payload/Runner.app/Assets.car
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/AppFrameworkInfo.plist ... 
+347 bytes for ./Payload/Runner.app/AppFrameworkInfo.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/AppIcon76x76@2x~ipad.png ... 
+2026-03-08 04:09:13 +0000  21459 bytes for ./Payload/Runner.app/AppIcon76x76@2x~ipad.png
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  7070 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/icudtl.dat ... 
+2026-03-08 04:09:13 +0000  862304 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/icudtl.dat
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Flutter ... 
+2026-03-08 04:09:13 +0000  8941360 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Flutter
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterSceneDelegate.h ... 
+893 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterSceneDelegate.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterEngine.h ... 
+2026-03-08 04:09:13 +0000  21724 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterEngine.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterChannels.h ... 
+2026-03-08 04:09:13 +0000  18414 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterChannels.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlugin.h ... 
+2026-03-08 04:09:13 +0000  18306 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlugin.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterAppDelegate.h ... 
+2026-03-08 04:09:13 +0000  1821 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterAppDelegate.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterTexture.h ... 
+2263 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterTexture.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterEngineGroup.h ... 
+2026-03-08 04:09:13 +0000  4755 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterEngineGroup.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlatformViews.h ... 
+1966 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPlatformViews.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterHeadlessDartRunner.h ... 
+3927 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterHeadlessDartRunner.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterCodecs.h ... 
+2026-03-08 04:09:13 +0000  15290 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterCodecs.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/Flutter.h ... 
+921 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/Flutter.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterViewController.h ... 
+2026-03-08 04:09:13 +0000  10734 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterViewController.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterMacros.h ... 
+1823 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterMacros.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterDartProject.h ... 
+2026-03-08 04:09:13 +0000  3914 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterDartProject.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterHourFormat.h ... 
+2026-03-08 04:09:13 +0000  536 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterHourFormat.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPluginAppLifeCycleDelegate.h ... 
+2026-03-08 04:09:13 +0000  5318 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterPluginAppLifeCycleDelegate.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterBinaryMessenger.h ... 
+2026-03-08 04:09:13 +0000  3761 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterBinaryMessenger.h
+copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterCallbackCache.h ... 
+2026-03-08 04:09:13 +0000  1724 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterCallbackCache.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterSceneLifeCycle.h ... 
+2026-03-08 04:09:13 +0000  8387 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Headers/FlutterSceneLifeCycle.h
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy ... 
+845 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Modules/module.modulemap ... 
+2026-03-08 04:09:13 +0000  95 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Modules/module.modulemap
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/Flutter.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  1081 bytes for ./Payload/Runner.app/Frameworks/Flutter.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  11408 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/de.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  920 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/de.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ur.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  1114 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ur.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ar.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  1018 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ar.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hans.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  782 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hans.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ja.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  967 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ja.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/en.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  865 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/en.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nb-NO.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  844 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nb-NO.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/es.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  886 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/es.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/pt_BR.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  865 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/pt_BR.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/da.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  883 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/da.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/it.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  891 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/it.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ko.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  931 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ko.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Base.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  837 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Base.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hant.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  778 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/zh-Hant.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/hu.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  886 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/hu.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Assets.car ... 
+2026-03-08 04:09:13 +0000  55080 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Assets.car
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/tr.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  885 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/tr.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/vi.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  909 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/vi.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  599 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ru.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  1037 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/ru.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/fr.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  942 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/fr.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nl.lproj/DKImagePickerController.strings ... 
+2026-03-08 04:09:13 +0000  893 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/nl.lproj/DKImagePickerController.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  795 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController ... 
+2026-03-08 04:09:13 +0000  1084880 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/DKImagePickerController
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  820 bytes for ./Payload/Runner.app/Frameworks/DKImagePickerController.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SwiftyGif.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2308 bytes for ./Payload/Runner.app/Frameworks/SwiftyGif.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  373 bytes for ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  765 bytes for ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif ... 
+2026-03-08 04:09:13 +0000  235072 bytes for ./Payload/Runner.app/Frameworks/SwiftyGif.framework/SwiftyGif
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SwiftyGif.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  790 bytes for ./Payload/Runner.app/Frameworks/SwiftyGif.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  4180 bytes for ./Payload/Runner.app/Frameworks/App.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/App ... 
+2026-03-08 04:09:13 +0000  8437056 bytes for ./Payload/Runner.app/Frameworks/App.framework/App
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/NOTICES.Z ... 
+2026-03-08 04:09:13 +0000  117419 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/NOTICES.Z
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json ... 
+45 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/NativeAssetsManifest.json
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/FontManifest.json ... 
+208 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/FontManifest.json
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf ... 
+2026-03-08 04:09:13 +0000  257628 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag ... 
+2026-03-08 04:09:13 +0000  11992 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/shaders/ink_sparkle.frag
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/shaders/stretch_effect.frag ... 
+2026-03-08 04:09:13 +0000  10192 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/shaders/stretch_effect.frag
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/AssetManifest.bin ... 
+2026-03-08 04:09:13 +0000  162 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/AssetManifest.bin
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf ... 
+2026-03-08 04:09:13 +0000  1645184 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/fonts/MaterialIcons-Regular.otf
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/assets/logo.png ... 
+2026-03-08 04:09:13 +0000  907593 bytes for ./Payload/Runner.app/Frameworks/App.framework/flutter_assets/assets/logo.png
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/App.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  754 bytes for ./Payload/Runner.app/Frameworks/App.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/mobile_scanner.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2360 bytes for ./Payload/Runner.app/Frameworks/mobile_scanner.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  373 bytes for ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  793 bytes for ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner ... 
+2026-03-08 04:09:13 +0000  355440 bytes for ./Payload/Runner.app/Frameworks/mobile_scanner.framework/mobile_scanner
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/mobile_scanner.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  800 bytes for ./Payload/Runner.app/Frameworks/mobile_scanner.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2368 bytes for ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios ... 
+2026-03-08 04:09:13 +0000  201408 bytes for ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  373 bytes for ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  797 bytes for ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/url_launcher_ios_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  806 bytes for ./Payload/Runner.app/Frameworks/url_launcher_ios.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2400 bytes for ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  373 bytes for ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  813 bytes for ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  822 bytes for ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation ... 
+2026-03-08 04:09:13 +0000  152768 bytes for ./Payload/Runner.app/Frameworks/path_provider_foundation.framework/path_provider_foundation
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  3795 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/zh-Hans.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:13 +0000  839 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/zh-Hans.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/en.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:13 +0000  825 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/en.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Base.lproj/DKPhotoGallery.strings ... 
+2026-03-08 04:09:13 +0000  824 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Base.lproj/DKPhotoGallery.strings
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Assets.car ... 
+2026-03-08 04:09:13 +0000  54840 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Assets.car
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  599 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  776 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery ... 
+2026-03-08 04:09:13 +0000  808256 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/DKPhotoGallery
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  801 bytes for ./Payload/Runner.app/Frameworks/DKPhotoGallery.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/package_info_plus.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2372 bytes for ./Payload/Runner.app/Frameworks/package_info_plus.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus ... 
+2026-03-08 04:09:13 +0000  92192 bytes for ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/package_info_plus.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  808 bytes for ./Payload/Runner.app/Frameworks/package_info_plus.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  373 bytes for ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  799 bytes for ./Payload/Runner.app/Frameworks/package_info_plus.framework/package_info_plus_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2420 bytes for ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  598 bytes for ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  823 bytes for ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation ... 
+2026-03-08 04:09:13 +0000  215952 bytes for ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  832 bytes for ./Payload/Runner.app/Frameworks/shared_preferences_foundation.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SDWebImage.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2312 bytes for ./Payload/Runner.app/Frameworks/SDWebImage.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  599 bytes for ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  768 bytes for ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage ... 
+2026-03-08 04:09:13 +0000  865424 bytes for ./Payload/Runner.app/Frameworks/SDWebImage.framework/SDWebImage
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/SDWebImage.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  793 bytes for ./Payload/Runner.app/Frameworks/SDWebImage.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/file_picker.framework/_CodeSignature/CodeResources ... 
+2026-03-08 04:09:13 +0000  2364 bytes for ./Payload/Runner.app/Frameworks/file_picker.framework/_CodeSignature/CodeResources
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/PrivacyInfo.xcprivacy ... 
+2026-03-08 04:09:13 +0000  372 bytes for ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/PrivacyInfo.xcprivacy
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/Info.plist ... 
+2026-03-08 04:09:13 +0000  795 bytes for ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker_ios_privacy.bundle/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker ... 
+2026-03-08 04:09:13 +0000  157856 bytes for ./Payload/Runner.app/Frameworks/file_picker.framework/file_picker
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Frameworks/file_picker.framework/Info.plist ... 
+2026-03-08 04:09:13 +0000  794 bytes for ./Payload/Runner.app/Frameworks/file_picker.framework/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/embedded.mobileprovision ... 
+2026-03-08 04:09:13 +0000  17300 bytes for ./Payload/Runner.app/embedded.mobileprovision
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/Info.plist ... 
+2026-03-08 04:09:13 +0000  1987 bytes for ./Payload/Runner.app/Info.plist
+2026-03-08 04:09:13 +0000  copying file ./Payload/Runner.app/PkgInfo ... 
+2026-03-08 04:09:13 +0000  8 bytes for ./Payload/Runner.app/PkgInfo
+2026-03-08 04:09:13 +0000  /usr/bin/ditto exited with 0
+2026-03-08 04:09:13 +0000  Processing step: IDEDistributionAppStoreInformationStep
+2026-03-08 04:09:13 +0000  Skipping step: IDEDistributionAppStoreInformationStep because it said so
+2026-03-08 04:09:13 +0000  Processing step: IDEDistributionGenerateProcessedDistributionItems
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13354d20:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/file_picker.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa12b5b7e0:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/App.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa1371aa80:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKImagePickerController.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13355a40:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SDWebImage.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13355340:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/package_info_plus.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13356060:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/Flutter.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13355ab0:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/PlugIns/PacketTunnel.appex'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa1371bf00:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/shared_preferences_foundation.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa133567d0:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/DKPhotoGallery.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13719000:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/path_provider_foundation.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13355570:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/SwiftyGif.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13355b20:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/url_launcher_ios.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa13356ca0:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app/Frameworks/mobile_scanner.framework'>
+2026-03-08 04:09:13 +0000  IDEDistributionItem init <DVTFilePath:0xa12b5a6a0:'/var/folders/qg/z_8_ddtx49qdffyx2byxx_400000gn/T/XcodeDistPipeline.~~~qTqehx/Root/Payload/Runner.app'>
+2026-03-08 04:09:13 +0000  Processing step: IDEDistributionCreateManifestStep
