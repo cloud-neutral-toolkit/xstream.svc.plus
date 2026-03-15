@@ -64,6 +64,15 @@ class _HelpScreenState extends State<HelpScreen> {
           children: [
             _buildSectionCard(
               context,
+              title: context.l10n.get('helpQuickStartTitle'),
+              children: [
+                Text(context.l10n.get('helpQuickStartIntro')),
+                const SizedBox(height: 12),
+                Text(context.l10n.get('helpQuickStartNote')),
+              ],
+            ),
+            _buildSectionCard(
+              context,
               title: context.l10n.get('helpSupportTitle'),
               children: [
                 Text(context.l10n.get('helpSupportIntro')),

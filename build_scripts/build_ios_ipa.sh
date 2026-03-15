@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-EXPORT_METHOD="${IOS_EXPORT_METHOD:-development}"
+EXPORT_METHOD="${IOS_EXPORT_METHOD:-app-store}"
 IPA_DIR="$ROOT_DIR/build/ios/ipa"
 BRANCH="${BRANCH:-$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD)}"
 BUILD_ID="${BUILD_ID:-$(git -C "$ROOT_DIR" rev-parse --short HEAD)}"

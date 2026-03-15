@@ -207,6 +207,11 @@ class AppLocalizations {
       'runtimeMcpStarted': 'Runtime MCP Server started',
       'runtimeMcpStopped': 'Runtime MCP Server stopped',
       'runtimeMcpToggleFailed': 'Runtime MCP Server toggle failed',
+      'helpQuickStartTitle': 'Quick Start',
+      'helpQuickStartIntro':
+          'Xstream supports Proxy Mode and Tunnel Mode. To get started, tap the + button in the top-right corner of the Home screen, choose Read Clipboard, and import a VLESS configuration link. After the import succeeds, select the node and tap Start. When the Home screen shows "Connected", the connection is active.',
+      'helpQuickStartNote':
+          'Note: Core features do not require login. Sync is optional and does not affect the basic connection experience.',
       'helpSupportTitle': 'Self-Service Support',
       'helpSupportIntro':
           'Use this page to separate Packet Tunnel startup problems from DNS, TLS, site challenge, node transport, and runtime config issues.',
@@ -457,6 +462,10 @@ curl -I --proxy socks5h://127.0.0.1:1080 --max-time 15 https://grok.com''',
       'runtimeMcpStarted': '运行态 MCP Server 已启动',
       'runtimeMcpStopped': '运行态 MCP Server 已停止',
       'runtimeMcpToggleFailed': '运行态 MCP Server 切换失败',
+      'helpQuickStartTitle': '快速开始',
+      'helpQuickStartIntro':
+          'Xstream 支持代理模式与隧道模式。首次使用时，点击首页右上角 +，选择“读取剪贴板”，导入 VLESS 配置链接；导入成功后选择节点并点击“启动”，当首页显示“已连接”即表示连接已建立。',
+      'helpQuickStartNote': '说明：核心功能无需登录即可使用；Sync 为可选功能，不影响基本连接体验。',
       'helpSupportTitle': '自助排查支持',
       'helpSupportIntro':
           '本页用于区分 Packet Tunnel 启动问题与 DNS、TLS、站点 challenge、节点传输层、运行时配置等问题。',

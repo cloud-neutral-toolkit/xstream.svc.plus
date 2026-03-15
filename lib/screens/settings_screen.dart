@@ -778,34 +778,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
               ),
               child: Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.sync),
-                        title: Text(context.l10n.get('syncConfig')),
-                        onTap: _onSyncConfig,
-                      ),
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                      ListTile(
-                        leading: const Icon(Icons.upload_file),
-                        title: Text(context.l10n.get('importConfig')),
-                        onTap: _onImportConfig,
-                      ),
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                      ListTile(
-                        leading: const Icon(Icons.download),
-                        title: Text(context.l10n.get('exportConfig')),
-                        onTap: _onExportConfig,
-                      ),
-                      const Divider(height: 1, indent: 16, endIndent: 16),
-                      ListTile(
-                        leading:
-                            Icon(Icons.delete_forever, color: Colors.red[400]),
-                        title: Text(context.l10n.get('deleteConfig'),
-                            style: TextStyle(color: Colors.red[400])),
-                      ),
-                    ],
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.sync),
+                    title: Text(context.l10n.get('syncConfig')),
+                    onTap: _onSyncConfig,
                   ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(Icons.upload_file),
+                    title: Text(context.l10n.get('importConfig')),
+                    onTap: _onImportConfig,
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(Icons.download),
+                    title: Text(context.l10n.get('exportConfig')),
+                    onTap: _onExportConfig,
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: Icon(Icons.delete_forever, color: Colors.red[400]),
+                    title: Text(context.l10n.get('deleteConfig'),
+                        style: TextStyle(color: Colors.red[400])),
+                    onTap: _onDeleteConfig,
+                  ),
+                ],
               ),
+            ),
             const SizedBox(height: 20),
             // DNS & Tunnel
             Container(
@@ -1020,212 +1020,209 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildSection(context.l10n.get('xrayMgmt'), [
-                      _buildButton(
-                        icon: Icons.sync,
-                        label: context.l10n.get('syncConfig'),
-                        onPressed: _onSyncConfig,
+                  _buildButton(
+                    icon: Icons.sync,
+                    label: context.l10n.get('syncConfig'),
+                    onPressed: _onSyncConfig,
+                  ),
+                  _buildButton(
+                    icon: Icons.upload_file,
+                    label: context.l10n.get('importConfig'),
+                    onPressed: _onImportConfig,
+                  ),
+                  _buildButton(
+                    icon: Icons.download,
+                    label: context.l10n.get('exportConfig'),
+                    onPressed: _onExportConfig,
+                  ),
+                  _buildButton(
+                    icon: Icons.delete_forever,
+                    label: context.l10n.get('deleteConfig'),
+                    style: _menuButtonStyle.copyWith(
+                      backgroundColor: WidgetStateProperty.all(Colors.red[400]),
+                    ),
+                    onPressed: _onDeleteConfig,
+                  ),
+                  _buildButton(
+                    icon: Icons.save,
+                    label: context.l10n.get('saveConfig'),
+                    onPressed: _onSaveConfig,
+                  ),
+                ]),
+                _buildSection(context.l10n.get('configMgmt'), [
+                  _buildButton(
+                    icon: Icons.security,
+                    label: context.l10n.get('permissionGuide'),
+                    onPressed: _showPermissionGuide,
+                  ),
+                  _buildButton(
+                    icon: Icons.restore,
+                    label: context.l10n.get('resetAll'),
+                    style: _menuButtonStyle.copyWith(
+                      backgroundColor: WidgetStateProperty.all(Colors.red[400]),
+                    ),
+                    onPressed: _onResetAll,
+                  ),
+                ]),
+                _buildSection(context.l10n.get('advancedConfig'), [
+                  _buildButton(
+                    icon: Icons.dns,
+                    label: context.l10n.get('proxyDnsConfig'),
+                    onPressed: _showProxyDnsDialog,
+                  ),
+                  _buildButton(
+                    icon: Icons.dns_outlined,
+                    label: context.l10n.get('directDnsConfig'),
+                    onPressed: _showDirectDnsDialog,
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: SwitchListTile(
+                      value: DnsConfig.dohEnabled,
+                      onChanged: _onToggleDnsOverHttps,
+                      title: Text(
+                        context.l10n.get('dnsOverHttps'),
+                        style: _menuTextStyle,
                       ),
-                      _buildButton(
-                        icon: Icons.upload_file,
-                        label: context.l10n.get('importConfig'),
-                        onPressed: _onImportConfig,
+                      subtitle: Text(
+                        context.l10n.get('dnsOverHttpsHint'),
+                        style: const TextStyle(fontSize: 12),
                       ),
-                      _buildButton(
-                        icon: Icons.download,
-                        label: context.l10n.get('exportConfig'),
-                        onPressed: _onExportConfig,
-                      ),
-                      _buildButton(
-                        icon: Icons.delete_forever,
-                        label: context.l10n.get('deleteConfig'),
-                        style: _menuButtonStyle.copyWith(
-                          backgroundColor:
-                              WidgetStateProperty.all(Colors.red[400]),
-                        ),
-                        onPressed: _onDeleteConfig,
-                      ),
-                      _buildButton(
-                        icon: Icons.save,
-                        label: context.l10n.get('saveConfig'),
-                        onPressed: _onSaveConfig,
-                      ),
-                    ]),
-                    _buildSection(context.l10n.get('configMgmt'), [
-                      _buildButton(
-                        icon: Icons.security,
-                        label: context.l10n.get('permissionGuide'),
-                        onPressed: _showPermissionGuide,
-                      ),
-                      _buildButton(
-                        icon: Icons.restore,
-                        label: context.l10n.get('resetAll'),
-                        style: _menuButtonStyle.copyWith(
-                          backgroundColor:
-                              WidgetStateProperty.all(Colors.red[400]),
-                        ),
-                        onPressed: _onResetAll,
-                      ),
-                    ]),
-                    _buildSection(context.l10n.get('advancedConfig'), [
-                      _buildButton(
-                        icon: Icons.dns,
-                        label: context.l10n.get('proxyDnsConfig'),
-                        onPressed: _showProxyDnsDialog,
-                      ),
-                      _buildButton(
-                        icon: Icons.dns_outlined,
-                        label: context.l10n.get('directDnsConfig'),
-                        onPressed: _showDirectDnsDialog,
-                      ),
-                      SizedBox(
+                    ),
+                  ),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _buildXhttpAdvancedConfig(context),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.socksProxyEnabled,
+                    builder: (context, enabled, _) {
+                      return SizedBox(
                         width: double.infinity,
                         child: SwitchListTile(
-                          value: DnsConfig.dohEnabled,
-                          onChanged: _onToggleDnsOverHttps,
-                          title: Text(
-                            context.l10n.get('dnsOverHttps'),
-                            style: _menuTextStyle,
+                          value: enabled,
+                          onChanged: (value) {
+                            setState(() =>
+                                GlobalState.socksProxyEnabled.value = value);
+                            addAppLog('SOCKS 代理: ${value ? "开启" : "关闭"}');
+                          },
+                          title: const Text(
+                            'SOCKS 代理',
+                            style: TextStyle(fontSize: 14),
                           ),
-                          subtitle: Text(
-                            context.l10n.get('dnsOverHttpsHint'),
-                            style: const TextStyle(fontSize: 12),
+                          subtitle: const Text(
+                            '启用 SOCKS 代理服务 (127.0.0.1:1080)',
+                            style: TextStyle(fontSize: 12),
                           ),
                         ),
-                      ),
-                      SizedBox(
+                      );
+                    },
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.httpProxyEnabled,
+                    builder: (context, enabled, _) {
+                      return SizedBox(
                         width: double.infinity,
-                        child: _buildXhttpAdvancedConfig(context),
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: GlobalState.socksProxyEnabled,
-                        builder: (context, enabled, _) {
-                          return SizedBox(
-                            width: double.infinity,
-                            child: SwitchListTile(
-                              value: enabled,
-                              onChanged: (value) {
-                                setState(() => GlobalState
-                                    .socksProxyEnabled.value = value);
-                                addAppLog('SOCKS 代理: ${value ? "开启" : "关闭"}');
-                              },
-                              title: const Text(
-                                'SOCKS 代理',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              subtitle: const Text(
-                                '启用 SOCKS 代理服务 (127.0.0.1:1080)',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: GlobalState.httpProxyEnabled,
-                        builder: (context, enabled, _) {
-                          return SizedBox(
-                            width: double.infinity,
-                            child: SwitchListTile(
-                              value: enabled,
-                              onChanged: (value) {
-                                setState(() =>
-                                    GlobalState.httpProxyEnabled.value = value);
-                                addAppLog('HTTP 代理: ${value ? "开启" : "关闭"}');
-                              },
-                              title: const Text(
-                                'HTTP 代理',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              subtitle: const Text(
-                                '启用 HTTP 代理服务 (127.0.0.1:1081)',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: GlobalState.tunnelProxyEnabled,
-                        builder: (context, enabled, _) {
-                          return SizedBox(
-                            width: double.infinity,
-                            child: SwitchListTile(
-                              value: enabled,
-                              onChanged: (value) {
-                                setState(() {
-                                  GlobalState.setTunnelModeEnabled(value);
-                                });
-                                addAppLog(
-                                  '系统级网络隧道: ${value ? "开启" : "关闭"}',
-                                );
-                                _refreshTunStatus();
-                              },
-                              title: const Text(
-                                '隧道模式',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              subtitle: const Text(
-                                '启用系统级网络隧道',
-                                style: TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 16.0, top: 4),
-                        child: Text(
-                          _formatTunStatusText(context, _tunStatus),
-                          style:
-                              const TextStyle(fontSize: 12, color: Colors.grey),
+                        child: SwitchListTile(
+                          value: enabled,
+                          onChanged: (value) {
+                            setState(() =>
+                                GlobalState.httpProxyEnabled.value = value);
+                            addAppLog('HTTP 代理: ${value ? "开启" : "关闭"}');
+                          },
+                          title: const Text(
+                            'HTTP 代理',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          subtitle: const Text(
+                            '启用 HTTP 代理服务 (127.0.0.1:1081)',
+                            style: TextStyle(fontSize: 12),
+                          ),
                         ),
-                      ),
-                      ValueListenableBuilder<bool>(
-                        valueListenable: _runtimeMcpService.available,
-                        builder: (context, available, _) {
+                      );
+                    },
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.tunnelProxyEnabled,
+                    builder: (context, enabled, _) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: SwitchListTile(
+                          value: enabled,
+                          onChanged: (value) {
+                            setState(() {
+                              GlobalState.setTunnelModeEnabled(value);
+                            });
+                            addAppLog(
+                              '系统级网络隧道: ${value ? "开启" : "关闭"}',
+                            );
+                            _refreshTunStatus();
+                          },
+                          title: const Text(
+                            '隧道模式',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                          subtitle: const Text(
+                            '启用系统级网络隧道',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(left: 16.0, top: 4),
+                    child: Text(
+                      _formatTunStatusText(context, _tunStatus),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _runtimeMcpService.available,
+                    builder: (context, available, _) {
+                      return ValueListenableBuilder<bool>(
+                        valueListenable: _runtimeMcpService.running,
+                        builder: (context, running, __) {
                           return ValueListenableBuilder<bool>(
-                            valueListenable: _runtimeMcpService.running,
-                            builder: (context, running, __) {
-                              return ValueListenableBuilder<bool>(
-                                valueListenable: _runtimeMcpService.loading,
-                                builder: (context, loading, ___) {
-                                  final subtitle = available
-                                      ? (running
-                                          ? context.l10n
-                                              .get('runtimeMcpStatusRunning')
-                                          : context.l10n
-                                              .get('runtimeMcpStatusStopped'))
+                            valueListenable: _runtimeMcpService.loading,
+                            builder: (context, loading, ___) {
+                              final subtitle = available
+                                  ? (running
+                                      ? context.l10n
+                                          .get('runtimeMcpStatusRunning')
                                       : context.l10n
-                                          .get('runtimeMcpStatusUnavailable');
-                                  return SizedBox(
-                                    width: double.infinity,
-                                    child: SwitchListTile(
-                                      value: running,
-                                      onChanged: available && !loading
-                                          ? _toggleRuntimeMcp
-                                          : null,
-                                      title: Text(
-                                        context.l10n.get('runtimeMcpServer'),
-                                        style: _menuTextStyle,
-                                      ),
-                                      subtitle: Text(
-                                        loading
-                                            ? context.l10n
-                                                .get('runtimeMcpStatusLoading')
-                                            : subtitle,
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
-                                  );
-                                },
+                                          .get('runtimeMcpStatusStopped'))
+                                  : context.l10n
+                                      .get('runtimeMcpStatusUnavailable');
+                              return SizedBox(
+                                width: double.infinity,
+                                child: SwitchListTile(
+                                  value: running,
+                                  onChanged: available && !loading
+                                      ? _toggleRuntimeMcp
+                                      : null,
+                                  title: Text(
+                                    context.l10n.get('runtimeMcpServer'),
+                                    style: _menuTextStyle,
+                                  ),
+                                  subtitle: Text(
+                                    loading
+                                        ? context.l10n
+                                            .get('runtimeMcpStatusLoading')
+                                        : subtitle,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
                               );
                             },
                           );
                         },
-                      ),
-                    ]),
-                  ],
-                ),
+                      );
+                    },
+                  ),
+                ]),
+              ],
+            ),
             const Divider(height: 32),
             ListTile(
               leading: const Icon(Icons.stacked_line_chart),
