@@ -34,6 +34,9 @@ class PermissionGuideService {
     final normalized = (message ?? '').trim().toLowerCase();
     if (normalized.isEmpty) return false;
     return normalized.contains('permission denied') ||
+        normalized.contains('vpn_permission_required') ||
+        normalized.contains('vpn_permission_requested') ||
+        normalized.contains('vpn_permission_denied') ||
         normalized.contains('authorization denied') ||
         normalized.contains('not authorized');
   }
@@ -41,7 +44,7 @@ class PermissionGuideService {
   static Future<bool> shouldPromptForPacketTunnelAuthorization({
     String? failureMessage,
   }) async {
-    if (!Platform.isMacOS) {
+    if (!Platform.isMacOS && !Platform.isAndroid) {
       return false;
     }
     if (looksLikePacketTunnelPermissionDenied(failureMessage)) {
@@ -109,7 +112,7 @@ class PermissionGuideService {
   }
 
   static Future<PermissionCheckItem> _checkPacketTunnelPermission() async {
-    if (!Platform.isMacOS && !Platform.isIOS) {
+    if (!Platform.isMacOS && !Platform.isIOS && !Platform.isAndroid) {
       return const PermissionCheckItem(
         id: 'packet_tunnel',
         passed: true,
@@ -122,34 +125,43 @@ class PermissionGuideService {
       final status = await NativeBridge.getPacketTunnelStatus();
       final lastError = status.lastError?.trim();
       if (status.status == 'not_configured') {
-        return const PermissionCheckItem(
+        return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
-          detail: 'Packet Tunnel manager is not configured.',
-          suggestion:
-              'Enable system VPN once in app to trigger NetworkExtension permission prompt.',
+          detail: Platform.isAndroid
+              ? 'Android VPN service is not configured yet.'
+              : 'Packet Tunnel manager is not configured.',
+          suggestion: Platform.isAndroid
+              ? 'Enable Tunnel Mode once to trigger the Android VPN permission prompt.'
+              : 'Enable system VPN once in app to trigger NetworkExtension permission prompt.',
         );
       }
       if (status.status == 'unsupported') {
-        return const PermissionCheckItem(
+        return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
-          detail: 'Packet Tunnel is unsupported in current runtime.',
-          suggestion:
-              'Check NetworkExtension capability, PacketTunnel target embedding, and signing entitlement.',
+          detail: Platform.isAndroid
+              ? 'Android VPN tunnel is unsupported in current runtime.'
+              : 'Packet Tunnel is unsupported in current runtime.',
+          suggestion: Platform.isAndroid
+              ? 'Check VpnService manifest wiring, native bridge registration, and tunnel service packaging.'
+              : 'Check NetworkExtension capability, PacketTunnel target embedding, and signing entitlement.',
         );
       }
       if (lastError != null &&
           lastError.isNotEmpty &&
           status.status != 'connected') {
-        final permissionDenied =
-            looksLikePacketTunnelPermissionDenied(lastError);
+        final permissionDenied = looksLikePacketTunnelPermissionDenied(
+          lastError,
+        );
         return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
           detail: 'Packet Tunnel last error: $lastError',
           suggestion: permissionDenied
-              ? 'Open Privacy & Security, approve System VPN permission for Xstream, then retry.'
+              ? (Platform.isAndroid
+                    ? 'Approve the Android VPN permission for Xstream, or reopen VPN settings and retry.'
+                    : 'Open Privacy & Security, approve System VPN permission for Xstream, then retry.')
               : 'Review the Packet Tunnel error details, then retry after fixing authorization or configuration.',
         );
       }
@@ -241,8 +253,9 @@ class PermissionGuideService {
         detail: ok
             ? 'System network query commands are available.'
             : 'Network query failed: scutil=${a.exitCode}, networksetup=${b.exitCode}',
-        suggestion:
-            ok ? '' : 'Check terminal/system permission policy, then retry.',
+        suggestion: ok
+            ? ''
+            : 'Check terminal/system permission policy, then retry.',
       );
     } catch (e) {
       return PermissionCheckItem(

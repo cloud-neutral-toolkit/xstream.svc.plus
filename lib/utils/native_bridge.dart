@@ -13,18 +13,20 @@ import 'global_config.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
-  static const MethodChannel _loggerChannel =
-      MethodChannel('com.xstream/logger');
+  static const MethodChannel _loggerChannel = MethodChannel(
+    'com.xstream/logger',
+  );
   static final darwin_host.DarwinHostApi _darwinHostApi =
       darwin_host.DarwinHostApi();
   static bool _darwinFlutterApiReady = false;
   static Future<void> Function(String action, Map<String, dynamic> payload)?
-      _nativeMenuActionHandler;
+  _nativeMenuActionHandler;
   static String? _mobileActiveNodeName;
   static String? _darwinAppGroupPathCache;
   static Future<void> _connectionLifecycleQueue = Future<void>.value();
 
-  static final bool _useFfi = Platform.isWindows ||
+  static final bool _useFfi =
+      Platform.isWindows ||
       Platform.isLinux ||
       Platform.isMacOS ||
       Platform.isIOS ||
@@ -37,6 +39,38 @@ class NativeBridge {
   static bool get _isDarwin => Platform.isMacOS || Platform.isIOS;
 
   static bool get _isMobile => Platform.isIOS || Platform.isAndroid;
+
+  static bool isTunnelStartAcceptedMessage(String? message) {
+    final normalized = (message ?? '').trim().toLowerCase();
+    if (normalized.isEmpty) return false;
+    if (normalized.contains('启动失败') ||
+        normalized.contains('停止失败') ||
+        normalized.contains('当前平台暂不支持') ||
+        normalized.contains('profile_missing') ||
+        normalized.contains('config_missing') ||
+        normalized.contains('xray_start_failed') ||
+        normalized.contains('establish_failed') ||
+        normalized.contains('native_bridge_unavailable')) {
+      return false;
+    }
+    return normalized.contains('start_submitted') ||
+        normalized.contains('vpn_permission_requested') ||
+        normalized.contains('packet tunnel 启动请求已提交') ||
+        normalized.contains('packet tunnel start request submitted') ||
+        normalized.contains('已连接') ||
+        normalized.contains('启动成功');
+  }
+
+  static bool looksLikePacketTunnelPermissionIssue(String? message) {
+    final normalized = (message ?? '').trim().toLowerCase();
+    if (normalized.isEmpty) return false;
+    return normalized.contains('vpn_permission_required') ||
+        normalized.contains('vpn_permission_requested') ||
+        normalized.contains('vpn_permission_denied') ||
+        normalized.contains('permission denied') ||
+        normalized.contains('authorization denied') ||
+        normalized.contains('not authorized');
+  }
 
   static String _platformErrorSummary(PlatformException e) {
     final parts = <String>[];
@@ -58,17 +92,17 @@ class NativeBridge {
   );
   static const _tunMetricsFallback = PacketTunnelMetricsSnapshot();
 
-  static Future<T> _runSerializedConnectionOp<T>(
-    Future<T> Function() action,
-  ) {
+  static Future<T> _runSerializedConnectionOp<T>(Future<T> Function() action) {
     final completer = Completer<T>();
-    _connectionLifecycleQueue = _connectionLifecycleQueue.then((_) async {
-      try {
-        completer.complete(await action());
-      } catch (error, stackTrace) {
-        completer.completeError(error, stackTrace);
-      }
-    }).catchError((_) {});
+    _connectionLifecycleQueue = _connectionLifecycleQueue
+        .then((_) async {
+          try {
+            completer.complete(await action());
+          } catch (error, stackTrace) {
+            completer.completeError(error, stackTrace);
+          }
+        })
+        .catchError((_) {});
     return completer.future;
   }
 
@@ -127,8 +161,15 @@ class NativeBridge {
       final p5 = vpnNodesConfigPath.toNativeUtf8();
       final p6 = vpnNodesConfigContent.toNativeUtf8();
       final pwd = password.toNativeUtf8();
-      final resPtr = _ffi.writeConfigFiles(p1.cast(), p2.cast(), p3.cast(),
-          p4.cast(), p5.cast(), p6.cast(), pwd.cast());
+      final resPtr = _ffi.writeConfigFiles(
+        p1.cast(),
+        p2.cast(),
+        p3.cast(),
+        p4.cast(),
+        p5.cast(),
+        p6.cast(),
+        pwd.cast(),
+      );
       final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(p1);
@@ -207,9 +248,11 @@ class NativeBridge {
           configPath: runtimeConfigPath,
         );
         await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
-        final result =
-            await _channel.invokeMethod<String>('startPacketTunnel', profile);
-        if (result != null && !result.toLowerCase().contains('fail')) {
+        final result = await _channel.invokeMethod<String>(
+          'startPacketTunnel',
+          profile,
+        );
+        if (isTunnelStartAcceptedMessage(result)) {
           _mobileActiveNodeName = nodeName;
         }
         return result ?? 'Packet Tunnel 启动请求已提交';
@@ -406,14 +449,11 @@ class NativeBridge {
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'startNodeService',
-          {
-            'serviceName': node.serviceName,
-            'nodeName': node.name,
-            'configPath': runtimeConfigPath,
-          },
-        );
+        final result = await _channel.invokeMethod<String>('startNodeService', {
+          'serviceName': node.serviceName,
+          'nodeName': node.name,
+          'configPath': runtimeConfigPath,
+        });
         return result ?? '启动成功';
       } on MissingPluginException {
         return '插件未实现';
@@ -425,9 +465,7 @@ class NativeBridge {
 
   // 停止节点服务
   static Future<String> stopNodeService(String nodeName) {
-    return _runSerializedConnectionOp(
-      () => _stopNodeServiceInternal(nodeName),
-    );
+    return _runSerializedConnectionOp(() => _stopNodeServiceInternal(nodeName));
   }
 
   static Future<String> _stopNodeServiceInternal(String nodeName) async {
@@ -460,10 +498,9 @@ class NativeBridge {
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'stopNodeService',
-          {'serviceName': node.serviceName},
-        );
+        final result = await _channel.invokeMethod<String>('stopNodeService', {
+          'serviceName': node.serviceName,
+        });
         return result ?? '已停止';
       } on MissingPluginException {
         return '插件未实现';
@@ -490,14 +527,11 @@ class NativeBridge {
       return res == 1;
     } else {
       try {
-        final result = await _channel.invokeMethod<bool>(
-          'checkNodeStatus',
-          {
-            'serviceName': node.serviceName,
-            'nodeName': node.name,
-            'configPath': node.configPath,
-          },
-        );
+        final result = await _channel.invokeMethod<bool>('checkNodeStatus', {
+          'serviceName': node.serviceName,
+          'nodeName': node.name,
+          'configPath': node.configPath,
+        });
         return result ?? false;
       } on MissingPluginException {
         return false;
@@ -523,12 +557,13 @@ class NativeBridge {
     _nativeMenuActionHandler = onAction;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'nativeMenuAction') {
-        final args = (call.arguments as Map?)?.cast<Object?, Object?>() ??
+        final args =
+            (call.arguments as Map?)?.cast<Object?, Object?>() ??
             <Object?, Object?>{};
         final action = (args['action'] as String?) ?? '';
         final payloadRaw =
             (args['payload'] as Map?)?.cast<Object?, Object?>() ??
-                <Object?, Object?>{};
+            <Object?, Object?>{};
         final payload = <String, dynamic>{};
         payloadRaw.forEach((key, value) {
           if (key is String) {
@@ -570,10 +605,9 @@ class NativeBridge {
       return res == 1;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'performAction',
-          {'action': 'isXrayDownloading'},
-        );
+        final result = await _channel.invokeMethod<String>('performAction', {
+          'action': 'isXrayDownloading',
+        });
         return result == '1';
       } on MissingPluginException {
         return false;
@@ -597,13 +631,10 @@ class NativeBridge {
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'performAction',
-          {
-            'action': 'resetXrayAndConfig',
-            'password': password,
-          },
-        );
+        final result = await _channel.invokeMethod<String>('performAction', {
+          'action': 'resetXrayAndConfig',
+          'password': password,
+        });
         return result ?? '重置完成';
       } on MissingPluginException {
         return '插件未实现';
@@ -754,10 +785,7 @@ class NativeBridge {
   static Future<String> _resolveOrBootstrapIosTunnelConfigPath() async {
     final resolved = await _resolveTunnelConfigPath();
     if (resolved != null) {
-      return _prepareCanonicalTunnelConfigPath(
-        resolved,
-        isTunMode: true,
-      );
+      return _prepareCanonicalTunnelConfigPath(resolved, isTunMode: true);
     }
     return _bootstrapNodeConfigPath(isTunMode: true);
   }
@@ -803,8 +831,9 @@ class NativeBridge {
       );
       sourceJson['inbounds'] = jsonDecode(newInboundsStr);
 
-      final updatedJsonStr =
-          const JsonEncoder.withIndent('  ').convert(sourceJson);
+      final updatedJsonStr = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(sourceJson);
       if (sourceJsonStr != updatedJsonStr) {
         await sourceFile.writeAsString(updatedJsonStr);
       }
@@ -852,9 +881,7 @@ class NativeBridge {
     return bootstrapPath;
   }
 
-  static String _buildBootstrapNodeConfigString({
-    required bool isTunMode,
-  }) {
+  static String _buildBootstrapNodeConfigString({required bool isTunMode}) {
     final disableLocalProxyInPacketTunnel = Platform.isIOS && isTunMode;
     final inboundsStr = VpnConfig.generateInboundsConfig(
       enableSocksProxy: !disableLocalProxyInPacketTunnel,
@@ -1051,8 +1078,10 @@ class NativeBridge {
           configPath: canonicalPath,
         );
         await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
-        final result =
-            await _channel.invokeMethod<String>('startPacketTunnel', profile);
+        final result = await _channel.invokeMethod<String>(
+          'startPacketTunnel',
+          profile,
+        );
         return result ?? 'Packet Tunnel start request submitted';
       } on MissingPluginException {
         return '插件未实现';
@@ -1193,11 +1222,20 @@ class NativeBridge {
       );
       return _tunStatusFallback;
     } catch (e) {
-      addAppLog(
-        'Packet Tunnel status query failed: $e',
-        level: LogLevel.error,
-      );
+      addAppLog('Packet Tunnel status query failed: $e', level: LogLevel.error);
       return _tunStatusFallback;
+    }
+  }
+
+  static Future<String> openVpnSettings() async {
+    if (!Platform.isAndroid) return '当前平台暂不支持';
+    try {
+      final result = await _channel.invokeMethod<String>('openVpnSettings');
+      return result ?? 'opened';
+    } on MissingPluginException {
+      return '插件未实现';
+    } catch (e) {
+      return 'failed: $e';
     }
   }
 
@@ -1343,10 +1381,7 @@ class NativeBridge {
 class _DarwinFlutterApiImpl extends darwin_host.DarwinFlutterApi {
   @override
   void onPacketTunnelError(String code, String message) {
-    addAppLog(
-      'Packet Tunnel error ($code): $message',
-      level: LogLevel.error,
-    );
+    addAppLog('Packet Tunnel error ($code): $message', level: LogLevel.error);
   }
 
   @override
@@ -1383,8 +1418,9 @@ class PacketTunnelStatus {
   factory PacketTunnelStatus.fromMap(Map<Object?, Object?> map) {
     final status = map['status'] as String? ?? 'unknown';
     final utunRaw = map['utun'];
-    final utunList =
-        utunRaw is List ? utunRaw.whereType<String>().toList() : <String>[];
+    final utunList = utunRaw is List
+        ? utunRaw.whereType<String>().toList()
+        : <String>[];
     final lastError = map['lastError'] as String?;
     final startedAtRaw = map['startedAt'];
     final startedAt = startedAtRaw is int ? startedAtRaw : null;

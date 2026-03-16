@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/permission_guide_service.dart';
 import '../utils/global_config.dart' show GlobalState;
+import '../utils/native_bridge.dart';
 
 Future<void> showPermissionGuideDialog(
   BuildContext context, {
@@ -166,7 +167,9 @@ Future<void> showPermissionGuideDialog(
               ),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: _openSecurityPage,
+              onPressed: () async {
+                await _openSecurityPage();
+              },
               child: Text(context.l10n.get('openPrivacy')),
             ),
             const SizedBox(height: 8),
@@ -203,15 +206,16 @@ Future<void> showPermissionGuideDialog(
   );
 }
 
-void _openSecurityPage() {
+Future<void> _openSecurityPage() async {
   if (Platform.isMacOS) {
-    Process.run(
-      'open',
-      ['x-apple.systempreferences:com.apple.preference.security'],
-    );
+    await Process.run('open', [
+      'x-apple.systempreferences:com.apple.preference.security',
+    ]);
+  } else if (Platform.isAndroid) {
+    await NativeBridge.openVpnSettings();
   } else if (Platform.isWindows) {
-    Process.run('cmd', ['/c', 'start', 'ms-settings:privacy']);
+    await Process.run('cmd', ['/c', 'start', 'ms-settings:privacy']);
   } else if (Platform.isLinux) {
-    Process.run('xdg-open', ['settings://privacy']);
+    await Process.run('xdg-open', ['settings://privacy']);
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../utils/global_config.dart';
-import '../l10n/app_localizations.dart';
 import '../widgets/app_breadcrumb.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -30,8 +29,8 @@ class AboutScreen extends StatelessWidget {
                     Text(
                       buildVersion,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).disabledColor,
-                          ),
+                        color: Theme.of(context).disabledColor,
+                      ),
                     ),
                   ],
                 );
@@ -61,9 +60,7 @@ class AboutScreen extends StatelessWidget {
     // When null, it is embedded in MainPage which already has a top AppBar.
     if (breadcrumbItems != null) {
       return Scaffold(
-        appBar: AppBar(
-          title: AppBreadcrumb(items: breadcrumbItems!),
-        ),
+        appBar: AppBar(title: AppBreadcrumb(items: breadcrumbItems!)),
         body: _buildBody(context),
       );
     }
