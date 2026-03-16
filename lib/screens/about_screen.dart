@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../utils/global_config.dart';
-import '../l10n/app_localizations.dart';
 import '../widgets/app_breadcrumb.dart';
 
 class AboutScreen extends StatelessWidget {

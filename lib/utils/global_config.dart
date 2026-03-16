@@ -34,20 +34,20 @@ String _firstNonEmpty(List<String> values) {
 
 /// 当前展示版本标签。
 final String buildVersion = (() {
-  const defineBranchName =
-      String.fromEnvironment('BRANCH_NAME', defaultValue: '');
+  const defineBranchName = String.fromEnvironment(
+    'BRANCH_NAME',
+    defaultValue: '',
+  );
   const defineBranch = String.fromEnvironment('BRANCH', defaultValue: '');
   const defineBuildId = String.fromEnvironment('BUILD_ID', defaultValue: '');
-  const defineBuildDate =
-      String.fromEnvironment('BUILD_DATE', defaultValue: '');
+  const defineBuildDate = String.fromEnvironment(
+    'BUILD_DATE',
+    defaultValue: '',
+  );
 
   // Prioritize environment defines (passed via --dart-define) for ALL platforms
   // This ensures mobile builds (iOS/Android) get the same labels as Desktop when built via Makefile.
-  final branch = _firstNonEmpty([
-    defineBranchName,
-    defineBranch,
-    'main',
-  ]);
+  final branch = _firstNonEmpty([defineBranchName, defineBranch, 'main']);
   const buildId = defineBuildId;
   const buildDate = defineBuildDate;
 
@@ -61,10 +61,10 @@ final String buildVersion = (() {
 
 /// 基础系统信息，用于匿名统计等场景
 Map<String, String> collectSystemInfo() => {
-      'os': Platform.operatingSystem,
-      'osVersion': Platform.operatingSystemVersion,
-      'dartVersion': Platform.version,
-    };
+  'os': Platform.operatingSystem,
+  'osVersion': Platform.operatingSystemVersion,
+  'dartVersion': Platform.version,
+};
 
 /// 全局应用状态管理（使用 ValueNotifier 实现响应式绑定）
 class GlobalState {
@@ -72,38 +72,43 @@ class GlobalState {
   static const String proxyOnlyConnectionMode = '仅代理';
 
   /// 是否在顶部栏显示解锁按钮（默认隐藏，在设置中心开启）
-  static final ValueNotifier<bool> showUnlockButton =
-      ValueNotifier<bool>(false);
-
+  static final ValueNotifier<bool> showUnlockButton = ValueNotifier<bool>(
+    false,
+  );
 
   /// 调试模式开关，由 `--debug` 参数控制
   static final ValueNotifier<bool> debugMode = ValueNotifier<bool>(false);
 
   /// 遥测开关：true 表示发送匿名统计信息
-  static final ValueNotifier<bool> telemetryEnabled =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> telemetryEnabled = ValueNotifier<bool>(
+    false,
+  );
 
   /// 全局代理开关
   static final ValueNotifier<bool> globalProxy = ValueNotifier<bool>(false);
 
   /// 隧道模式开关
-  static final ValueNotifier<bool> tunnelProxyEnabled =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> tunnelProxyEnabled = ValueNotifier<bool>(
+    false,
+  );
 
   /// TUN 设置开关
-  static final ValueNotifier<bool> tunSettingsEnabled =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> tunSettingsEnabled = ValueNotifier<bool>(
+    false,
+  );
 
   /// Xray Core 下载状态
   static final ValueNotifier<bool> xrayUpdating = ValueNotifier<bool>(false);
 
   /// 系统权限向导是否已完成
-  static final ValueNotifier<bool> permissionGuideDone =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> permissionGuideDone = ValueNotifier<bool>(
+    false,
+  );
 
   /// 当前连接模式，可在底部弹出栏中切换（如 VPN / 仅代理）
-  static final ValueNotifier<String> connectionMode =
-      ValueNotifier<String>(tunnelConnectionMode);
+  static final ValueNotifier<String> connectionMode = ValueNotifier<String>(
+    Platform.isLinux ? proxyOnlyConnectionMode : tunnelConnectionMode,
+  );
 
   /// 当前活跃节点名称（桌面菜单栏/主界面共享）
   static final ValueNotifier<String> activeNodeName = ValueNotifier<String>('');
@@ -116,12 +121,14 @@ class GlobalState {
   static final ValueNotifier<int> nodeListRevision = ValueNotifier<int>(0);
 
   /// 当前语言环境，默认中文
-  static final ValueNotifier<Locale> locale =
-      ValueNotifier<Locale>(const Locale('zh'));
+  static final ValueNotifier<Locale> locale = ValueNotifier<Locale>(
+    const Locale('zh'),
+  );
 
   /// SOCKS 代理模式开关（默认开启）
-  static final ValueNotifier<bool> socksProxyEnabled =
-      ValueNotifier<bool>(true);
+  static final ValueNotifier<bool> socksProxyEnabled = ValueNotifier<bool>(
+    true,
+  );
 
   /// HTTP 代理模式开关（默认开启）
   static final ValueNotifier<bool> httpProxyEnabled = ValueNotifier<bool>(true);
@@ -133,8 +140,9 @@ class GlobalState {
   static final ValueNotifier<bool> fallbackToProxy = ValueNotifier<bool>(false);
 
   /// 回退到域名（Fallback to Domain）
-  static final ValueNotifier<bool> fallbackToDomain =
-      ValueNotifier<bool>(false);
+  static final ValueNotifier<bool> fallbackToDomain = ValueNotifier<bool>(
+    false,
+  );
 
   /// IPv6 to Domain
   static final ValueNotifier<bool> ipv6ToDomain = ValueNotifier<bool>(false);
@@ -148,6 +156,11 @@ class GlobalState {
   static String normalizeConnectionMode(String? value) {
     if (Platform.isIOS) {
       return tunnelConnectionMode;
+    }
+    if (Platform.isLinux) {
+      return value == tunnelConnectionMode
+          ? tunnelConnectionMode
+          : proxyOnlyConnectionMode;
     }
     return value == proxyOnlyConnectionMode
         ? proxyOnlyConnectionMode
@@ -178,9 +191,7 @@ class GlobalState {
       setConnectionMode(tunnelConnectionMode);
       return;
     }
-    setConnectionMode(
-      enabled ? tunnelConnectionMode : proxyOnlyConnectionMode,
-    );
+    setConnectionMode(enabled ? tunnelConnectionMode : proxyOnlyConnectionMode);
   }
 }
 
@@ -253,14 +264,18 @@ class DnsConfig {
       'to explicit fake domains because stale fake mappings can affect '
       'system DNS cache after the Secure Tunnel stops.';
 
-  static final ValueNotifier<String> proxyDns1 =
-      ValueNotifier<String>(_defaultDohDns1);
-  static final ValueNotifier<String> proxyDns2 =
-      ValueNotifier<String>(_defaultDohDns2);
-  static final ValueNotifier<String> directDns1 =
-      ValueNotifier<String>(_defaultPlainDns1);
-  static final ValueNotifier<String> directDns2 =
-      ValueNotifier<String>(_defaultPlainDns2);
+  static final ValueNotifier<String> proxyDns1 = ValueNotifier<String>(
+    _defaultDohDns1,
+  );
+  static final ValueNotifier<String> proxyDns2 = ValueNotifier<String>(
+    _defaultDohDns2,
+  );
+  static final ValueNotifier<String> directDns1 = ValueNotifier<String>(
+    _defaultPlainDns1,
+  );
+  static final ValueNotifier<String> directDns2 = ValueNotifier<String>(
+    _defaultPlainDns2,
+  );
   static final ValueNotifier<DnsTransportMode> transportMode =
       ValueNotifier<DnsTransportMode>(DnsTransportMode.doh);
   static final ValueNotifier<bool> fakeDnsEnabled = ValueNotifier<bool>(false);
@@ -306,14 +321,18 @@ class DnsConfig {
     );
     fakeDnsEnabled.value = prefs.getBool(_fakeDnsEnabledKey) ?? false;
 
-    proxyDns1
-        .addListener(() => prefs.setString(_proxyDns1Key, proxyDns1.value));
-    proxyDns2
-        .addListener(() => prefs.setString(_proxyDns2Key, proxyDns2.value));
-    directDns1
-        .addListener(() => prefs.setString(_directDns1Key, directDns1.value));
-    directDns2
-        .addListener(() => prefs.setString(_directDns2Key, directDns2.value));
+    proxyDns1.addListener(
+      () => prefs.setString(_proxyDns1Key, proxyDns1.value),
+    );
+    proxyDns2.addListener(
+      () => prefs.setString(_proxyDns2Key, proxyDns2.value),
+    );
+    directDns1.addListener(
+      () => prefs.setString(_directDns1Key, directDns1.value),
+    );
+    directDns2.addListener(
+      () => prefs.setString(_directDns2Key, directDns2.value),
+    );
     transportMode.addListener(() {
       prefs.setString(_transportModeKey, transportMode.value.storageValue);
     });
@@ -329,20 +348,32 @@ class DnsConfig {
     }
 
     transportMode.value = nextMode;
-    proxyDns1.value =
-        _normalizeProxyEndpoint(proxyDns1.value, nextMode, primary: true);
-    proxyDns2.value =
-        _normalizeProxyEndpoint(proxyDns2.value, nextMode, primary: false);
+    proxyDns1.value = _normalizeProxyEndpoint(
+      proxyDns1.value,
+      nextMode,
+      primary: true,
+    );
+    proxyDns2.value = _normalizeProxyEndpoint(
+      proxyDns2.value,
+      nextMode,
+      primary: false,
+    );
   }
 
   static void updateProxyServers({
     required String primary,
     required String secondary,
   }) {
-    proxyDns1.value =
-        _normalizeProxyEndpoint(primary, transportMode.value, primary: true);
-    proxyDns2.value =
-        _normalizeProxyEndpoint(secondary, transportMode.value, primary: false);
+    proxyDns1.value = _normalizeProxyEndpoint(
+      primary,
+      transportMode.value,
+      primary: true,
+    );
+    proxyDns2.value = _normalizeProxyEndpoint(
+      secondary,
+      transportMode.value,
+      primary: false,
+    );
   }
 
   static void updateDirectServers({
@@ -355,8 +386,13 @@ class DnsConfig {
 
   static List<String> proxyResolversForXray() {
     return <String>[proxyDns1.value, proxyDns2.value]
-        .map((value) =>
-            _normalizeProxyEndpoint(value, transportMode.value, primary: true))
+        .map(
+          (value) => _normalizeProxyEndpoint(
+            value,
+            transportMode.value,
+            primary: true,
+          ),
+        )
         .where((value) => value.isNotEmpty)
         .toSet()
         .toList();
@@ -447,8 +483,9 @@ class DnsConfig {
       ),
     ];
 
-    final proxyTransport =
-        dohEnabled ? ResolverTransport.doh : ResolverTransport.plain;
+    final proxyTransport = dohEnabled
+        ? ResolverTransport.doh
+        : ResolverTransport.plain;
     final proxyPolicies = <ResolverServerPolicy>[
       ResolverServerPolicy(
         address: effectiveProxyResolvers.first,
@@ -505,8 +542,9 @@ class DnsConfig {
     final uri = Uri.tryParse(trimmed);
     if (mode == DnsTransportMode.doh) {
       if (uri != null && uri.hasScheme && uri.scheme == 'https') {
-        final normalizedPath =
-            uri.path.isEmpty || uri.path == '/' ? '/dns-query' : uri.path;
+        final normalizedPath = uri.path.isEmpty || uri.path == '/'
+            ? '/dns-query'
+            : uri.path;
         return uri.replace(path: normalizedPath).toString();
       }
       final host = uri != null && uri.host.isNotEmpty ? uri.host : trimmed;
@@ -551,15 +589,12 @@ class XhttpAdvancedConfig {
   static const String alpnH2 = 'h2';
   static const String alpnHttp11 = 'http/1.1';
   static const List<String> allowedAlpn = <String>[alpnH3, alpnH2, alpnHttp11];
-  static const List<String> defaultAlpn = <String>[
-    alpnH3,
-    alpnH2,
-    alpnHttp11,
-  ];
+  static const List<String> defaultAlpn = <String>[alpnH3, alpnH2, alpnHttp11];
 
   static final ValueNotifier<String> mode = ValueNotifier<String>(modeAuto);
-  static final ValueNotifier<List<String>> alpn =
-      ValueNotifier<List<String>>(List<String>.from(defaultAlpn));
+  static final ValueNotifier<List<String>> alpn = ValueNotifier<List<String>>(
+    List<String>.from(defaultAlpn),
+  );
 
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -756,8 +791,9 @@ class GlobalApplicationConfig {
     if (Platform.isMacOS) {
       try {
         // 读取 macOS 配置文件，获取 PRODUCT_BUNDLE_IDENTIFIER
-        final config = await rootBundle
-            .loadString('macos/Runner/Configs/AppInfo.xcconfig');
+        final config = await rootBundle.loadString(
+          'macos/Runner/Configs/AppInfo.xcconfig',
+        );
         final line = config
             .split('\n')
             .firstWhere((l) => l.startsWith('PRODUCT_BUNDLE_IDENTIFIER='));
@@ -804,7 +840,8 @@ class GlobalApplicationConfig {
         return '${xstreamDir.path}\\vpn_nodes.json';
 
       case 'linux':
-        final home = Platform.environment['HOME'] ??
+        final home =
+            Platform.environment['HOME'] ??
             (await getApplicationSupportDirectory()).path;
         final xstreamDir = Directory('$home/.config/xstream');
         await xstreamDir.create(recursive: true);

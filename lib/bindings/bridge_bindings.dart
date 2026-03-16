@@ -49,6 +49,12 @@ typedef StartXrayNative = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 typedef StartXrayDart = ffi.Pointer<ffi.Char> Function(ffi.Pointer<ffi.Char>);
 typedef StopXrayNative = ffi.Pointer<ffi.Char> Function();
 typedef StopXrayDart = ffi.Pointer<ffi.Char> Function();
+typedef DesktopIntegrationCommandNative = ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ffi.Char>);
+typedef DesktopIntegrationCommandDart = ffi.Pointer<ffi.Char> Function(
+    ffi.Pointer<ffi.Char>);
+typedef InitTrayNative = ffi.Void Function();
+typedef InitTrayDart = void Function();
 
 class BridgeBindings {
   BridgeBindings(ffi.DynamicLibrary lib)
@@ -76,7 +82,11 @@ class BridgeBindings {
                 'IsXrayDownloading'),
         startXray =
             lib.lookupFunction<StartXrayNative, StartXrayDart>('StartXray'),
-        stopXray = lib.lookupFunction<StopXrayNative, StopXrayDart>('StopXray');
+        stopXray = lib.lookupFunction<StopXrayNative, StopXrayDart>('StopXray'),
+        desktopIntegrationCommand = lib.lookupFunction<
+                DesktopIntegrationCommandNative,
+                DesktopIntegrationCommandDart>('DesktopIntegrationCommand'),
+        initTray = lib.lookupFunction<InitTrayNative, InitTrayDart>('InitTray');
 
   final StartNodeServiceDart startNodeService;
   final CreateWindowsServiceDart createWindowsService;
@@ -88,4 +98,6 @@ class BridgeBindings {
   final IsXrayDownloadingDart isXrayDownloading;
   final StartXrayDart startXray;
   final StopXrayDart stopXray;
+  final DesktopIntegrationCommandDart desktopIntegrationCommand;
+  final InitTrayDart initTray;
 }

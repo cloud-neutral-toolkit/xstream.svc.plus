@@ -13,18 +13,20 @@ import 'global_config.dart';
 
 class NativeBridge {
   static const MethodChannel _channel = MethodChannel('com.xstream/native');
-  static const MethodChannel _loggerChannel =
-      MethodChannel('com.xstream/logger');
+  static const MethodChannel _loggerChannel = MethodChannel(
+    'com.xstream/logger',
+  );
   static final darwin_host.DarwinHostApi _darwinHostApi =
       darwin_host.DarwinHostApi();
   static bool _darwinFlutterApiReady = false;
   static Future<void> Function(String action, Map<String, dynamic> payload)?
-      _nativeMenuActionHandler;
+  _nativeMenuActionHandler;
   static String? _mobileActiveNodeName;
   static String? _darwinAppGroupPathCache;
   static Future<void> _connectionLifecycleQueue = Future<void>.value();
 
-  static final bool _useFfi = Platform.isWindows ||
+  static final bool _useFfi =
+      Platform.isWindows ||
       Platform.isLinux ||
       Platform.isMacOS ||
       Platform.isIOS ||
@@ -57,19 +59,107 @@ class NativeBridge {
     utunInterfaces: [],
   );
   static const _tunMetricsFallback = PacketTunnelMetricsSnapshot();
+  static bool _linuxDesktopInitialized = false;
 
-  static Future<T> _runSerializedConnectionOp<T>(
-    Future<T> Function() action,
-  ) {
+  static Future<T> _runSerializedConnectionOp<T>(Future<T> Function() action) {
     final completer = Completer<T>();
-    _connectionLifecycleQueue = _connectionLifecycleQueue.then((_) async {
-      try {
-        completer.complete(await action());
-      } catch (error, stackTrace) {
-        completer.completeError(error, stackTrace);
-      }
-    }).catchError((_) {});
+    _connectionLifecycleQueue = _connectionLifecycleQueue
+        .then((_) async {
+          try {
+            completer.complete(await action());
+          } catch (error, stackTrace) {
+            completer.completeError(error, stackTrace);
+          }
+        })
+        .catchError((_) {});
     return completer.future;
+  }
+
+  static Future<Map<String, dynamic>> _invokeLinuxDesktopCommand(
+    String action, {
+    Map<String, dynamic>? payload,
+  }) async {
+    if (!Platform.isLinux) {
+      return <String, dynamic>{'ok': false, 'message': '当前平台暂不支持'};
+    }
+    final request = <String, dynamic>{'action': action, ...?payload};
+    final requestPtr = jsonEncode(request).toNativeUtf8();
+    try {
+      final resPtr = _ffi.desktopIntegrationCommand(requestPtr.cast());
+      final response = resPtr.cast<Utf8>().toDartString();
+      _ffi.freeCString(resPtr);
+      final decoded = jsonDecode(response);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return decoded.cast<String, dynamic>();
+      }
+      return <String, dynamic>{'ok': false, 'message': 'unexpected response'};
+    } finally {
+      malloc.free(requestPtr);
+    }
+  }
+
+  static Future<void> initializeLinuxDesktopIntegration() async {
+    if (!Platform.isLinux || _linuxDesktopInitialized) {
+      return;
+    }
+    _linuxDesktopInitialized = true;
+    if (_useFfi) {
+      try {
+        _ffi.initTray();
+      } catch (_) {}
+    }
+  }
+
+  static Future<LinuxDesktopIntegrationStatus>
+  getLinuxDesktopIntegrationStatus() async {
+    if (!Platform.isLinux) {
+      return const LinuxDesktopIntegrationStatus(
+        desktopEnvironment: 'unsupported',
+        autostartEnabled: false,
+        privilegeReady: false,
+      );
+    }
+    final response = await _invokeLinuxDesktopCommand('getDesktopEnvironment');
+    return LinuxDesktopIntegrationStatus.fromMap(response);
+  }
+
+  static Future<String> setLinuxAutostartEnabled(bool enabled) async {
+    if (!Platform.isLinux) return '当前平台暂不支持';
+    final response = await _invokeLinuxDesktopCommand(
+      'setAutostartEnabled',
+      payload: <String, dynamic>{
+        'enable': enabled,
+        'execPath': '/opt/xstream/xstream',
+      },
+    );
+    return (response['message'] as String?) ??
+        ((response['ok'] == true) ? 'success' : '操作失败');
+  }
+
+  static Future<bool> isLinuxAutostartEnabled() async {
+    if (!Platform.isLinux) return false;
+    final response = await _invokeLinuxDesktopCommand('isAutostartEnabled');
+    return response['autostartEnabled'] == true;
+  }
+
+  static Future<String> ensureLinuxTunnelPrivileges() async {
+    if (!Platform.isLinux) return '当前平台暂不支持';
+    final response = await _invokeLinuxDesktopCommand('ensureTunnelPrivileges');
+    return (response['message'] as String?) ??
+        ((response['ok'] == true) ? 'success' : '操作失败');
+  }
+
+  static Future<void> _notifyLinuxDesktop(String title, String body) async {
+    if (!Platform.isLinux) {
+      return;
+    }
+    await _invokeLinuxDesktopCommand(
+      'notify',
+      payload: <String, dynamic>{'title': title, 'body': body},
+    );
   }
 
   static BridgeBindings get _ffi {
@@ -127,8 +217,15 @@ class NativeBridge {
       final p5 = vpnNodesConfigPath.toNativeUtf8();
       final p6 = vpnNodesConfigContent.toNativeUtf8();
       final pwd = password.toNativeUtf8();
-      final resPtr = _ffi.writeConfigFiles(p1.cast(), p2.cast(), p3.cast(),
-          p4.cast(), p5.cast(), p6.cast(), pwd.cast());
+      final resPtr = _ffi.writeConfigFiles(
+        p1.cast(),
+        p2.cast(),
+        p3.cast(),
+        p4.cast(),
+        p5.cast(),
+        p6.cast(),
+        pwd.cast(),
+      );
       final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(p1);
@@ -207,8 +304,10 @@ class NativeBridge {
           configPath: runtimeConfigPath,
         );
         await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
-        final result =
-            await _channel.invokeMethod<String>('startPacketTunnel', profile);
+        final result = await _channel.invokeMethod<String>(
+          'startPacketTunnel',
+          profile,
+        );
         if (result != null && !result.toLowerCase().contains('fail')) {
           _mobileActiveNodeName = nodeName;
         }
@@ -271,6 +370,18 @@ class NativeBridge {
     // ── Linux: FFI → startXray with TUN inbound (xray-core tun2socks) ────
     if (Platform.isLinux) {
       try {
+        final privilegeMessage = await ensureLinuxTunnelPrivileges();
+        if (!privilegeMessage.toLowerCase().contains('ready') &&
+            !privilegeMessage.toLowerCase().contains('success')) {
+          return '启动失败: $privilegeMessage';
+        }
+        final helperResult = await _invokeLinuxDesktopCommand(
+          'startTunnelHelper',
+          payload: <String, dynamic>{'mode': 'tun'},
+        );
+        if (helperResult['ok'] != true) {
+          return '启动失败: ${(helperResult['message'] as String?) ?? 'tunnel helper failed'}';
+        }
         await _stopOtherRunningNodes(nodeName);
         final configJson = await File(runtimeConfigPath).readAsString();
         if (_useFfi) {
@@ -279,9 +390,18 @@ class NativeBridge {
           final result = resPtr.cast<Utf8>().toDartString();
           _ffi.freeCString(resPtr);
           malloc.free(configPtr);
-          return result.toLowerCase().startsWith('success')
-              ? 'TUN 模式启动成功 ($nodeName)'
-              : '启动失败: $result';
+          if (result.toLowerCase().startsWith('success')) {
+            await _notifyLinuxDesktop(
+              'Xstream',
+              'Tunnel Mode connected: $nodeName',
+            );
+            return 'TUN 模式启动成功 ($nodeName)';
+          }
+          await _invokeLinuxDesktopCommand(
+            'stopTunnelHelper',
+            payload: <String, dynamic>{'mode': 'tun'},
+          );
+          return '启动失败: $result';
         }
         return '启动失败: FFI 不可用';
       } catch (e) {
@@ -319,6 +439,13 @@ class NativeBridge {
           final resPtr = _ffi.stopXray();
           final result = resPtr.cast<Utf8>().toDartString();
           _ffi.freeCString(resPtr);
+          if (Platform.isLinux) {
+            await _invokeLinuxDesktopCommand(
+              'stopTunnelHelper',
+              payload: <String, dynamic>{'mode': 'tun'},
+            );
+            await _notifyLinuxDesktop('Xstream', 'Tunnel Mode disconnected');
+          }
           return result.toLowerCase().startsWith('success')
               ? 'TUN 模式已停止'
               : '停止失败: $result';
@@ -403,17 +530,18 @@ class NativeBridge {
       final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(namePtr);
+      if (Platform.isLinux && result.toLowerCase().startsWith('success')) {
+        await _invokeLinuxDesktopCommand('setSystemProxy');
+        await _notifyLinuxDesktop('Xstream', 'Proxy Mode connected: $nodeName');
+      }
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'startNodeService',
-          {
-            'serviceName': node.serviceName,
-            'nodeName': node.name,
-            'configPath': runtimeConfigPath,
-          },
-        );
+        final result = await _channel.invokeMethod<String>('startNodeService', {
+          'serviceName': node.serviceName,
+          'nodeName': node.name,
+          'configPath': runtimeConfigPath,
+        });
         return result ?? '启动成功';
       } on MissingPluginException {
         return '插件未实现';
@@ -425,9 +553,7 @@ class NativeBridge {
 
   // 停止节点服务
   static Future<String> stopNodeService(String nodeName) {
-    return _runSerializedConnectionOp(
-      () => _stopNodeServiceInternal(nodeName),
-    );
+    return _runSerializedConnectionOp(() => _stopNodeServiceInternal(nodeName));
   }
 
   static Future<String> _stopNodeServiceInternal(String nodeName) async {
@@ -457,13 +583,16 @@ class NativeBridge {
       final result = resPtr.cast<Utf8>().toDartString();
       _ffi.freeCString(resPtr);
       malloc.free(namePtr);
+      if (Platform.isLinux && result.toLowerCase().startsWith('success')) {
+        await _invokeLinuxDesktopCommand('clearSystemProxy');
+        await _notifyLinuxDesktop('Xstream', 'Proxy Mode disconnected');
+      }
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'stopNodeService',
-          {'serviceName': node.serviceName},
-        );
+        final result = await _channel.invokeMethod<String>('stopNodeService', {
+          'serviceName': node.serviceName,
+        });
         return result ?? '已停止';
       } on MissingPluginException {
         return '插件未实现';
@@ -490,14 +619,11 @@ class NativeBridge {
       return res == 1;
     } else {
       try {
-        final result = await _channel.invokeMethod<bool>(
-          'checkNodeStatus',
-          {
-            'serviceName': node.serviceName,
-            'nodeName': node.name,
-            'configPath': node.configPath,
-          },
-        );
+        final result = await _channel.invokeMethod<bool>('checkNodeStatus', {
+          'serviceName': node.serviceName,
+          'nodeName': node.name,
+          'configPath': node.configPath,
+        });
         return result ?? false;
       } on MissingPluginException {
         return false;
@@ -523,12 +649,13 @@ class NativeBridge {
     _nativeMenuActionHandler = onAction;
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'nativeMenuAction') {
-        final args = (call.arguments as Map?)?.cast<Object?, Object?>() ??
+        final args =
+            (call.arguments as Map?)?.cast<Object?, Object?>() ??
             <Object?, Object?>{};
         final action = (args['action'] as String?) ?? '';
         final payloadRaw =
             (args['payload'] as Map?)?.cast<Object?, Object?>() ??
-                <Object?, Object?>{};
+            <Object?, Object?>{};
         final payload = <String, dynamic>{};
         payloadRaw.forEach((key, value) {
           if (key is String) {
@@ -570,10 +697,9 @@ class NativeBridge {
       return res == 1;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'performAction',
-          {'action': 'isXrayDownloading'},
-        );
+        final result = await _channel.invokeMethod<String>('performAction', {
+          'action': 'isXrayDownloading',
+        });
         return result == '1';
       } on MissingPluginException {
         return false;
@@ -597,13 +723,10 @@ class NativeBridge {
       return result;
     } else {
       try {
-        final result = await _channel.invokeMethod<String>(
-          'performAction',
-          {
-            'action': 'resetXrayAndConfig',
-            'password': password,
-          },
-        );
+        final result = await _channel.invokeMethod<String>('performAction', {
+          'action': 'resetXrayAndConfig',
+          'password': password,
+        });
         return result ?? '重置完成';
       } on MissingPluginException {
         return '插件未实现';
@@ -613,8 +736,15 @@ class NativeBridge {
     }
   }
 
-  /// Enable or disable system SOCKS proxy on macOS
+  /// Enable or disable system proxy on desktop platforms.
   static Future<String> setSystemProxy(bool enable, String password) async {
+    if (Platform.isLinux) {
+      final response = await _invokeLinuxDesktopCommand(
+        enable ? 'setSystemProxy' : 'clearSystemProxy',
+      );
+      return (response['message'] as String?) ??
+          ((response['ok'] == true) ? 'success' : '操作失败');
+    }
     if (!Platform.isMacOS) return '当前平台暂不支持';
     try {
       final result = await _channel.invokeMethod<String>('setSystemProxy', {
@@ -754,10 +884,7 @@ class NativeBridge {
   static Future<String> _resolveOrBootstrapIosTunnelConfigPath() async {
     final resolved = await _resolveTunnelConfigPath();
     if (resolved != null) {
-      return _prepareCanonicalTunnelConfigPath(
-        resolved,
-        isTunMode: true,
-      );
+      return _prepareCanonicalTunnelConfigPath(resolved, isTunMode: true);
     }
     return _bootstrapNodeConfigPath(isTunMode: true);
   }
@@ -803,8 +930,9 @@ class NativeBridge {
       );
       sourceJson['inbounds'] = jsonDecode(newInboundsStr);
 
-      final updatedJsonStr =
-          const JsonEncoder.withIndent('  ').convert(sourceJson);
+      final updatedJsonStr = const JsonEncoder.withIndent(
+        '  ',
+      ).convert(sourceJson);
       if (sourceJsonStr != updatedJsonStr) {
         await sourceFile.writeAsString(updatedJsonStr);
       }
@@ -852,9 +980,7 @@ class NativeBridge {
     return bootstrapPath;
   }
 
-  static String _buildBootstrapNodeConfigString({
-    required bool isTunMode,
-  }) {
+  static String _buildBootstrapNodeConfigString({required bool isTunMode}) {
     final disableLocalProxyInPacketTunnel = Platform.isIOS && isTunMode;
     final inboundsStr = VpnConfig.generateInboundsConfig(
       enableSocksProxy: !disableLocalProxyInPacketTunnel,
@@ -1051,8 +1177,10 @@ class NativeBridge {
           configPath: canonicalPath,
         );
         await _channel.invokeMethod<String>('savePacketTunnelProfile', profile);
-        final result =
-            await _channel.invokeMethod<String>('startPacketTunnel', profile);
+        final result = await _channel.invokeMethod<String>(
+          'startPacketTunnel',
+          profile,
+        );
         return result ?? 'Packet Tunnel start request submitted';
       } on MissingPluginException {
         return '插件未实现';
@@ -1193,10 +1321,7 @@ class NativeBridge {
       );
       return _tunStatusFallback;
     } catch (e) {
-      addAppLog(
-        'Packet Tunnel status query failed: $e',
-        level: LogLevel.error,
-      );
+      addAppLog('Packet Tunnel status query failed: $e', level: LogLevel.error);
       return _tunStatusFallback;
     }
   }
@@ -1340,13 +1465,33 @@ class NativeBridge {
   }
 }
 
+class LinuxDesktopIntegrationStatus {
+  final String desktopEnvironment;
+  final bool autostartEnabled;
+  final bool privilegeReady;
+  final String? message;
+
+  const LinuxDesktopIntegrationStatus({
+    required this.desktopEnvironment,
+    required this.autostartEnabled,
+    required this.privilegeReady,
+    this.message,
+  });
+
+  factory LinuxDesktopIntegrationStatus.fromMap(Map<String, dynamic> map) {
+    return LinuxDesktopIntegrationStatus(
+      desktopEnvironment: (map['desktopEnvironment'] as String?) ?? 'unknown',
+      autostartEnabled: map['autostartEnabled'] == true,
+      privilegeReady: map['privilegeReady'] == true,
+      message: map['message'] as String?,
+    );
+  }
+}
+
 class _DarwinFlutterApiImpl extends darwin_host.DarwinFlutterApi {
   @override
   void onPacketTunnelError(String code, String message) {
-    addAppLog(
-      'Packet Tunnel error ($code): $message',
-      level: LogLevel.error,
-    );
+    addAppLog('Packet Tunnel error ($code): $message', level: LogLevel.error);
   }
 
   @override
@@ -1383,8 +1528,9 @@ class PacketTunnelStatus {
   factory PacketTunnelStatus.fromMap(Map<Object?, Object?> map) {
     final status = map['status'] as String? ?? 'unknown';
     final utunRaw = map['utun'];
-    final utunList =
-        utunRaw is List ? utunRaw.whereType<String>().toList() : <String>[];
+    final utunList = utunRaw is List
+        ? utunRaw.whereType<String>().toList()
+        : <String>[];
     final lastError = map['lastError'] as String?;
     final startedAtRaw = map['startedAt'];
     final startedAt = startedAtRaw is int ? startedAtRaw : null;

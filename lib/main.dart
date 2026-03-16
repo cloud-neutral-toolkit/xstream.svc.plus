@@ -33,13 +33,14 @@ import 'widgets/take_picture.dart';
 
 String getQrCodeData(img.Image image) {
   final source = RGBLuminanceSource(
-      image.width,
-      image.height,
-      image
-          .convert(numChannels: 4)
-          .getBytes(order: img.ChannelOrder.abgr)
-          .buffer
-          .asInt32List());
+    image.width,
+    image.height,
+    image
+        .convert(numChannels: 4)
+        .getBytes(order: img.ChannelOrder.abgr)
+        .buffer
+        .asInt32List(),
+  );
   // decode qr code
   final bitMap = BinaryBitmap(GlobalHistogramBinarizer(source));
   final qr = QRCodeReader().decode(bitMap);
@@ -57,7 +58,9 @@ void main(List<String> args) async {
   await ExperimentalFeatures.init();
   await TunSettingsService.init();
   await DesktopSyncService.instance.init();
-  final debug = args.contains('--debug') ||
+  await NativeBridge.initializeLinuxDesktopIntegration();
+  final debug =
+      args.contains('--debug') ||
       Platform.executableArguments.contains('--debug');
   GlobalState.debugMode.value = debug;
   if (debug) {
@@ -111,8 +114,6 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         MediaQuery.of(context).size.width < _mobileBreakpoint;
   }
 
-
-
   @override
   void initState() {
     super.initState();
@@ -150,12 +151,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     }
   }
 
-
-
   void _openAddConfig() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SubscriptionScreen()));
   }
 
   void _openAddConfigWithUri(String uri) {
@@ -205,7 +204,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
             await _pickImageAndScan();
           }
         } else {
-           await _pickImageAndScan();
+          await _pickImageAndScan();
         }
         break;
 
@@ -214,11 +213,16 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
         break;
     }
   }
+
   Future<void> _showQrScanner() async {
     final barcode = await Navigator.of(context, rootNavigator: true)
-        .push<Barcode?>(MaterialPageRoute(builder: (ctx) {
-      return const ScanQrCode();
-    }));
+        .push<Barcode?>(
+          MaterialPageRoute(
+            builder: (ctx) {
+              return const ScanQrCode();
+            },
+          ),
+        );
     if (barcode == null || barcode.displayValue == null) {
       return;
     }
@@ -280,8 +284,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
 
   void _toggleLanguage() {
     final current = GlobalState.locale.value;
-    GlobalState.locale.value =
-        current.languageCode == 'zh' ? const Locale('en') : const Locale('zh');
+    GlobalState.locale.value = current.languageCode == 'zh'
+        ? const Locale('en')
+        : const Locale('zh');
   }
 
   Future<void> _onConnectionModeChanged() async {
@@ -318,15 +323,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
       if (running) {
         GlobalState.activeNodeName.value = activeNode;
       } else if (tunnelEnabled) {
-        final shouldShow = await PermissionGuideService
-            .shouldPromptForPacketTunnelAuthorization(
-          failureMessage: startMsg,
-        );
+        final shouldShow =
+            await PermissionGuideService.shouldPromptForPacketTunnelAuthorization(
+              failureMessage: startMsg,
+            );
         if (mounted && shouldShow) {
-          await showPermissionGuideDialog(
-            context,
-            failureMessage: startMsg,
-          );
+          await showPermissionGuideDialog(context, failureMessage: startMsg);
         }
       }
     }
@@ -335,9 +337,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (mounted) {
       final label = tunnelEnabled ? 'TUN 模式' : '代理模式';
       final suffix = activeNode.isNotEmpty ? '，已自动重连' : '';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已切换到$label$suffix')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('已切换到$label$suffix')));
     }
   }
 
@@ -401,13 +403,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
     if (useTunMode && !running) {
       final shouldShow =
           await PermissionGuideService.shouldPromptForPacketTunnelAuthorization(
-        failureMessage: message,
-      );
+            failureMessage: message,
+          );
       if (mounted && shouldShow) {
-        await showPermissionGuideDialog(
-          context,
-          failureMessage: message,
-        );
+        await showPermissionGuideDialog(context, failureMessage: message);
       }
     }
   }
@@ -444,19 +443,29 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   List<NavigationRailDestination> _buildDestinations(BuildContext context) {
     return [
       NavigationRailDestination(
-          icon: const Icon(Icons.home), label: Text(context.l10n.get('home'))),
+        icon: const Icon(Icons.home),
+        label: Text(context.l10n.get('home')),
+      ),
       NavigationRailDestination(
-          icon: const Icon(Icons.link), label: Text(context.l10n.get('proxy'))),
+        icon: const Icon(Icons.link),
+        label: Text(context.l10n.get('proxy')),
+      ),
       NavigationRailDestination(
-          icon: const Icon(Icons.account_circle),
-          label: Text(context.l10n.get('accountLogin'))),
+        icon: const Icon(Icons.account_circle),
+        label: Text(context.l10n.get('accountLogin')),
+      ),
       NavigationRailDestination(
-          icon: const Icon(Icons.settings),
-          label: Text(context.l10n.get('settings'))),
+        icon: const Icon(Icons.settings),
+        label: Text(context.l10n.get('settings')),
+      ),
       NavigationRailDestination(
-          icon: const Icon(Icons.help), label: Text(context.l10n.get('help'))),
+        icon: const Icon(Icons.help),
+        label: Text(context.l10n.get('help')),
+      ),
       NavigationRailDestination(
-          icon: const Icon(Icons.info), label: Text(context.l10n.get('about'))),
+        icon: const Icon(Icons.info),
+        label: Text(context.l10n.get('about')),
+      ),
     ];
   }
 
@@ -645,8 +654,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color:
-                              const Color(0xFF5B8DEF).withValues(alpha: 0.35),
+                          color: const Color(
+                            0xFF5B8DEF,
+                          ).withValues(alpha: 0.35),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -668,8 +678,11 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           ),
           bottomNavigationBar: isMobile
               ? NavigationBar(
-                  selectedIndex:
-                      _clampIndex(isMobile, mobilePages, desktopPages),
+                  selectedIndex: _clampIndex(
+                    isMobile,
+                    mobilePages,
+                    desktopPages,
+                  ),
                   labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
                   onDestinationSelected: (index) =>
                       setState(() => _currentIndex = index),
@@ -684,12 +697,16 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
           body: isMobile
               ? IndexedStack(
                   index: _clampIndex(isMobile, mobilePages, desktopPages),
-                  children: mobilePages)
+                  children: mobilePages,
+                )
               : Row(
                   children: [
                     NavigationRail(
-                      selectedIndex:
-                          _clampIndex(isMobile, mobilePages, desktopPages),
+                      selectedIndex: _clampIndex(
+                        isMobile,
+                        mobilePages,
+                        desktopPages,
+                      ),
                       onDestinationSelected: (index) =>
                           setState(() => _currentIndex = index),
                       labelType: NavigationRailLabelType.all,
@@ -698,9 +715,9 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     const VerticalDivider(width: 1),
                     Expanded(
                       child: IndexedStack(
-                          index:
-                              _clampIndex(isMobile, mobilePages, desktopPages),
-                          children: desktopPages),
+                        index: _clampIndex(isMobile, mobilePages, desktopPages),
+                        children: desktopPages,
+                      ),
                     ),
                   ],
                 ),
@@ -710,7 +727,10 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   }
 
   int _clampIndex(
-      bool isMobile, List<Widget> mobilePages, List<Widget> desktopPages) {
+    bool isMobile,
+    List<Widget> mobilePages,
+    List<Widget> desktopPages,
+  ) {
     if (isMobile && _currentIndex >= mobilePages.length) {
       return mobilePages.length - 1;
     }
@@ -728,9 +748,4 @@ class _NavigationDestination {
   _NavigationDestination({required this.icon, required this.label});
 }
 
-enum _AddNodeMenuAction {
-  manualInput,
-  scanQr,
-
-  readClipboard,
-}
+enum _AddNodeMenuAction { manualInput, scanQr, readClipboard }

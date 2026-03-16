@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ACTION="${1:-}"
+shift || true
+
+MODE="tun"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mode)
+      MODE="${2:-tun}"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+STATE_DIR="/run/xstream"
+STATE_FILE="${STATE_DIR}/net-helper.env"
+TUN_DEV="xstream-tun0"
+DNS_IPV4="10.0.0.53"
+DNS_IPV6="fd00::53"
+
+mkdir -p "$STATE_DIR"
+
+detect_default_iface() {
+  ip route show default 2>/dev/null | awk '/default/ {print $5; exit}'
+}
+
+write_state() {
+  cat >"$STATE_FILE" <<EOF
+DEFAULT_IFACE=${DEFAULT_IFACE:-}
+TUN_DEV=${TUN_DEV}
+DNS_IPV4=${DNS_IPV4}
+DNS_IPV6=${DNS_IPV6}
+MODE=${MODE}
+EOF
+}
+
+restore_dns() {
+  if command -v resolvectl >/dev/null 2>&1 && [[ -n "${DEFAULT_IFACE:-}" ]]; then
+    resolvectl revert "$DEFAULT_IFACE" >/dev/null 2>&1 || true
+  fi
+}
+
+case "$ACTION" in
+  start)
+    if [[ "${MODE}" != "tun" ]]; then
+      echo "unsupported mode: ${MODE}" >&2
+      exit 1
+    fi
+
+    DEFAULT_IFACE="$(detect_default_iface)"
+    if [[ -z "$DEFAULT_IFACE" ]]; then
+      echo "failed to detect default interface" >&2
+      exit 1
+    fi
+
+    if ! ip link show "$TUN_DEV" >/dev/null 2>&1; then
+      ip tuntap add dev "$TUN_DEV" mode tun
+    fi
+    ip link set "$TUN_DEV" up
+    ip addr replace 10.0.0.2/24 dev "$TUN_DEV"
+    ip -6 addr replace fd00::2/120 dev "$TUN_DEV"
+
+    if command -v resolvectl >/dev/null 2>&1; then
+      resolvectl dns "$TUN_DEV" "$DNS_IPV4" "$DNS_IPV6" >/dev/null 2>&1 || true
+      resolvectl domain "$TUN_DEV" "~." >/dev/null 2>&1 || true
+    fi
+
+    write_state
+    echo "tunnel helper started"
+    ;;
+  stop)
+    if [[ -f "$STATE_FILE" ]]; then
+      # shellcheck disable=SC1090
+      source "$STATE_FILE"
+    fi
+    restore_dns
+    ip link delete "$TUN_DEV" >/dev/null 2>&1 || true
+    rm -f "$STATE_FILE"
+    echo "tunnel helper stopped"
+    ;;
+  *)
+    echo "usage: $0 <start|stop> [--mode tun]" >&2
+    exit 1
+    ;;
+esac
