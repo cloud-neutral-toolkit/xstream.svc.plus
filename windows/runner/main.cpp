@@ -5,8 +5,36 @@
 #include "flutter_window.h"
 #include "utils.h"
 
+namespace {
+constexpr const wchar_t kSingleInstanceMutexName[] =
+    L"Local\\plus.svc.xstream.single-instance";
+
+HWND FindExistingInstanceWindow() {
+  return ::FindWindowW(nullptr, L"xstream");
+}
+
+void ActivateExistingInstance(HWND window) {
+  if (!window) {
+    return;
+  }
+  ::ShowWindow(window, SW_RESTORE);
+  ::SetForegroundWindow(window);
+}
+}  // namespace
+
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  HANDLE instance_mutex =
+      ::CreateMutexW(nullptr, FALSE, kSingleInstanceMutexName);
+  if (!instance_mutex) {
+    return EXIT_FAILURE;
+  }
+  if (::GetLastError() == ERROR_ALREADY_EXISTS) {
+    ActivateExistingInstance(FindExistingInstanceWindow());
+    ::CloseHandle(instance_mutex);
+    return EXIT_SUCCESS;
+  }
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
@@ -33,6 +61,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
   if (!window.Create(L"xstream", origin, size)) {
+    ::CloseHandle(instance_mutex);
+    ::CoUninitialize();
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
@@ -43,6 +73,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     ::DispatchMessage(&msg);
   }
 
+  ::CloseHandle(instance_mutex);
   ::CoUninitialize();
   return EXIT_SUCCESS;
 }
