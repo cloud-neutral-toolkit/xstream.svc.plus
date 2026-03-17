@@ -1,42 +1,42 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-GITHUB_REPO="your-username/your-repo-name"  # ← 修改为你的 GitHub 仓库路径
-GITHUB_TOKEN="ghp_..."                      # ← 推荐使用环境变量传入
+if ! command -v gh >/dev/null 2>&1; then
+  echo "gh CLI is required to clean daily tags." >&2
+  exit 1
+fi
 
-NOW=$(date +%s)
-MAX_AGE=$((60 * 60 * 24))  # 1天
+GITHUB_REPO="${GITHUB_REPOSITORY:-}"
+if [[ -z "$GITHUB_REPO" ]]; then
+  remote_url="$(git config --get remote.origin.url || true)"
+  GITHUB_REPO="$(printf '%s' "$remote_url" | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$##')"
+fi
 
-echo "🧹 Cleaning old daily-* tags and GitHub releases (keep recent 1-day)..."
+if [[ -z "$GITHUB_REPO" ]]; then
+  echo "Unable to resolve GitHub repository slug." >&2
+  exit 1
+fi
 
-for tag in $(git tag | grep '^daily-'); do
-  TAG_TIME=$(git log -1 --format=%ct "$tag")
-  AGE=$((NOW - TAG_TIME))
+NOW="$(date +%s)"
+MAX_AGE_HOURS="${MAX_AGE_HOURS:-24}"
+MAX_AGE="$((MAX_AGE_HOURS * 60 * 60))"
+
+echo "Cleaning old daily-* tags and GitHub releases (keep recent ${MAX_AGE_HOURS}h)..."
+
+mapfile -t daily_tags < <(git tag --list 'daily-*')
+
+for tag in "${daily_tags[@]}"; do
+  TAG_TIME="$(git log -1 --format=%ct "$tag")"
+  AGE="$((NOW - TAG_TIME))"
 
   if (( AGE > MAX_AGE )); then
-    echo "🗑️ Deleting tag: $tag (age: $((AGE/3600))h)"
-
-    # Delete local + remote git tag
-    git tag -d "$tag" || true
-    git push origin ":refs/tags/$tag" || true
-
-    # Delete GitHub release (if exists)
-    echo "🌐 Attempting to delete GitHub release for tag: $tag"
-    RELEASE_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-      https://api.github.com/repos/$GITHUB_REPO/releases/tags/$tag \
-      | jq -r '.id')
-
-    if [[ "$RELEASE_ID" != "null" ]]; then
-      curl -s -X DELETE \
-        -H "Authorization: token $GITHUB_TOKEN" \
-        https://api.github.com/repos/$GITHUB_REPO/releases/$RELEASE_ID \
-        && echo "✅ GitHub release deleted: $tag"
-    else
-      echo "⚠️ No GitHub release found for: $tag"
-    fi
+    echo "Deleting tag: $tag (age: $((AGE / 3600))h)"
+    gh release delete "$tag" --repo "$GITHUB_REPO" --yes --cleanup-tag || true
+    git tag -d "$tag" >/dev/null 2>&1 || true
+    git push origin ":refs/tags/$tag" >/dev/null 2>&1 || true
   else
-    echo "✅ Keeping recent tag: $tag"
+    echo "Keeping recent tag: $tag"
   fi
 done
 
-echo "🎉 Cleanup done."
+echo "Cleanup done."

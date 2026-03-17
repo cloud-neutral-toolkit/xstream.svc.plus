@@ -10,27 +10,31 @@
 
 ## ✨ 功能亮点
 
-- 多节点支持，快速切换
-- 实时日志输出与故障诊断
-- 支持 macOS 权限验证与服务管理
-- 解耦式界面设计，支持跨平台构建
-- Windows/Linux 版本最小化时自动隐藏到系统托盘（右下角）
-- Windows 版本支持计划任务部署与后台运行
-- Windows 版本现已支持生成 MSIX 安装包并上架 Microsoft Store
+- Apple 平台支持 System VPN / Packet Tunnel，macOS 与 iOS 共享统一的 Secure Tunnel 架构
+- iOS 已支持 Packet Tunnel 扩展集成与设备侧启动流程，系统 VPN 列表可提前注册配置
+- Home 页面提供实时连接监控，可显示下载、上传、延迟、内存与 CPU 等运行指标
+- 内置 Logs / Help / About / Settings 的全局面包屑导航，桌面端与 iPhone 端页面结构更清晰
+- 实时日志输出与诊断视图已针对长日志、桌面布局和 iPhone 可读性做过优化
+- 支持多节点导入与切换，并已接入 `vless://` URI 导入与出站配置生成
+- Windows/Linux 桌面端支持最小化到系统托盘；Windows 额外支持计划任务后台运行与 MSIX 打包
 
 ---
 
 ## 📦 支持平台
 
-| 平台     | 架构     | 测试状态   |
-|----------|----------|------------|
-| macOS    | arm64    | ✅ 已测试   |
-| macOS    | x64      | ⚠️ 未测试   |
-| Linux    | x64      | ⚠️ 未测试   |
-| Linux    | arm64    | ⚠️ 未测试   |
-| Windows  | x64      | ✅ 已测试   |
-| Android  | arm64    | ⚠️ 未测试   |
-| iOS      | arm64    | ✅ 已测试   |
+<!-- SUPPORT_MATRIX:START -->
+| 平台 | 架构 | 测试状态 | 下载 |
+|------|------|----------|------|
+| macOS | arm64 | ✅ 已测试 | — |
+| macOS | x64 | ⚠️ 未测试 | — |
+| Linux | x64 | ⚠️ 未测试 | — |
+| Linux | arm64 | ⚠️ 未测试 | — |
+| Windows | x64 | ✅ 已测试 | — |
+| Android | arm64 | ⚠️ 未测试 | — |
+| iOS | arm64 | ✅ 已测试 | — |
+
+> 自动更新：发布成功后，此表会由 CI 自动刷新为最新 nightly 下载链接。
+<!-- SUPPORT_MATRIX:END -->
 
 ---
 

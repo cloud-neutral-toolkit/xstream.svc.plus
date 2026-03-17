@@ -5,18 +5,29 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
+    paths-ignore:
+      - "README.md"
   pull_request:
     branches:
       - main
     paths:
-      - 'lib/**'
-      - 'assets/**'
-      - 'pubspec.*'
-      - 'macos/**'
-      - 'linux/**'
-      - 'windows/**'
-      - '.github/workflows/build-and-release.yml'
+      - "lib/**"
+      - "assets/**"
+      - "android/**"
+      - "ios/**"
+      - "macos/**"
+      - "linux/**"
+      - "windows/**"
+      - "go_core/**"
+      - "build_scripts/**"
+      - "scripts/**"
+      - "pubspec.*"
+      - "Makefile"
+      - ".gitmodules"
+      - ".github/workflows/build-and-release.yml"
+  schedule:
+    - cron: "0 19 * * 0"
   workflow_dispatch:
 
 permissions:
@@ -31,7 +42,40 @@ env:
   XSTREAM_MACOS_PACKET_TUNNEL_BUNDLE_ID: plus.svc.xstream.PacketTunnel
 
 jobs:
+  clean-daily-tags:
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Clean old daily tags
+        shell: bash
+        run: bash ./scripts/clean_old_tags.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  code-analysis:
+    if: ${{ github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
+          cache: true
+      - name: Install analysis dependencies
+        shell: bash
+        run: bash ./scripts/ci/setup_platform_deps.sh linux
+      - name: Run code analysis
+        shell: bash
+        run: bash ./scripts/ci/run_code_analysis.sh
+
   build:
+    if: ${{ github.event_name != 'schedule' }}
     strategy:
       fail-fast: false
       matrix:
@@ -67,135 +111,39 @@ jobs:
       ARCH: ${{ matrix.arch }}
 
     steps:
-      - name: Checkout source code
+      - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
-      - name: Set up Flutter (Unix)
-        if: ${{ matrix.platform != 'windows' }}
-        shell: bash
-        run: |
-          if [[ "$PLATFORM" == "linux" || "$PLATFORM" == "android" ]]; then
-            sudo apt-get update
-            sudo apt-get install -y clang cmake ninja-build libgtk-3-dev pkg-config libx11-dev binutils libgl1-mesa-dev libayatana-appindicator3-dev
-            mkdir -p $HOME/flutter
-            curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.22.2-stable.tar.xz
-            tar xf flutter_linux_3.22.2-stable.tar.xz -C $HOME/flutter --strip-components=1
-            export PATH="$HOME/flutter/bin:$PATH"
-            flutter --version
-            flutter doctor
-            echo "$HOME/flutter/bin" >> $GITHUB_PATH
-          elif [[ "$PLATFORM" == "macos" || "$PLATFORM" == "ios" ]]; then
-            brew install --cask flutter
-            export PATH="$PATH:$HOME/Library/Flutter/bin"
-          fi
-          flutter --version
-          flutter doctor
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.3"
+          cache: true
 
-      - name: Set up Flutter (Windows)
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
-        run: |
-          choco install flutter --no-progress -y
-          flutter --version
-          flutter doctor
-
-      - name: Set up Go (Windows)
-        if: ${{ matrix.platform == 'windows' }}
+      - name: Set up Go
+        if: ${{ matrix.platform != 'macos' }}
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: "1.23"
 
-      - name: Build Go shared library (Windows)
+      - name: Set up MSYS2 toolchain
         if: ${{ matrix.platform == 'windows' }}
-        shell: bash
-        run: ./build_scripts/build_windows.sh
-
-      - name: Set up Go (Linux only)
-        if: ${{ matrix.platform == 'linux' }}
-        uses: actions/setup-go@v5
+        uses: msys2/setup-msys2@v2
         with:
-          go-version: '1.23'
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
 
-      - name: Ensure ImageMagick is installed (Linux only)
-        if: ${{ matrix.platform == 'linux' }}
-        run: sudo apt-get install -y imagemagick
-
-      - name: Build Go shared library (Linux)
-        if: ${{ matrix.platform == 'linux' }}
-        run: ./build_scripts/build_linux.sh
-
-      - name: Flutter pub get
-        run: flutter pub get
-
-      - name: Run Flutter tests (Linux only)
-        if: ${{ matrix.platform == 'linux' }}
-        run: flutter test --reporter expanded
-        continue-on-error: true
-
-      - name: Build Android App
-        if: ${{ matrix.platform == 'android' }}
+      - name: Install platform dependencies
         shell: bash
-        run: |
-          flutter pub get
-          dart run flutter_launcher_icons
-          flutter build apk --release
+        run: bash ./scripts/ci/setup_platform_deps.sh "$PLATFORM"
 
-      - name: Build iOS App
-        if: ${{ matrix.platform == 'ios' }}
+      - name: Build platform artifacts
         shell: bash
-        run: flutter build ios --release --no-codesign
-
-      - name: Build iOS IPA
-        if: ${{ matrix.platform == 'ios' }}
-        shell: bash
-        run: |
-          flutter build ipa --release --no-codesign
-          mkdir -p build/ios/ipa/Payload
-          cp -R build/ios/iphoneos/Runner.app build/ios/ipa/Payload
-          (cd build/ios/ipa && zip -r XStream.ipa Payload)
-
-      - name: Build macOS App
-        if: ${{ matrix.platform == 'macos' }}
-        shell: bash
-        run: flutter build macos --release
-
-      - name: Package macOS DMG
-        if: ${{ matrix.platform == 'macos' }}
-        run: make macos-${ARCH}
-
-      - name: Build Linux App
-        if: ${{ matrix.platform == 'linux' }}
-        shell: bash
-        run: flutter build linux --release -v
-
-      - name: Package and verify Linux bundle
-        if: ${{ matrix.platform == 'linux' }}
-        run: |
-          bash build_scripts/package_linux_bundle.sh
-
-      - name: Build Windows App
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
-        run: |
-          flutter build windows --release
-
-      - name: Package and verify Windows bundle
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
-        run: |
-          ./build_scripts/package_windows_bundle.ps1
-
-      - name: Build MSIX package
-        if: ${{ matrix.platform == 'windows' }}
-        shell: powershell
-        run: |
-          ./build_scripts/package_windows_msix.ps1
-
-      - name: Zip iOS Runner.app
-        if: ${{ matrix.platform == 'ios' }}
-        run: |
-          cd build/ios/iphoneos
-          zip -r XStream.app.zip Runner.app
+        run: bash ./scripts/ci/build_matrix_artifacts.sh "$PLATFORM" "$ARCH"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -205,6 +153,8 @@ jobs:
             build/macos/*.dmg
             build/linux/x64/release/bundle/xstream-linux.zip
             build/linux/x64/release/AppImage/xstream-linux.AppImage
+            build/linux/x64/release/packages/*.deb
+            build/linux/x64/release/packages/*.rpm
             build/windows/x64/runner/Release/xstream-windows.zip
             build/windows/x64/runner/Release/*.msix
             build/app/outputs/flutter-apk/app-release.apk
@@ -212,18 +162,18 @@ jobs:
             build/ios/ipa/*.ipa
 
   release:
+    if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     needs: build
     strategy:
       matrix:
         platform:
-
-          - { name: macos, file_pattern: '*.dmg', remote_path: 'xstream/macos/latest/xstream-macos-latest.dmg' }
-          - { name: linux, file_pattern: 'xstream-linux.zip', remote_path: 'xstream/linux/latest/xstream-linux-latest.zip' }
-          - { name: windows, file_pattern: 'xstream-windows.zip', remote_path: 'xstream/windows/latest/xstream-windows-latest.zip' }
-          - { name: ios, file_pattern: '*.ipa', remote_path: 'xstream/ios/latest/xstream-ios-latest.ipa' }
-          - { name: android, file_pattern: 'app-release.apk', remote_path: 'xstream/android/latest/xstream-android-latest.apk' }
-          - { name: github, file_pattern: '**/*', remote_path: '' }
+          - { name: macos, file_pattern: "*.dmg", remote_path: "xstream/macos/latest/xstream-macos-latest.dmg" }
+          - { name: linux, file_pattern: "xstream-linux.zip", remote_path: "xstream/linux/latest/xstream-linux-latest.zip" }
+          - { name: windows, file_pattern: "xstream-windows.zip", remote_path: "xstream/windows/latest/xstream-windows-latest.zip" }
+          - { name: ios, file_pattern: "*.ipa", remote_path: "xstream/ios/latest/xstream-ios-latest.ipa" }
+          - { name: android, file_pattern: "app-release.apk", remote_path: "xstream/android/latest/xstream-android-latest.apk" }
+          - { name: github, file_pattern: "**/*", remote_path: "" }
 
     steps:
       - name: Checkout source
@@ -233,158 +183,38 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
-          if-no-artifact-found: ignore
 
-      - name: Upload to GitHub Release
-        if: matrix.platform.name == 'github'
+      - name: Upload assets to GitHub Release
+        if: ${{ matrix.platform.name == 'github' }}
+        shell: bash
+        run: bash ./scripts/ci/github_release_upload.sh release-artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          TAG="daily-${{ github.run_number }}"
-          TITLE="Daily Build ${{ github.run_number }}"
-          if ! gh release view "$TAG" >/dev/null 2>&1; then
-            gh release create "$TAG" --title "$TITLE" --notes "Automated daily build"
-          fi
-          find release-artifacts -type f -print0 | xargs -0 -I{} gh release upload "$TAG" "{}" --clobber
-          
-      - name: Upload ${{ matrix.platform.name }} bundle via rsync
-        if: matrix.platform.name != 'github'
+          RELEASE_TAG: daily-${{ github.run_number }}
+          RELEASE_TITLE: Daily Build ${{ github.run_number }}
+
+      - name: Sync assets to remote update server
+        if: ${{ matrix.platform.name != 'github' }}
+        shell: bash
+        run: bash ./scripts/ci/remote_release_sync.sh "${{ matrix.platform.name }}" "${{ matrix.platform.file_pattern }}" "${{ matrix.platform.remote_path }}"
         env:
+          ARTIFACT_DIR: release-artifacts
           RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          echo "$RSYNC_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts
 
-          FILE=$(find release-artifacts -name '${{ matrix.platform.file_pattern }}' | head -n 1)
-          echo "Uploading $FILE to /data/update-server/${{ matrix.platform.remote_path }}"
-          rsync -av "$FILE" root@"$VPS_HOST":/data/update-server/${{ matrix.platform.remote_path }} --delete
-
-
-          if [ "${{ matrix.platform.name }}" = "windows" ]; then
-            FILE_MSIX=$(find release-artifacts -name '*.msix' | head -n 1)
-            if [ -n "$FILE_MSIX" ]; then
-              echo "Uploading $FILE_MSIX to /data/update-server/xstream-windows-latest/xstream-windows-latest.msix"
-              rsync -av "$FILE_MSIX" root@"$VPS_HOST":/data/update-server/xstream-windows-latest/xstream-windows-latest.msix --delete
-            fi
-          fi
-
-
-  publish-stores:
+  update-readme:
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     needs: release
-    strategy:
-      matrix:
-        store: [apple, google, microsoft]
-    env:
-      PUBLISH_APPLE: false
-      PUBLISH_GOOGLE: false
-      PUBLISH_MICROSOFT: false
-
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
         with:
-          path: release-artifacts
-          if-no-artifact-found: ignore
+          fetch-depth: 0
 
-      - name: Deploy to Apple App Store
-        if: matrix.store == 'apple' && env.PUBLISH_APPLE == 'true'
-        run: |
-          echo "Apple store upload is managed by scripts/release-testflight.sh"
-
-      - name: Deploy to Google Play
-        if: matrix.store == 'google' && env.PUBLISH_GOOGLE == 'true'
-        run: |
-          echo "Google Play upload is not configured in this workflow"
-
-      - name: Deploy to Microsoft Store
-        if: matrix.store == 'microsoft' && env.PUBLISH_MICROSOFT == 'true'
-        run: |
-          echo "Microsoft Store upload is not configured in this workflow"
-
-
-  publish-testflight-main:
-    name: Upload iOS/macOS to TestFlight (ASC API Key)
-    runs-on: macos-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    timeout-minutes: 120
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        run: |
-          brew install --cask flutter
-          echo "$HOME/Library/Flutter/bin" >> $GITHUB_PATH
-          flutter --version
-          flutter doctor
-
-      - name: Install CocoaPods
-        run: |
-          sudo gem install cocoapods --no-document || true
-          pod --version
-
-      - name: Validate required ASC/TestFlight secrets
+      - name: Refresh README download links
+        shell: bash
+        run: bash ./scripts/ci/update_readme_from_release.sh
         env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: |
-          set -euo pipefail
-          for key in ASC_KEY_ID ASC_ISSUER_ID ASC_KEY_P8; do
-            if [ -z "${!key:-}" ]; then
-              echo "Missing required secret: $key" >&2
-              exit 1
-            fi
-          done
-
-      - name: Prepare .env for release script
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: |
-          set -euo pipefail
-          KEY_PATH="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
-          printf '%s' "$ASC_KEY_P8" > "$KEY_PATH"
-          chmod 600 "$KEY_PATH"
-
-          cat > .env.ci <<EOF
-          XSTREAM_APPLE_TEAM_ID=$XSTREAM_APPLE_TEAM_ID
-          XSTREAM_APP_GROUP_ID=$XSTREAM_APP_GROUP_ID
-          XSTREAM_MACOS_BUNDLE_ID=$XSTREAM_MACOS_BUNDLE_ID
-          XSTREAM_MACOS_PACKET_TUNNEL_BUNDLE_ID=$XSTREAM_MACOS_PACKET_TUNNEL_BUNDLE_ID
-          XSTREAM_IOS_BUNDLE_ID=$XSTREAM_IOS_BUNDLE_ID
-          XSTREAM_IOS_PACKET_TUNNEL_BUNDLE_ID=$XSTREAM_IOS_PACKET_TUNNEL_BUNDLE_ID
-          ASC_KEY_ID=$ASC_KEY_ID
-          ASC_ISSUER_ID=$ASC_ISSUER_ID
-          ASC_KEY_PATH=$KEY_PATH
-          EOF
-
-      - name: Build and upload to TestFlight
-        env:
-          ENV_FILE: .env.ci
-        run: |
-          set -euo pipefail
-          chmod +x scripts/release-testflight.sh
-          scripts/release-testflight.sh --platform all --build-number "${GITHUB_RUN_NUMBER}"
-
-      - name: Upload Apple release artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-apple-testflight-${{ github.run_number }}
-          path: |
-            build/ios/ipa/*.ipa
-            build/macos/export/*.pkg
-          if-no-files-found: warn
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: daily-${{ github.run_number }}
