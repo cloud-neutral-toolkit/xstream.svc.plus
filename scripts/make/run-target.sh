@@ -348,6 +348,7 @@ case "$TARGET" in
     # Run this before doing a manual Xcode Archive to ensure the version is correct.
     echo "Syncing Flutter build config (pubspec.yaml → Generated.xcconfig)..."
     "$flutter_bin" build macos --config-only
+    "$flutter_bin" build ios --config-only --no-codesign
     echo "✅ Config synced. Xcode Archive will now use the correct version."
     ;;
   mcp)
