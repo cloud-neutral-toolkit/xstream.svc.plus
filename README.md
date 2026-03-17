@@ -72,6 +72,35 @@
 - [iOS 设计文档](docs/ios-design.md#xray-core-%E9%9B%86%E6%88%90)
 - [FFI 桥接架构](docs/ffi-bridge-architecture.md)
 
+## 🔢 版本号变更
+
+macOS / iOS 的版本号单一来源是 [pubspec.yaml](pubspec.yaml)：
+
+```yaml
+version: X.Y.Z+BUILD
+```
+
+- `X.Y.Z` 是展示版本号
+- `BUILD` 是 macOS / iOS 的 build number
+
+以后变更版本号时，只需要：
+
+```bash
+cd /Users/shenlan/workspaces/cloud-neutral-toolkit/xstream.svc.plus
+# 1. 修改 pubspec.yaml 中的 version:
+# 2. 同步 Flutter/Xcode 生成配置
+make sync-macos-config
+```
+
+如果 Xcode Archive 里仍然显示旧版本号，执行：
+
+```bash
+cd /Users/shenlan/workspaces/cloud-neutral-toolkit/xstream.svc.plus
+make reset-macos-xcode-version
+```
+
+不需要手动修改 Xcode 工程里的版本号。
+
 ## 📚 许可证与致谢
 
 - 本项目整体遵循 [Apache 2.0](LICENSE) 开源协议。
