@@ -86,4 +86,31 @@ void main() {
       expect(DesktopSyncService.isRenderableXrayConfig(json), isTrue);
     });
   });
+
+  group('DesktopSyncService.pickSyncedNodeName', () {
+    test('prefers server-provided node name over vless host', () {
+      final name = DesktopSyncService.pickSyncedNodeName(
+        serverName: 'Japan Node',
+        vlessUri:
+            'vless://uuid@jp-xhttp.svc.plus:443?security=tls#jp-xhttp.svc.plus',
+        id: 'jp-xhttp.svc.plus',
+      );
+
+      expect(name, 'Japan Node');
+    });
+
+    test('falls back to vless fragment then host when server name is absent', () {
+      final fromFragment = DesktopSyncService.pickSyncedNodeName(
+        vlessUri: 'vless://uuid@jp-xhttp.svc.plus:443?security=tls#Tokyo',
+        id: 'node-1',
+      );
+      final fromHost = DesktopSyncService.pickSyncedNodeName(
+        vlessUri: 'vless://uuid@jp-xhttp.svc.plus:443?security=tls',
+        id: 'node-2',
+      );
+
+      expect(fromFragment, 'Tokyo');
+      expect(fromHost, 'jp-xhttp.svc.plus');
+    });
+  });
 }

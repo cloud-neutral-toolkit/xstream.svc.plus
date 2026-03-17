@@ -151,6 +151,24 @@ class DesktopSyncService {
     }
   }
 
+  @visibleForTesting
+  static String pickSyncedNodeName({
+    String? serverName,
+    String? displayName,
+    String? remark,
+    String? vlessUri,
+    String? id,
+  }) {
+    return _firstNonEmptyStringStatic([
+      serverName,
+      displayName,
+      remark,
+      _extractNodeNameFromVlessUriStatic(vlessUri),
+      _extractHostFromVlessUriStatic(vlessUri),
+      id,
+    ]);
+  }
+
   Future<DesktopSyncResult> _performSync({required bool manual}) async {
     final session = SessionManager.instance;
     final token = (session.sessionToken ?? '').trim();
@@ -442,15 +460,14 @@ class DesktopSyncService {
           ]),
         );
 
-        // Prefer domain from VLESS URI as node name (e.g. "jp-xhttp.svc.plus")
         final hostFromUri = _extractHostFromVlessUri(vlessUri);
-        final name = _firstNonEmptyString([
-          hostFromUri,
-          node['name'],
-          node['remark'],
-          _extractNodeNameFromVlessUri(vlessUri),
-          node['id'],
-        ]);
+        final name = pickSyncedNodeName(
+          serverName: _firstNonEmptyString([node['name']]),
+          displayName: _firstNonEmptyString([node['display_name']]),
+          remark: _firstNonEmptyString([node['remark']]),
+          vlessUri: vlessUri,
+          id: _firstNonEmptyString([node['id']]),
+        );
         if (name.isEmpty) continue;
 
         // Country code: prefer server-provided, fallback to domain prefix
@@ -489,6 +506,10 @@ class DesktopSyncService {
   }
 
   String _firstNonEmptyString(List<Object?> candidates) {
+    return _firstNonEmptyStringStatic(candidates);
+  }
+
+  static String _firstNonEmptyStringStatic(List<Object?> candidates) {
     for (final candidate in candidates) {
       if (candidate is String && candidate.trim().isNotEmpty) {
         return candidate.trim();
@@ -503,7 +524,7 @@ class DesktopSyncService {
     return trimmed;
   }
 
-  String? _extractNodeNameFromVlessUri(String? uriText) {
+  static String? _extractNodeNameFromVlessUriStatic(String? uriText) {
     final raw = (uriText ?? '').trim();
     if (raw.isEmpty || !raw.toLowerCase().startsWith('vless://')) {
       return null;
@@ -521,6 +542,10 @@ class DesktopSyncService {
   }
 
   String? _extractHostFromVlessUri(String? uriText) {
+    return _extractHostFromVlessUriStatic(uriText);
+  }
+
+  static String? _extractHostFromVlessUriStatic(String? uriText) {
     final raw = (uriText ?? '').trim();
     if (raw.isEmpty || !raw.toLowerCase().startsWith('vless://')) {
       return null;
