@@ -527,17 +527,17 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0xFF5B8DEF).withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, size: 20, color: const Color(0xFF5B8DEF)),
+              child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(width: 14),
             Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF1E2025),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -607,7 +607,7 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 8,
-                  color: Colors.white,
+                   color: Theme.of(context).colorScheme.surface,
                   onSelected: _showAddNodeMenuAction,
                   itemBuilder: (context) => [
                     _buildAddNodeItem(
@@ -652,12 +652,12 @@ class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
                         ),
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.add_rounded, color: Colors.white, size: 20),
-                        SizedBox(width: 4),
-                        Icon(Icons.dns_rounded, color: Colors.white, size: 16),
+                        Icon(Icons.add_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 20),
+                        const SizedBox(width: 4),
+                        Icon(Icons.dns_rounded, color: Theme.of(context).colorScheme.onPrimary, size: 16),
                       ],
                     ),
                   ),

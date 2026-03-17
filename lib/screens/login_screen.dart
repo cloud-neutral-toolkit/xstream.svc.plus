@@ -4,6 +4,7 @@ import '../services/session/session_manager.dart';
 import '../services/sync/desktop_sync_service.dart';
 import '../services/sync/sync_state.dart';
 import '../l10n/app_localizations.dart';
+import '../utils/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -100,6 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoggedInView(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final xc = context.xColors;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Center(
@@ -109,20 +113,20 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 32),
-              const Icon(Icons.account_circle,
-                  size: 80, color: Color(0xFF5C6BC0)),
+              Icon(Icons.account_circle, size: 80, color: xc.brand),
               const SizedBox(height: 16),
               Text(
                 _sessionManager.currentUser.value ?? '',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 _sessionManager.baseUrl.value,
-                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(fontSize: 13, color: xc.mutedText),
               ),
               const SizedBox(height: 24),
 
@@ -141,12 +145,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       return ElevatedButton.icon(
                         onPressed: syncing ? null : _handleSyncNow,
                         icon: syncing
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: cs.onPrimary,
                                 ),
                               )
                             : const Icon(Icons.sync),
@@ -154,8 +158,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ? context.l10n.get('syncInProgress')
                             : context.l10n.get('syncNow')),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5C6BC0),
-                          foregroundColor: Colors.white,
+                          backgroundColor: xc.brand,
+                          foregroundColor: cs.onPrimary,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -171,8 +175,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     icon: const Icon(Icons.logout),
                     label: Text(context.l10n.get('logout')),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.redAccent,
-                      side: const BorderSide(color: Colors.redAccent),
+                      foregroundColor: cs.error,
+                      side: BorderSide(color: cs.error),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -190,6 +194,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSyncStatusCard(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final xc = context.xColors;
+
     return ValueListenableBuilder<SyncSummary>(
       valueListenable: SyncStateStore.instance.summary,
       builder: (context, summary, _) {
@@ -202,41 +209,43 @@ class _LoginScreenState extends State<LoginScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.grey[50],
+            color: xc.cardBackground,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+            border: Border.all(color: xc.cardBorder),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.sync, size: 18, color: Color(0xFF5C6BC0)),
+                  Icon(Icons.sync, size: 18, color: xc.brand),
                   const SizedBox(width: 8),
                   Text(
                     context.l10n.get('desktopSync'),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
+                      color: cs.onSurface,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              _infoRow(context.l10n.get('lastSyncTime'), lastSync),
+              _infoRow(context, context.l10n.get('lastSyncTime'), lastSync),
               const SizedBox(height: 4),
-              _infoRow(context.l10n.get('configVersion'),
+              _infoRow(context, context.l10n.get('configVersion'),
                   '${summary.configVersion}'),
               if (metadata != null && metadata.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                _infoRow(context.l10n.get('subscriptionMetadata'), metadata),
+                _infoRow(context,
+                    context.l10n.get('subscriptionMetadata'), metadata),
               ],
               if (summary.lastError != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   summary.lastError!,
-                  style: const TextStyle(
-                    color: Colors.redAccent,
+                  style: TextStyle(
+                    color: cs.error,
                     fontSize: 12,
                   ),
                 ),
@@ -248,18 +257,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _infoRow(String label, String value) {
+  Widget _infoRow(BuildContext context, String label, String value) {
+    final xc = context.xColors;
+    final cs = Theme.of(context).colorScheme;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$label: ',
-          style: const TextStyle(fontSize: 13, color: Colors.grey),
+          style: TextStyle(fontSize: 13, color: xc.mutedText),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(fontSize: 13),
+            style: TextStyle(fontSize: 13, color: cs.onSurface),
           ),
         ),
       ],
@@ -267,6 +279,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginForm(BuildContext context, bool isMfaRequired) {
+    final cs = Theme.of(context).colorScheme;
+    final xc = context.xColors;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -281,22 +296,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.cloud_outlined,
-                          size: 64, color: Color(0xFF5C6BC0)),
+                      Icon(Icons.cloud_outlined,
+                          size: 64, color: xc.brand),
                       const SizedBox(height: 16),
                       Text(
                         context.l10n.get('accountLogin'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF222222),
+                          color: cs.onSurface,
                         ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         context.l10n.get('syncNotLoggedIn'),
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 14, color: xc.mutedText),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
@@ -383,8 +399,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           return ElevatedButton(
                             onPressed: loading ? null : _handleLogin,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF5C6BC0),
-                              foregroundColor: Colors.white,
+                              backgroundColor: xc.brand,
+                              foregroundColor: cs.onPrimary,
                               padding:
                                   const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
@@ -392,12 +408,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             child: loading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: cs.onPrimary,
                                     ),
                                   )
                                 : Text(
@@ -421,8 +437,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             padding: const EdgeInsets.only(top: 12),
                             child: Text(
                               error,
-                              style: const TextStyle(
-                                color: Colors.redAccent,
+                              style: TextStyle(
+                                color: cs.error,
                                 fontSize: 13,
                               ),
                               textAlign: TextAlign.center,

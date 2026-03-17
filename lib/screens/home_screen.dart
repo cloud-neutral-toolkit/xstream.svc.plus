@@ -10,6 +10,7 @@ import '../../services/permission_guide_service.dart';
 import '../../services/vpn_config_service.dart';
 import '../widgets/permission_guide_dialog.dart';
 import '../widgets/log_console.dart' show LogLevel;
+import '../utils/app_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -671,37 +672,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   _LatencyVisual _latencyVisual(BuildContext context, int? latency) {
+    final xc = context.xColors;
     if (latency == null || latency < 0) {
-      return const _LatencyVisual(
+      return _LatencyVisual(
         value: _emptyMetricValue,
         label: '',
-        color: Color(0xFFB8BDC7),
+        color: xc.subtleText,
       );
     }
     if (latency < 300) {
       return _LatencyVisual(
         value: '${latency}ms',
-        color: const Color(0xFF3E8F5A),
+        color: xc.success,
         label: '',
       );
     }
     if (latency <= 500) {
       return _LatencyVisual(
         value: '${latency}ms',
-        color: const Color(0xFFBF8A3A),
+        color: xc.warning,
         label: '',
       );
     }
     if (latency <= 800) {
       return _LatencyVisual(
         value: '${latency}ms',
-        color: const Color(0xFFC3655C),
+        color: xc.error,
         label: '',
       );
     }
     return _LatencyVisual(
       value: '${latency}ms',
-      color: const Color(0xFF8F3F3A),
+      color: xc.error,
       label: '',
     );
   }
@@ -738,18 +740,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     required Widget child,
     EdgeInsetsGeometry padding = const EdgeInsets.all(18),
   }) {
+    final xc = context.xColors;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       padding: padding,
       decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
+        color: xc.cardBackground,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE9EBEF)),
-        boxShadow: const [
+        border: Border.all(color: xc.cardBorder),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x11000000),
+            color: Theme.of(context).colorScheme.shadow,
             blurRadius: 14,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -783,12 +786,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Color _connectionStateColor() {
+    final xc = context.xColors;
     if (_isSwitchingNode) {
-      return const Color(0xFFBF8A3A);
+      return xc.warning;
     }
     return _hasActiveConnection
-        ? const Color(0xFF3E8F5A)
-        : const Color(0xFFB8BDC7);
+        ? xc.success
+        : xc.subtleText;
   }
 
   String _connectionMetaLine(BuildContext context) {
@@ -809,6 +813,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     required IconData icon,
     required Color color,
   }) {
+    final cs = Theme.of(context).colorScheme;
+    final xc = context.xColors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -818,10 +824,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             const SizedBox(width: 10),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF7A8090),
+                color: xc.mutedText,
               ),
             ),
           ],
@@ -829,10 +835,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         const SizedBox(height: 14),
         _buildMetricValue(
           value,
-          const TextStyle(
+          TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF1F2937),
+            color: cs.onSurface,
             letterSpacing: -0.8,
             height: 1.0,
           ),
@@ -846,12 +852,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _LatencyVisual latency, {
     bool compact = false,
   }) {
+    final xc = context.xColors;
+    final isEmpty = latency.value == _emptyMetricValue;
     final textStyle = TextStyle(
       fontSize: compact ? 12 : 13,
       fontWeight: FontWeight.w600,
-      color: latency.value == _emptyMetricValue
-          ? const Color(0xFF7A8090)
-          : latency.color,
+      color: isEmpty ? xc.mutedText : latency.color,
     );
 
     return Container(
@@ -860,13 +866,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         vertical: compact ? 6 : 8,
       ),
       decoration: BoxDecoration(
-        color: latency.value == _emptyMetricValue
-            ? const Color(0xFFF6F7F9)
+        color: isEmpty
+            ? xc.cardBackground
             : latency.color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: latency.value == _emptyMetricValue
-              ? const Color(0xFFE3E7EE)
+          color: isEmpty
+              ? xc.cardBorder
               : latency.color.withValues(alpha: 0.18),
         ),
       ),
@@ -892,7 +898,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               latency.label,
               style: TextStyle(
                 fontSize: compact ? 11 : 12,
-                color: const Color(0xFF7A8090),
+                color: xc.mutedText,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -905,9 +911,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildBottomStatCell({
     required String label,
     required String value,
-    Color valueColor = const Color(0xFF667085),
+    Color? valueColor,
     Widget? leading,
   }) {
+    final xc = context.xColors;
+    final effectiveColor = valueColor ?? xc.mutedText;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -923,10 +931,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               children: [
                 TextSpan(
                   text: '$label ',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF98A1B2),
+                    color: xc.subtleText,
                   ),
                 ),
                 TextSpan(
@@ -934,7 +942,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: valueColor,
+                    color: effectiveColor,
                   ),
                 ),
               ],
@@ -1034,19 +1042,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       nodeName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                     ),
                     if (metaLine.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       Text(
                         metaLine,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Color(0xFF7A8090),
+                          color: context.xColors.mutedText,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -1064,7 +1072,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   label: context.l10n.get('homeStatusDownload'),
                   value: _formatRate(metrics.downloadBytesPerSecond),
                   icon: Icons.south_rounded,
-                  color: const Color(0xFF5B8DEF),
+                  color: context.xColors.download,
                 ),
               ),
               const SizedBox(width: 16),
@@ -1073,7 +1081,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   label: context.l10n.get('homeStatusUpload'),
                   value: _formatRate(metrics.uploadBytesPerSecond),
                   icon: Icons.north_rounded,
-                  color: const Color(0xFFDA6A87),
+                  color: context.xColors.upload,
                 ),
               ),
             ],
@@ -1098,7 +1106,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   label: context.l10n.get('homeStatusLatency'),
                   value: latency.value,
                   valueColor: latency.value == _emptyMetricValue
-                      ? const Color(0xFF667085)
+                      ? context.xColors.mutedText
                       : latency.color,
                   leading: Container(
                     width: 8,
@@ -1119,6 +1127,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Widget _buildNodeOptionChip(
       BuildContext context, VpnNode node) {
+    final cs = Theme.of(context).colorScheme;
+    final xc = context.xColors;
     final isActive = _activeNode == node.name;
     final isSelected = _selectedNode == node.name;
     final isHighlighted = _highlightNode == node.name;
@@ -1132,8 +1142,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ? Container(
               width: 8,
               height: 8,
-              decoration: const BoxDecoration(
-                color: Color(0xFF3E8F5A),
+              decoration: BoxDecoration(
+                color: xc.success,
                 shape: BoxShape.circle,
               ),
             )
@@ -1145,17 +1155,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       labelStyle: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: isActive ? const Color(0xFF215C37) : const Color(0xFF344054),
+        color: isActive ? xc.success : cs.onSurface,
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: cs.surface,
       selectedColor:
-          isActive ? const Color(0xFFE7F4EC) : const Color(0xFFF5F6F8),
+          isActive ? xc.success.withValues(alpha: 0.12) : xc.cardBackground,
       side: BorderSide(
         color: isActive
-            ? const Color(0xFF3E8F5A)
+            ? xc.success
             : emphasized
-                ? const Color(0xFFD5DAE3)
-                : const Color(0xFFE5E7EB),
+                ? xc.cardBorder
+                : cs.outlineVariant,
       ),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       onSelected:
@@ -1180,10 +1190,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.dns_outlined,
                     size: 20,
-                    color: Color(0xFF667085),
+                    color: context.xColors.mutedText,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1192,10 +1202,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       children: [
                         Text(
                           context.l10n.get('nodeList'),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF98A1B2),
+                            color: context.xColors.subtleText,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -1203,10 +1213,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           node?.name ?? context.l10n.get('noNodes'),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                       ],
@@ -1219,9 +1229,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     AnimatedRotation(
                       turns: _showNodeOptions ? 0.5 : 0,
                       duration: const Duration(milliseconds: 220),
-                      child: const Icon(
+                      child: Icon(
                         Icons.expand_more_rounded,
-                        color: Color(0xFF98A1B2),
+                        color: context.xColors.subtleText,
                       ),
                     ),
                   ],
@@ -1292,9 +1302,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   child: FloatingActionButton.extended(
                     heroTag: 'home_connection_control',
                     backgroundColor: _hasActiveConnection
-                        ? const Color(0xFF3E8F5A)
-                        : const Color(0xFF1F2937),
-                    foregroundColor: Colors.white,
+                        ? context.xColors.success
+                        : Theme.of(context).colorScheme.inverseSurface,
+                    foregroundColor: Theme.of(context).colorScheme.onInverseSurface,
                     onPressed:
                         _isSwitchingNode ? null : _toggleFromFloatingButton,
                     icon: _isSwitchingNode

@@ -501,9 +501,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -515,7 +515,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 2),
           Text(
             context.l10n.get('xhttpAdvancedHint'),
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 10),
           Row(
@@ -607,7 +607,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildMobileSettingsView(BuildContext context) {
     return Container(
-      color: Colors.grey[100],
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -626,9 +626,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Sniffing / Fallback toggles card
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -650,63 +650,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                   ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: GlobalState.fallbackToProxy,
-                    builder: (context, enabled, _) {
-                      return SwitchListTile(
-                        value: enabled,
-                        onChanged: (value) {
-                          setState(
-                              () => GlobalState.fallbackToProxy.value = value);
-                          addAppLog('回退到代理: ${value ? "开启" : "关闭"}');
-                        },
-                        title: Text(context.l10n.get('fallbackProxy')),
-                        subtitle: Text(
-                          context.l10n.get('fallbackProxyHint'),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: GlobalState.fallbackToDomain,
-                    builder: (context, enabled, _) {
-                      return SwitchListTile(
-                        value: enabled,
-                        onChanged: (value) {
-                          setState(
-                              () => GlobalState.fallbackToDomain.value = value);
-                          addAppLog('回退到域名: ${value ? "开启" : "关闭"}');
-                        },
-                        title: Text(context.l10n.get('fallbackDomain')),
-                        subtitle: Text(
-                          context.l10n.get('fallbackDomainHint'),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      );
-                    },
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: GlobalState.ipv6ToDomain,
-                    builder: (context, enabled, _) {
-                      return SwitchListTile(
-                        value: enabled,
-                        onChanged: (value) {
-                          setState(
-                              () => GlobalState.ipv6ToDomain.value = value);
-                          addAppLog('IPv6 to Domain: ${value ? "开启" : "关闭"}');
-                        },
-                        title: Text(context.l10n.get('ipv6ToDomain')),
-                        subtitle: Text(
-                          context.l10n.get('ipv6ToDomainHint'),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
@@ -720,9 +663,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -773,9 +716,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -810,9 +753,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // DNS & Tunnel
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -884,9 +827,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // Runtime MCP Server
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: ValueListenableBuilder<bool>(
                 valueListenable: _runtimeMcpService.available,
@@ -927,9 +870,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // About / Updates
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -985,8 +928,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 label: Text(context.l10n.get('resetAll'),
                     style: const TextStyle(fontSize: 16)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[500],
-                  foregroundColor: Colors.white,
+                   backgroundColor: Theme.of(context).colorScheme.error,
+                   foregroundColor: Theme.of(context).colorScheme.onError,
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
@@ -1004,7 +947,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildDesktopSettingsView(BuildContext context) {
     return Container(
-      color: Colors.grey[100],
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1174,7 +1117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.only(left: 16.0, top: 4),
                     child: Text(
                       _formatTunStatusText(context, _tunStatus),
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
                   ValueListenableBuilder<bool>(
@@ -1288,7 +1231,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: Colors.grey[700]),
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: 12),
@@ -1344,7 +1287,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: Colors.grey[700]),
+                    ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: 12),

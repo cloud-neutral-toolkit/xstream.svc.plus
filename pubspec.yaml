@@ -1,6 +1,6 @@
 name: xstream
 description: A cross-platform network accelerator powered by XTLS VLESS.
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
