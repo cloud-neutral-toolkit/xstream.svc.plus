@@ -169,6 +169,27 @@ class DesktopSyncService {
     ]);
   }
 
+  @visibleForTesting
+  static String pickSyncedNodeUri({
+    String? vlessUri,
+    String? uriSchemeXhttp,
+    String? uriSchemeXhttpCamel,
+    String? uriSchemeTcp,
+    String? uriSchemeTcpCamel,
+    String? uri,
+    String? link,
+  }) {
+    return _firstNonEmptyStringStatic([
+      vlessUri,
+      uriSchemeXhttp,
+      uriSchemeXhttpCamel,
+      uriSchemeTcp,
+      uriSchemeTcpCamel,
+      uri,
+      link,
+    ]);
+  }
+
   Future<DesktopSyncResult> _performSync({required bool manual}) async {
     final session = SessionManager.instance;
     final token = (session.sessionToken ?? '').trim();
@@ -451,13 +472,20 @@ class DesktopSyncService {
         if (item is! Map) continue;
         final node = item.cast<Object?, Object?>();
         final vlessUri = _nullableString(
-          _firstNonEmptyString([
-            node['vless_uri'],
-            node['vlessUri'],
-            node['uri_scheme_tcp'],
-            node['uri'],
-            node['link'],
-          ]),
+          pickSyncedNodeUri(
+            vlessUri:
+                _firstNonEmptyString([node['vless_uri'], node['vlessUri']]),
+            uriSchemeXhttp: _firstNonEmptyString([
+              node['uri_scheme_xhttp'],
+              node['uri_schemeXhttp'],
+            ]),
+            uriSchemeTcp: _firstNonEmptyString([
+              node['uri_scheme_tcp'],
+              node['uri_schemeTcp'],
+            ]),
+            uri: _firstNonEmptyString([node['uri']]),
+            link: _firstNonEmptyString([node['link']]),
+          ),
         );
 
         final hostFromUri = _extractHostFromVlessUri(vlessUri);

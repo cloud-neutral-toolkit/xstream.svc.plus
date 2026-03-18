@@ -6,6 +6,7 @@ import '../../utils/global_config.dart'
     show GlobalState, DnsConfig, GlobalApplicationConfig, XhttpAdvancedConfig;
 import '../../utils/native_bridge.dart';
 import '../../services/app_version_service.dart';
+import '../../services/desktop/desktop_platform_capabilities.dart';
 import '../l10n/app_localizations.dart';
 import '../../services/vpn_config_service.dart';
 import '../../services/telemetry/telemetry_service.dart';
@@ -26,8 +27,10 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  PacketTunnelStatus _tunStatus =
-      const PacketTunnelStatus(status: 'unknown', utunInterfaces: []);
+  PacketTunnelStatus _tunStatus = const PacketTunnelStatus(
+    status: 'unknown',
+    utunInterfaces: [],
+  );
 
   final SessionManager _sessionManager = SessionManager.instance;
   final RuntimeMcpService _runtimeMcpService = RuntimeMcpService.instance;
@@ -44,6 +47,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     minimumSize: const Size.fromHeight(36),
     textStyle: _menuTextStyle,
   );
+
+  DesktopPlatformCapabilities get _desktopCapabilities =>
+      DesktopPlatformCapabilities.current;
 
   @override
   void initState() {
@@ -270,9 +276,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       GlobalState.activeNodeName.value = '';
       final imported = VpnConfig.nodes
           .map((e) => e.name)
-          .firstWhere((name) => !existingNames.contains(name), orElse: () {
-        return VpnConfig.nodes.isNotEmpty ? VpnConfig.nodes.first.name : '';
-      });
+          .firstWhere(
+            (name) => !existingNames.contains(name),
+            orElse: () {
+              return VpnConfig.nodes.isNotEmpty
+                  ? VpnConfig.nodes.first.name
+                  : '';
+            },
+          );
       GlobalState.lastImportedNodeName.value = imported;
       GlobalState.nodeListRevision.value++;
       await _prepareImportedNodeForIos(imported);
@@ -309,9 +320,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       encoder.close();
       addAppLog('✅ 配置已导出: $backupPath');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已导出到: $backupPath')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('已导出到: $backupPath')));
     } catch (e) {
       addAppLog('[错误] 导出失败: $e', level: LogLevel.error);
     }
@@ -433,10 +444,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (!mounted) return;
     final msg = ok
         ? (enabled
-            ? context.l10n.get('runtimeMcpStarted')
-            : context.l10n.get('runtimeMcpStopped'))
+              ? context.l10n.get('runtimeMcpStarted')
+              : context.l10n.get('runtimeMcpStopped'))
         : (_runtimeMcpService.lastError.value ??
-            context.l10n.get('runtimeMcpToggleFailed'));
+              context.l10n.get('runtimeMcpToggleFailed'));
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
@@ -461,7 +472,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       next.remove(value);
     }
-    final changed = next.length != _draftXhttpAlpn.length ||
+    final changed =
+        next.length != _draftXhttpAlpn.length ||
         next.any((item) => !_draftXhttpAlpn.contains(item));
     if (!changed) return;
     setState(() {
@@ -558,18 +570,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               FilterChip(
                 label: Text(context.l10n.get('xhttpAlpnH3')),
                 selected: _draftXhttpAlpn.contains(XhttpAdvancedConfig.alpnH3),
-                onSelected: (enabled) => _toggleDraftXhttpAlpn(
-                  XhttpAdvancedConfig.alpnH3,
-                  enabled,
-                ),
+                onSelected: (enabled) =>
+                    _toggleDraftXhttpAlpn(XhttpAdvancedConfig.alpnH3, enabled),
               ),
               FilterChip(
                 label: Text(context.l10n.get('xhttpAlpnH2')),
                 selected: _draftXhttpAlpn.contains(XhttpAdvancedConfig.alpnH2),
-                onSelected: (enabled) => _toggleDraftXhttpAlpn(
-                  XhttpAdvancedConfig.alpnH2,
-                  enabled,
-                ),
+                onSelected: (enabled) =>
+                    _toggleDraftXhttpAlpn(XhttpAdvancedConfig.alpnH2, enabled),
               ),
               FilterChip(
                 label: Text(context.l10n.get('xhttpAlpnHttp11')),
@@ -587,14 +595,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             children: [
               TextButton(
-                onPressed:
-                    _xhttpAdvancedDirty ? _resetXhttpAdvancedDraft : null,
+                onPressed: _xhttpAdvancedDirty
+                    ? _resetXhttpAdvancedDraft
+                    : null,
                 child: Text(context.l10n.get('xhttpResetDraft')),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
-                onPressed:
-                    _xhttpAdvancedDirty ? _saveAndApplyXhttpAdvanced : null,
+                onPressed: _xhttpAdvancedDirty
+                    ? _saveAndApplyXhttpAdvanced
+                    : null,
                 icon: const Icon(Icons.save),
                 label: Text(context.l10n.get('xhttpSaveApply')),
               ),
@@ -639,12 +649,73 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: enabled,
                         onChanged: (value) {
                           setState(
-                              () => GlobalState.sniffingEnabled.value = value);
+                            () => GlobalState.sniffingEnabled.value = value,
+                          );
                           addAppLog('嗅探: ${value ? "开启" : "关闭"}');
                         },
                         title: Text(context.l10n.get('sniffing')),
                         subtitle: Text(
                           context.l10n.get('sniffingHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.fallbackToProxy,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                            () => GlobalState.fallbackToProxy.value = value,
+                          );
+                          addAppLog('回退到代理: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('fallbackProxy')),
+                        subtitle: Text(
+                          context.l10n.get('fallbackProxyHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.fallbackToDomain,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                            () => GlobalState.fallbackToDomain.value = value,
+                          );
+                          addAppLog('回退到域名: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('fallbackDomain')),
+                        subtitle: Text(
+                          context.l10n.get('fallbackDomainHint'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: GlobalState.ipv6ToDomain,
+                    builder: (context, enabled, _) {
+                      return SwitchListTile(
+                        value: enabled,
+                        onChanged: (value) {
+                          setState(
+                            () => GlobalState.ipv6ToDomain.value = value,
+                          );
+                          addAppLog('IPv6 to Domain: ${value ? "开启" : "关闭"}');
+                        },
+                        title: Text(context.l10n.get('ipv6ToDomain')),
+                        subtitle: Text(
+                          context.l10n.get('ipv6ToDomainHint'),
                           style: const TextStyle(fontSize: 12),
                         ),
                       );
@@ -742,8 +813,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   ListTile(
                     leading: Icon(Icons.delete_forever, color: Colors.red[400]),
-                    title: Text(context.l10n.get('deleteConfig'),
-                        style: TextStyle(color: Colors.red[400])),
+                    title: Text(
+                      context.l10n.get('deleteConfig'),
+                      style: TextStyle(color: Colors.red[400]),
+                    ),
                     onTap: _onDeleteConfig,
                   ),
                 ],
@@ -805,8 +878,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             addAppLog('系统级网络隧道: ${value ? "开启" : "关闭"}');
                             _refreshTunStatus();
                           },
-                          title: const Text('隧道模式',
-                              style: TextStyle(fontSize: 16)),
+                          title: const Text(
+                            '隧道模式',
+                            style: TextStyle(fontSize: 16),
+                          ),
                           subtitle: const Text(
                             '启用系统级网络隧道',
                             style: TextStyle(fontSize: 12),
@@ -824,49 +899,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // Runtime MCP Server
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            if (_desktopCapabilities.supportsRuntimeMcp) ...[
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: _runtimeMcpService.available,
+                  builder: (context, available, _) {
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: _runtimeMcpService.running,
+                      builder: (context, running, __) {
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: _runtimeMcpService.loading,
+                          builder: (context, loading, ___) {
+                            final subtitle = available
+                                ? (running
+                                      ? context.l10n.get(
+                                          'runtimeMcpStatusRunning',
+                                        )
+                                      : context.l10n.get(
+                                          'runtimeMcpStatusStopped',
+                                        ))
+                                : context.l10n.get(
+                                    'runtimeMcpStatusUnavailable',
+                                  );
+                            return SwitchListTile(
+                              value: running,
+                              onChanged: available && !loading
+                                  ? _toggleRuntimeMcp
+                                  : null,
+                              title: Text(
+                                context.l10n.get('runtimeMcpServer'),
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                              subtitle: Text(
+                                loading
+                                    ? context.l10n.get(
+                                        'runtimeMcpStatusLoading',
+                                      )
+                                    : subtitle,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-              child: ValueListenableBuilder<bool>(
-                valueListenable: _runtimeMcpService.available,
-                builder: (context, available, _) {
-                  return ValueListenableBuilder<bool>(
-                    valueListenable: _runtimeMcpService.running,
-                    builder: (context, running, __) {
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: _runtimeMcpService.loading,
-                        builder: (context, loading, ___) {
-                          final subtitle = available
-                              ? (running
-                                  ? context.l10n.get('runtimeMcpStatusRunning')
-                                  : context.l10n.get('runtimeMcpStatusStopped'))
-                              : context.l10n.get('runtimeMcpStatusUnavailable');
-                          return SwitchListTile(
-                            value: running,
-                            onChanged: available && !loading
-                                ? _toggleRuntimeMcp
-                                : null,
-                            title: Text(context.l10n.get('runtimeMcpServer'),
-                                style: const TextStyle(fontSize: 16)),
-                            subtitle: Text(
-                              loading
-                                  ? context.l10n.get('runtimeMcpStatusLoading')
-                                  : subtitle,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
+            ],
             // About / Updates
             Container(
               decoration: BoxDecoration(
@@ -906,8 +994,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               height: 48,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.security),
-                label: Text(context.l10n.get('permissionGuide'),
-                    style: const TextStyle(fontSize: 16)),
+                label: Text(
+                  context.l10n.get('permissionGuide'),
+                  style: const TextStyle(fontSize: 16),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepPurple.withValues(alpha: 0.05),
                   foregroundColor: Colors.deepPurple,
@@ -925,8 +1015,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               height: 48,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.restore),
-                label: Text(context.l10n.get('resetAll'),
-                    style: const TextStyle(fontSize: 16)),
+                label: Text(
+                  context.l10n.get('resetAll'),
+                  style: const TextStyle(fontSize: 16),
+                ),
                 style: ElevatedButton.styleFrom(
                    backgroundColor: Theme.of(context).colorScheme.error,
                    foregroundColor: Theme.of(context).colorScheme.onError,
@@ -1045,8 +1137,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: SwitchListTile(
                           value: enabled,
                           onChanged: (value) {
-                            setState(() =>
-                                GlobalState.socksProxyEnabled.value = value);
+                            setState(
+                              () => GlobalState.socksProxyEnabled.value = value,
+                            );
                             addAppLog('SOCKS 代理: ${value ? "开启" : "关闭"}');
                           },
                           title: const Text(
@@ -1069,8 +1162,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         child: SwitchListTile(
                           value: enabled,
                           onChanged: (value) {
-                            setState(() =>
-                                GlobalState.httpProxyEnabled.value = value);
+                            setState(
+                              () => GlobalState.httpProxyEnabled.value = value,
+                            );
                             addAppLog('HTTP 代理: ${value ? "开启" : "关闭"}');
                           },
                           title: const Text(
@@ -1096,9 +1190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             setState(() {
                               GlobalState.setTunnelModeEnabled(value);
                             });
-                            addAppLog(
-                              '系统级网络隧道: ${value ? "开启" : "关闭"}',
-                            );
+                            addAppLog('系统级网络隧道: ${value ? "开启" : "关闭"}');
                             _refreshTunStatus();
                           },
                           title: const Text(
@@ -1120,57 +1212,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _runtimeMcpService.available,
-                    builder: (context, available, _) {
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: _runtimeMcpService.running,
-                        builder: (context, running, __) {
-                          return ValueListenableBuilder<bool>(
-                            valueListenable: _runtimeMcpService.loading,
-                            builder: (context, loading, ___) {
-                              final subtitle = available
-                                  ? (running
-                                      ? context.l10n
-                                          .get('runtimeMcpStatusRunning')
-                                      : context.l10n
-                                          .get('runtimeMcpStatusStopped'))
-                                  : context.l10n
-                                      .get('runtimeMcpStatusUnavailable');
-                              return SizedBox(
-                                width: double.infinity,
-                                child: SwitchListTile(
-                                  value: running,
-                                  onChanged: available && !loading
-                                      ? _toggleRuntimeMcp
-                                      : null,
-                                  title: Text(
-                                    context.l10n.get('runtimeMcpServer'),
-                                    style: _menuTextStyle,
+                  if (_desktopCapabilities.supportsRuntimeMcp)
+                    ValueListenableBuilder<bool>(
+                      valueListenable: _runtimeMcpService.available,
+                      builder: (context, available, _) {
+                        return ValueListenableBuilder<bool>(
+                          valueListenable: _runtimeMcpService.running,
+                          builder: (context, running, __) {
+                            return ValueListenableBuilder<bool>(
+                              valueListenable: _runtimeMcpService.loading,
+                              builder: (context, loading, ___) {
+                                final subtitle = available
+                                    ? (running
+                                          ? context.l10n.get(
+                                              'runtimeMcpStatusRunning',
+                                            )
+                                          : context.l10n.get(
+                                              'runtimeMcpStatusStopped',
+                                            ))
+                                    : context.l10n.get(
+                                        'runtimeMcpStatusUnavailable',
+                                      );
+                                return SizedBox(
+                                  width: double.infinity,
+                                  child: SwitchListTile(
+                                    value: running,
+                                    onChanged: available && !loading
+                                        ? _toggleRuntimeMcp
+                                        : null,
+                                    title: Text(
+                                      context.l10n.get('runtimeMcpServer'),
+                                      style: _menuTextStyle,
+                                    ),
+                                    subtitle: Text(
+                                      loading
+                                          ? context.l10n.get(
+                                              'runtimeMcpStatusLoading',
+                                            )
+                                          : subtitle,
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
                                   ),
-                                  subtitle: Text(
-                                    loading
-                                        ? context.l10n
-                                            .get('runtimeMcpStatusLoading')
-                                        : subtitle,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
                 ]),
               ],
             ),
             const Divider(height: 32),
             ListTile(
               leading: const Icon(Icons.stacked_line_chart),
-              title: Text(context.l10n.get('viewCollected'),
-                  style: _menuTextStyle),
+              title: Text(
+                context.l10n.get('viewCollected'),
+                style: _menuTextStyle,
+              ),
               trailing: Switch(
                 value: GlobalState.telemetryEnabled.value,
                 onChanged: (v) {
@@ -1211,10 +1310,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showProxyDnsDialog() {
-    final dns1Controller =
-        TextEditingController(text: DnsConfig.proxyDns1.value);
-    final dns2Controller =
-        TextEditingController(text: DnsConfig.proxyDns2.value);
+    final dns1Controller = TextEditingController(
+      text: DnsConfig.proxyDns1.value,
+    );
+    final dns2Controller = TextEditingController(
+      text: DnsConfig.proxyDns2.value,
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1237,14 +1338,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: dns1Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('primaryDns')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('primaryDns'),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: dns2Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('secondaryDns'),
+              ),
             ),
           ],
         ),
@@ -1269,10 +1372,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showDirectDnsDialog() {
-    final dns1Controller =
-        TextEditingController(text: DnsConfig.directDns1.value);
-    final dns2Controller =
-        TextEditingController(text: DnsConfig.directDns2.value);
+    final dns1Controller = TextEditingController(
+      text: DnsConfig.directDns1.value,
+    );
+    final dns2Controller = TextEditingController(
+      text: DnsConfig.directDns2.value,
+    );
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1293,14 +1398,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: dns1Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('primaryDns')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('primaryDns'),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: dns2Controller,
-              decoration:
-                  InputDecoration(labelText: context.l10n.get('secondaryDns')),
+              decoration: InputDecoration(
+                labelText: context.l10n.get('secondaryDns'),
+              ),
             ),
           ],
         ),
@@ -1325,16 +1432,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showTelemetryData() {
-    final data =
-        TelemetryService.collectData(appVersion: AppVersionService.shortLabel);
+    final data = TelemetryService.collectData(
+      appVersion: AppVersionService.shortLabel,
+    );
     final json = const JsonEncoder.withIndent('  ').convert(data);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.l10n.get('collectedData')),
-        content: SingleChildScrollView(
-          child: SelectableText(json),
-        ),
+        content: SingleChildScrollView(child: SelectableText(json)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),

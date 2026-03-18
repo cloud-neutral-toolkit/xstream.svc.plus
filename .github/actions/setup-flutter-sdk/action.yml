@@ -1,0 +1,20 @@
+name: Setup Flutter SDK
+description: Install the pinned Flutter SDK on Linux, macOS, or Windows runners
+
+inputs:
+  flutter-version:
+    description: Flutter SDK version to install
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install Flutter SDK on Linux/macOS
+      if: ${{ runner.os != 'Windows' }}
+      shell: bash
+      run: bash ./scripts/ci/install_flutter_sdk.sh "${{ inputs.flutter-version }}"
+
+    - name: Install Flutter SDK on Windows
+      if: ${{ runner.os == 'Windows' }}
+      shell: pwsh
+      run: pwsh -File ./scripts/ci/install_flutter_sdk.ps1 -FlutterVersion "${{ inputs.flutter-version }}"

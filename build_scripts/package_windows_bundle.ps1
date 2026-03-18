@@ -1,27 +1,26 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-# 确保目标目录存在
-$releaseDir = "build/windows/x64/runner/Release"
+. (Join-Path $PSScriptRoot "windows_bundle_utils.ps1")
+
+$releaseDir = Get-XstreamWindowsReleaseDir
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-# 查找并复制 dll
-$source = Get-ChildItem -Recurse -Filter "libgo_native_bridge.dll" | Select-Object -First 1
-if ($source) {
-    Copy-Item $source.FullName -Destination $releaseDir -Force
-    Write-Host "Found and copied: $($source.FullName)"
-} else {
-    Write-Error "Error: libgo_native_bridge.dll not found!"
-    exit 1
+Copy-XstreamBridgeDll -ReleaseDir $releaseDir
+Copy-XstreamVcRuntime -ReleaseDir $releaseDir
+Copy-XstreamWintunDll -ReleaseDir $releaseDir
+
+# Package the release bundle.
+$zipPath = Join-Path $releaseDir "xstream-windows.zip"
+if (Test-Path $zipPath) {
+    Remove-Item -Force $zipPath
 }
+Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
 
-# 打包
-Compress-Archive -Path "$releaseDir/*" -DestinationPath "$releaseDir/xstream-windows.zip" -Force
-
-# 简单验证打包结果
-if (!(Test-Path "$releaseDir/xstream-windows.zip")) {
+# Verify the package was created.
+if (!(Test-Path $zipPath)) {
     Write-Error "Error: Zip package not created!"
     exit 1
 }
 
-Write-Host "Package created successfully: $releaseDir/xstream-windows.zip"
+Write-Host "Package created successfully: $zipPath"

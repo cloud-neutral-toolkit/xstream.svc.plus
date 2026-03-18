@@ -1,0 +1,62 @@
+diff --git a/proxy/tun/tun_windows.go b/proxy/tun/tun_windows.go
+index 1452441c..f0844da7 100644
+--- a/proxy/tun/tun_windows.go
++++ b/proxy/tun/tun_windows.go
+@@ -4,6 +4,8 @@ package tun
+ 
+ import (
+ 	"errors"
++	"fmt"
++	"time"
+ 	_ "unsafe"
+ 
+ 	"golang.org/x/sys/windows"
+@@ -36,6 +38,12 @@ var _ GVisorTun = (*WindowsTun)(nil)
+ // WindowsTun implements GVisorDevice
+ var _ GVisorDevice = (*WindowsTun)(nil)
+ 
++const (
++	wintunRingCapacity        = 0x800000
++	wintunStartSessionRetries = 20
++	wintunStartSessionDelay   = 250 * time.Millisecond
++)
++
+ // NewTun creates a Wintun interface with the given name. Should a Wintun
+ // interface with the same name exist, it tried to be reused.
+ func NewTun(options TunOptions) (Tun, error) {
+@@ -46,7 +54,7 @@ func NewTun(options TunOptions) (Tun, error) {
+ 	}
+ 
+ 	// start the interface with ring buffer capacity of 8 MiB
+-	session, err := adapter.StartSession(0x800000)
++	session, err := startSessionWithRetry(adapter, options.Name, wintunRingCapacity)
+ 	if err != nil {
+ 		_ = adapter.Close()
+ 		return nil, err
+@@ -65,6 +73,26 @@ func NewTun(options TunOptions) (Tun, error) {
+ 	return tun, nil
+ }
+ 
++func startSessionWithRetry(adapter *wintun.Adapter, name string, capacity uint32) (wintun.Session, error) {
++	var zero wintun.Session
++	var lastErr error
++	for attempt := 0; attempt < wintunStartSessionRetries; attempt++ {
++		session, err := adapter.StartSession(capacity)
++		if err == nil {
++			return session, nil
++		}
++		if !errors.Is(err, windows.ERROR_ALREADY_INITIALIZED) {
++			return zero, err
++		}
++		lastErr = err
++		time.Sleep(wintunStartSessionDelay)
++	}
++	if lastErr == nil {
++		lastErr = windows.ERROR_ALREADY_INITIALIZED
++	}
++	return zero, fmt.Errorf("wintun adapter %q is already active in another xstream instance: %w", name, lastErr)
++}
++
+ func open(name string) (*wintun.Adapter, error) {
+ 	var guid *windows.GUID
+ 	// try to open existing adapter by name

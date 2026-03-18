@@ -99,7 +99,8 @@ void main() {
       expect(name, 'Japan Node');
     });
 
-    test('falls back to vless fragment then host when server name is absent', () {
+    test('falls back to vless fragment then host when server name is absent',
+        () {
       final fromFragment = DesktopSyncService.pickSyncedNodeName(
         vlessUri: 'vless://uuid@jp-xhttp.svc.plus:443?security=tls#Tokyo',
         id: 'node-1',
@@ -111,6 +112,36 @@ void main() {
 
       expect(fromFragment, 'Tokyo');
       expect(fromHost, 'jp-xhttp.svc.plus');
+    });
+  });
+
+  group('DesktopSyncService.pickSyncedNodeUri', () {
+    test('prefers xhttp uri scheme when canonical vless uri is absent', () {
+      final uri = DesktopSyncService.pickSyncedNodeUri(
+        uriSchemeXhttp:
+            'vless://uuid@jp-xhttp.svc.plus:443?type=xhttp&security=tls#Tokyo',
+        uriSchemeTcp:
+            'vless://uuid@jp-tcp.svc.plus:1443?type=tcp&security=tls#Tokyo-TCP',
+      );
+
+      expect(
+        uri,
+        'vless://uuid@jp-xhttp.svc.plus:443?type=xhttp&security=tls#Tokyo',
+      );
+    });
+
+    test('keeps canonical vless_uri as highest priority when present', () {
+      final uri = DesktopSyncService.pickSyncedNodeUri(
+        vlessUri:
+            'vless://uuid@us-xhttp.svc.plus:443?type=xhttp&security=tls#US',
+        uriSchemeXhttp:
+            'vless://uuid@jp-xhttp.svc.plus:443?type=xhttp&security=tls#JP',
+      );
+
+      expect(
+        uri,
+        'vless://uuid@us-xhttp.svc.plus:443?type=xhttp&security=tls#US',
+      );
     });
   });
 }

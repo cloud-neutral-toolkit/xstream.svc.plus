@@ -71,8 +71,10 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -83,6 +85,24 @@ import (
 
 var procMap sync.Map
 var instMu sync.Mutex
+
+type desktopIntegrationRequest struct {
+	Action   string `json:"action"`
+	Enable   bool   `json:"enable,omitempty"`
+	ExecPath string `json:"execPath,omitempty"`
+	Title    string `json:"title,omitempty"`
+	Body     string `json:"body,omitempty"`
+	Mode     string `json:"mode,omitempty"`
+}
+
+type desktopIntegrationResponse struct {
+	OK                 bool   `json:"ok"`
+	Message            string `json:"message,omitempty"`
+	DesktopEnvironment string `json:"desktopEnvironment,omitempty"`
+	AutostartEnabled   bool   `json:"autostartEnabled,omitempty"`
+	PrivilegeReady     bool   `json:"privilegeReady,omitempty"`
+	HelperPath         string `json:"helperPath,omitempty"`
+}
 
 func startXrayInternal(cfgData []byte) error {
 	if xray.GetXrayState() {
@@ -103,6 +123,417 @@ func clearNodeRegistry() {
 		procMap.Delete(key)
 		return true
 	})
+}
+
+func desktopIntegrationResult(resp desktopIntegrationResponse) *C.char {
+	data, err := json.Marshal(resp)
+	if err != nil {
+		return C.CString(`{"ok":false,"message":"failed to encode response"}`)
+	}
+	return C.CString(string(data))
+}
+
+func detectDesktopEnvironment() string {
+	candidates := []string{
+		strings.ToLower(os.Getenv("XDG_CURRENT_DESKTOP")),
+		strings.ToLower(os.Getenv("DESKTOP_SESSION")),
+		strings.ToLower(os.Getenv("XDG_SESSION_DESKTOP")),
+	}
+	for _, candidate := range candidates {
+		switch {
+		case strings.Contains(candidate, "gnome"), strings.Contains(candidate, "ubuntu"), strings.Contains(candidate, "unity"):
+			return "gnome"
+		case strings.Contains(candidate, "kde"), strings.Contains(candidate, "plasma"):
+			return "kde"
+		}
+	}
+	return "unknown"
+}
+
+func runOutput(name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	output, err := cmd.CombinedOutput()
+	return strings.TrimSpace(string(output)), err
+}
+
+func linuxConfigDir() string {
+	dir, err := os.UserConfigDir()
+	if err != nil || dir == "" {
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".config", "xstream")
+	}
+	return filepath.Join(dir, "xstream")
+}
+
+func linuxAutostartDesktopFile() string {
+	dir, err := os.UserConfigDir()
+	if err != nil || dir == "" {
+		home, _ := os.UserHomeDir()
+		return filepath.Join(home, ".config", "autostart", "xstream.desktop")
+	}
+	return filepath.Join(dir, "autostart", "xstream.desktop")
+}
+
+func linuxProxySnapshotPath() string {
+	return filepath.Join(linuxConfigDir(), "linux_proxy_snapshot.json")
+}
+
+func linuxTunnelHelperPath() string {
+	candidates := []string{
+		"/usr/libexec/xstream/xstream-net-helper",
+		filepath.Join(filepath.Dir(os.Args[0]), "xstream-net-helper"),
+		filepath.Join(filepath.Dir(os.Args[0]), "..", "libexec", "xstream", "xstream-net-helper"),
+		"scripts/linux/xstream-net-helper",
+	}
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func notifyDesktop(title, body string) error {
+	if _, err := exec.LookPath("notify-send"); err != nil {
+		return err
+	}
+	_, err := runOutput("notify-send", title, body)
+	return err
+}
+
+func setAutostartEnabled(enable bool, execPath string) error {
+	desktopFile := linuxAutostartDesktopFile()
+	if enable {
+		if execPath == "" {
+			execPath = "/opt/xstream/xstream"
+		}
+		if err := os.MkdirAll(filepath.Dir(desktopFile), 0755); err != nil {
+			return err
+		}
+		content := strings.Join([]string{
+			"[Desktop Entry]",
+			"Type=Application",
+			"Version=1.0",
+			"Name=Xstream",
+			"Comment=Xstream desktop launcher",
+			"Exec=" + execPath,
+			"Icon=xstream",
+			"Terminal=false",
+			"Categories=Network;Utility;",
+			"X-GNOME-Autostart-enabled=true",
+			"",
+		}, "\n")
+		return os.WriteFile(desktopFile, []byte(content), 0644)
+	}
+	if err := os.Remove(desktopFile); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+func isAutostartEnabled() bool {
+	_, err := os.Stat(linuxAutostartDesktopFile())
+	return err == nil
+}
+
+func writeProxySnapshot(data map[string]string) error {
+	if err := os.MkdirAll(filepath.Dir(linuxProxySnapshotPath()), 0755); err != nil {
+		return err
+	}
+	raw, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(linuxProxySnapshotPath(), raw, 0644)
+}
+
+func readProxySnapshot() map[string]string {
+	raw, err := os.ReadFile(linuxProxySnapshotPath())
+	if err != nil {
+		return map[string]string{}
+	}
+	var data map[string]string
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return map[string]string{}
+	}
+	return data
+}
+
+func gsettingsGet(schema string, key string) string {
+	output, err := runOutput("gsettings", "get", schema, key)
+	if err != nil {
+		return ""
+	}
+	return output
+}
+
+func gsettingsSet(schema string, key string, value string) error {
+	_, err := runOutput("gsettings", "set", schema, key, value)
+	return err
+}
+
+func kdeConfigTool() string {
+	for _, candidate := range []string{"kwriteconfig6", "kwriteconfig5", "kwriteconfig"} {
+		if _, err := exec.LookPath(candidate); err == nil {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func kreadConfigTool() string {
+	for _, candidate := range []string{"kreadconfig6", "kreadconfig5", "kreadconfig"} {
+		if _, err := exec.LookPath(candidate); err == nil {
+			return candidate
+		}
+	}
+	return ""
+}
+
+func reloadKDEProxy() {
+	if _, err := exec.LookPath("qdbus"); err == nil {
+		_, _ = runOutput("qdbus", "org.kde.KIO.Scheduler", "/KIO/Scheduler", "org.kde.KIO.Scheduler.reparseSlaveConfiguration", "")
+		return
+	}
+	if _, err := exec.LookPath("dbus-send"); err == nil {
+		_, _ = runOutput("dbus-send", "--session", "--dest=org.kde.KIO.Scheduler", "--type=method_call", "/KIO/Scheduler", "org.kde.KIO.Scheduler.reparseSlaveConfiguration")
+	}
+}
+
+func setLinuxProxy(enable bool) error {
+	desktop := detectDesktopEnvironment()
+	switch desktop {
+	case "gnome":
+		if enable {
+			snapshot := map[string]string{
+				"desktop":   "gnome",
+				"mode":      gsettingsGet("org.gnome.system.proxy", "mode"),
+				"socksHost": gsettingsGet("org.gnome.system.proxy.socks", "host"),
+				"socksPort": gsettingsGet("org.gnome.system.proxy.socks", "port"),
+				"httpHost":  gsettingsGet("org.gnome.system.proxy.http", "host"),
+				"httpPort":  gsettingsGet("org.gnome.system.proxy.http", "port"),
+			}
+			if err := writeProxySnapshot(snapshot); err != nil {
+				return err
+			}
+			for _, op := range []struct {
+				schema string
+				key    string
+				value  string
+			}{
+				{"org.gnome.system.proxy", "mode", "'manual'"},
+				{"org.gnome.system.proxy.socks", "host", "'127.0.0.1'"},
+				{"org.gnome.system.proxy.socks", "port", "1080"},
+				{"org.gnome.system.proxy.http", "host", "'127.0.0.1'"},
+				{"org.gnome.system.proxy.http", "port", "1081"},
+			} {
+				if err := gsettingsSet(op.schema, op.key, op.value); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		snapshot := readProxySnapshot()
+		mode := snapshot["mode"]
+		if mode == "" {
+			mode = "'none'"
+		}
+		for _, op := range []struct {
+			schema string
+			key    string
+			value  string
+		}{
+			{"org.gnome.system.proxy", "mode", mode},
+			{"org.gnome.system.proxy.socks", "host", "'" + strings.Trim(snapshot["socksHost"], "'") + "'"},
+			{"org.gnome.system.proxy.socks", "port", defaultIfEmpty(snapshot["socksPort"], "0")},
+			{"org.gnome.system.proxy.http", "host", "'" + strings.Trim(snapshot["httpHost"], "'") + "'"},
+			{"org.gnome.system.proxy.http", "port", defaultIfEmpty(snapshot["httpPort"], "0")},
+		} {
+			if op.value == "" {
+				continue
+			}
+			if err := gsettingsSet(op.schema, op.key, op.value); err != nil {
+				return err
+			}
+		}
+		return nil
+	case "kde":
+		writer := kdeConfigTool()
+		reader := kreadConfigTool()
+		if writer == "" {
+			return errors.New("kwriteconfig is required for KDE proxy integration")
+		}
+		if enable {
+			snapshot := map[string]string{"desktop": "kde"}
+			if reader != "" {
+				for _, item := range []struct {
+					key   string
+					group string
+					name  string
+				}{
+					{"ProxyType", "Proxy Settings", "ProxyType"},
+					{"httpProxy", "Proxy Settings", "httpProxy"},
+					{"socksProxy", "Proxy Settings", "socksProxy"},
+				} {
+					value, _ := runOutput(reader, "--file", "kioslaverc", "--group", item.group, "--key", item.name)
+					snapshot[item.key] = value
+				}
+			}
+			if err := writeProxySnapshot(snapshot); err != nil {
+				return err
+			}
+			for _, args := range [][]string{
+				{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "ProxyType", "1"},
+				{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "httpProxy", "http://127.0.0.1 1081"},
+				{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "socksProxy", "socks://127.0.0.1 1080"},
+			} {
+				if _, err := runOutput(writer, args...); err != nil {
+					return err
+				}
+			}
+			reloadKDEProxy()
+			return nil
+		}
+		snapshot := readProxySnapshot()
+		proxyType := defaultIfEmpty(snapshot["ProxyType"], "0")
+		httpProxy := snapshot["httpProxy"]
+		socksProxy := snapshot["socksProxy"]
+		for _, args := range [][]string{
+			{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "ProxyType", proxyType},
+			{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "httpProxy", httpProxy},
+			{"--file", "kioslaverc", "--group", "Proxy Settings", "--key", "socksProxy", socksProxy},
+		} {
+			if _, err := runOutput(writer, args...); err != nil {
+				return err
+			}
+		}
+		reloadKDEProxy()
+		return nil
+	default:
+		return errors.New("unsupported desktop environment")
+	}
+}
+
+func defaultIfEmpty(value string, fallback string) string {
+	if strings.TrimSpace(value) == "" {
+		return fallback
+	}
+	return value
+}
+
+func handleTunnelHelper(action string, mode string) (string, error) {
+	helper := linuxTunnelHelperPath()
+	if helper == "" {
+		return "", errors.New("xstream-net-helper not found")
+	}
+	if _, err := exec.LookPath("pkexec"); err != nil {
+		return helper, errors.New("pkexec not found")
+	}
+	args := []string{helper, action}
+	if mode != "" {
+		args = append(args, "--mode", mode)
+	}
+	output, err := runOutput("pkexec", args...)
+	if err != nil {
+		return helper, errors.New(strings.TrimSpace(output))
+	}
+	return helper, nil
+}
+
+//export DesktopIntegrationCommand
+func DesktopIntegrationCommand(requestC *C.char) *C.char {
+	var req desktopIntegrationRequest
+	if err := json.Unmarshal([]byte(C.GoString(requestC)), &req); err != nil {
+		return desktopIntegrationResult(desktopIntegrationResponse{
+			OK:      false,
+			Message: "invalid request: " + err.Error(),
+		})
+	}
+
+	resp := desktopIntegrationResponse{
+		OK:                 true,
+		DesktopEnvironment: detectDesktopEnvironment(),
+		AutostartEnabled:   isAutostartEnabled(),
+	}
+
+	switch req.Action {
+	case "getDesktopEnvironment":
+		resp.PrivilegeReady = linuxTunnelHelperPath() != ""
+	case "setSystemProxy":
+		if err := setLinuxProxy(true); err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.Message = "system proxy enabled"
+		}
+	case "clearSystemProxy":
+		if err := setLinuxProxy(false); err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.Message = "system proxy restored"
+		}
+	case "setAutostartEnabled":
+		if err := setAutostartEnabled(req.Enable, req.ExecPath); err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.AutostartEnabled = req.Enable
+			resp.Message = "autostart updated"
+		}
+	case "isAutostartEnabled":
+		resp.Message = "autostart status loaded"
+	case "ensureTunnelPrivileges":
+		helper := linuxTunnelHelperPath()
+		resp.HelperPath = helper
+		if helper == "" {
+			resp.OK = false
+			resp.Message = "xstream-net-helper not found"
+			break
+		}
+		if _, err := exec.LookPath("pkexec"); err != nil {
+			resp.OK = false
+			resp.Message = "pkexec not found"
+			break
+		}
+		resp.PrivilegeReady = true
+		resp.Message = "tunnel privileges ready"
+	case "startTunnelHelper":
+		helper, err := handleTunnelHelper("start", req.Mode)
+		resp.HelperPath = helper
+		if err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.PrivilegeReady = true
+			resp.Message = "tunnel helper started"
+		}
+	case "stopTunnelHelper":
+		helper, err := handleTunnelHelper("stop", req.Mode)
+		resp.HelperPath = helper
+		if err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.Message = "tunnel helper stopped"
+		}
+	case "notify":
+		if err := notifyDesktop(defaultIfEmpty(req.Title, "Xstream"), req.Body); err != nil {
+			resp.OK = false
+			resp.Message = err.Error()
+		} else {
+			resp.Message = "notification sent"
+		}
+	default:
+		resp.OK = false
+		resp.Message = "unsupported action"
+	}
+
+	resp.AutostartEnabled = isAutostartEnabled()
+	return desktopIntegrationResult(resp)
 }
 
 //export WriteConfigFiles

@@ -12,11 +12,15 @@ APPDIR="$PROJECT_ROOT/build/linux/AppDir"
 APPIMAGE_DIR="$PROJECT_ROOT/build/linux/x64/release/AppImage"
 OUTPUT_ZIP="$BUNDLE_DIR/xstream-linux.zip"
 APPIMAGE_OUTPUT="$APPIMAGE_DIR/xstream-linux.AppImage"
+APPIMAGE_TMP_DIR="$PROJECT_ROOT/build/linux/appimage-tmp"
 
 echo ">>> Preparing directories..."
+mkdir -p "$LIB_DIR"
+rm -rf "$APPDIR" "$APPIMAGE_TMP_DIR"
 mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/lib"
 mkdir -p "$APPIMAGE_DIR"
+mkdir -p "$APPIMAGE_TMP_DIR"
 
 echo ">>> Searching and copying libgo_native_bridge.so ..."
 FOUND=false
@@ -27,9 +31,15 @@ while IFS= read -r sofile; do
     FOUND=true
 done < <(find "$PROJECT_ROOT" -name 'libgo_native_bridge.so')
 
+if [[ "$FOUND" != "true" ]]; then
+    echo "libgo_native_bridge.so not found; run build_scripts/build_linux.sh first." >&2
+    exit 1
+fi
+
 echo ">>> Packaging bundle (zip legacy mode)..."
 cd "$BUNDLE_DIR"
-zip -r xstream-linux.zip .
+rm -f "$OUTPUT_ZIP"
+zip -r "$(basename "$OUTPUT_ZIP")" . -x "$(basename "$OUTPUT_ZIP")"
 cd -
 
 echo ">>> Preparing AppDir structure..."
@@ -78,7 +88,18 @@ if [ ! -f "$HOME/.local/bin/appimagetool-x86_64.AppImage" ]; then
 fi
 
 echo ">>> Building AppImage..."
-"$HOME/.local/bin/linuxdeploy-x86_64.AppImage" --appdir "$APPDIR" --output appimage
+(
+    cd "$APPIMAGE_TMP_DIR"
+    "$HOME/.local/bin/linuxdeploy-x86_64.AppImage" --appdir "$APPDIR" --output appimage
+)
 
-mv ./*.AppImage "$APPIMAGE_OUTPUT"
+GENERATED_APPIMAGE="$(find "$APPIMAGE_TMP_DIR" -maxdepth 1 -type f -name '*.AppImage' | head -n 1 || true)"
+if [[ -z "$GENERATED_APPIMAGE" ]]; then
+    echo "AppImage build completed but no .AppImage output was found." >&2
+    exit 1
+fi
+
+rm -f "$APPIMAGE_OUTPUT"
+mv "$GENERATED_APPIMAGE" "$APPIMAGE_OUTPUT"
+rm -rf "$APPIMAGE_TMP_DIR"
 echo ">>> AppImage build complete: $APPIMAGE_OUTPUT"
