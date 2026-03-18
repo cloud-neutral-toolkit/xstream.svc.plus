@@ -116,6 +116,8 @@ jobs:
             runs_on: ubuntu-22.04
 
     runs-on: ${{ matrix.runs_on }}
+    needs:
+      - prepare-release
 
     env:
       PLATFORM: ${{ matrix.platform }}
