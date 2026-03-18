@@ -34,6 +34,9 @@ class PermissionGuideService {
     final normalized = (message ?? '').trim().toLowerCase();
     if (normalized.isEmpty) return false;
     return normalized.contains('permission denied') ||
+        normalized.contains('vpn_permission_required') ||
+        normalized.contains('vpn_permission_requested') ||
+        normalized.contains('vpn_permission_denied') ||
         normalized.contains('authorization denied') ||
         normalized.contains('not authorized');
   }
@@ -41,8 +44,13 @@ class PermissionGuideService {
   static Future<bool> shouldPromptForPacketTunnelAuthorization({
     String? failureMessage,
   }) async {
-    if (!Platform.isMacOS) {
+    if (!Platform.isMacOS && !Platform.isAndroid && !Platform.isLinux) {
       return false;
+    }
+    if (Platform.isLinux) {
+      return looksLikePacketTunnelPermissionDenied(failureMessage) ||
+          (failureMessage ?? '').toLowerCase().contains('pkexec') ||
+          (failureMessage ?? '').toLowerCase().contains('helper');
     }
     if (looksLikePacketTunnelPermissionDenied(failureMessage)) {
       return true;
@@ -109,7 +117,59 @@ class PermissionGuideService {
   }
 
   static Future<PermissionCheckItem> _checkPacketTunnelPermission() async {
-    if (!Platform.isMacOS && !Platform.isIOS) {
+    if (Platform.isWindows) {
+      try {
+        final status = await NativeBridge.getPacketTunnelStatus();
+        if (status.status == 'unsupported') {
+          return const PermissionCheckItem(
+            id: 'packet_tunnel',
+            passed: false,
+            detail: 'Desktop secure tunnel runtime is unavailable.',
+            suggestion:
+                'Verify the Windows native bridge is packaged and restart the app.',
+          );
+        }
+        return PermissionCheckItem(
+          id: 'packet_tunnel',
+          passed: true,
+          detail: 'Desktop runtime status: ${status.status}',
+          suggestion: '',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'packet_tunnel',
+          passed: false,
+          detail: 'Desktop runtime status query failed: $e',
+          suggestion: 'Check the Windows runtime bridge and restart the app.',
+        );
+      }
+    }
+
+    if (Platform.isLinux) {
+      try {
+        final status = await NativeBridge.getLinuxDesktopIntegrationStatus();
+        final detail =
+            'Desktop=${status.desktopEnvironment}, privilegeReady=${status.privilegeReady}';
+        return PermissionCheckItem(
+          id: 'packet_tunnel',
+          passed: status.privilegeReady,
+          detail: detail,
+          suggestion: status.privilegeReady
+              ? ''
+              : 'Install xstream-net-helper with the Linux package and ensure pkexec/polkit are available in the desktop session.',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'packet_tunnel',
+          passed: false,
+          detail: 'Linux tunnel privilege check failed: $e',
+          suggestion:
+            'Install the desktop package, then verify pkexec and the xstream-net-helper helper are present.',
+        );
+      }
+    }
+
+    if (!Platform.isMacOS && !Platform.isIOS && !Platform.isAndroid) {
       return const PermissionCheckItem(
         id: 'packet_tunnel',
         passed: true,
@@ -122,34 +182,43 @@ class PermissionGuideService {
       final status = await NativeBridge.getPacketTunnelStatus();
       final lastError = status.lastError?.trim();
       if (status.status == 'not_configured') {
-        return const PermissionCheckItem(
+        return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
-          detail: 'Packet Tunnel manager is not configured.',
-          suggestion:
-              'Enable system VPN once in app to trigger NetworkExtension permission prompt.',
+          detail: Platform.isAndroid
+              ? 'Android VPN service is not configured yet.'
+              : 'Packet Tunnel manager is not configured.',
+          suggestion: Platform.isAndroid
+              ? 'Enable Tunnel Mode once to trigger the Android VPN permission prompt.'
+              : 'Enable system VPN once in app to trigger NetworkExtension permission prompt.',
         );
       }
       if (status.status == 'unsupported') {
-        return const PermissionCheckItem(
+        return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
-          detail: 'Packet Tunnel is unsupported in current runtime.',
-          suggestion:
-              'Check NetworkExtension capability, PacketTunnel target embedding, and signing entitlement.',
+          detail: Platform.isAndroid
+              ? 'Android VPN tunnel is unsupported in current runtime.'
+              : 'Packet Tunnel is unsupported in current runtime.',
+          suggestion: Platform.isAndroid
+              ? 'Check VpnService manifest wiring, native bridge registration, and tunnel service packaging.'
+              : 'Check NetworkExtension capability, PacketTunnel target embedding, and signing entitlement.',
         );
       }
       if (lastError != null &&
           lastError.isNotEmpty &&
           status.status != 'connected') {
-        final permissionDenied =
-            looksLikePacketTunnelPermissionDenied(lastError);
+        final permissionDenied = looksLikePacketTunnelPermissionDenied(
+          lastError,
+        );
         return PermissionCheckItem(
           id: 'packet_tunnel',
           passed: false,
           detail: 'Packet Tunnel last error: $lastError',
           suggestion: permissionDenied
-              ? 'Open Privacy & Security, approve System VPN permission for Xstream, then retry.'
+              ? (Platform.isAndroid
+                    ? 'Approve the Android VPN permission for Xstream, or reopen VPN settings and retry.'
+                    : 'Open Privacy & Security, approve System VPN permission for Xstream, then retry.')
               : 'Review the Packet Tunnel error details, then retry after fixing authorization or configuration.',
         );
       }
@@ -174,6 +243,56 @@ class PermissionGuideService {
   }
 
   static Future<PermissionCheckItem> _checkLaunchAgentReadiness() async {
+    if (Platform.isWindows) {
+      try {
+        final result = await Process.run('cmd', [
+          '/c',
+          'schtasks',
+          '/Query',
+        ], runInShell: true);
+        final passed = result.exitCode == 0;
+        return PermissionCheckItem(
+          id: 'launch_agent',
+          passed: passed,
+          detail: passed
+              ? 'Task Scheduler is available for background bootstrap.'
+              : 'Task Scheduler query failed: ${result.stderr}',
+          suggestion: passed
+              ? ''
+              : 'Open Task Scheduler once and verify the current user can query scheduled tasks.',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'launch_agent',
+          passed: false,
+          detail: 'Task Scheduler readiness check failed: $e',
+          suggestion: 'Verify Task Scheduler is available and retry.',
+        );
+      }
+    }
+
+    if (Platform.isLinux) {
+      try {
+        final enabled = await NativeBridge.isLinuxAutostartEnabled();
+        return PermissionCheckItem(
+          id: 'launch_agent',
+          passed: true,
+          detail: enabled
+              ? 'Autostart desktop file is enabled.'
+              : 'Autostart desktop file is currently disabled.',
+          suggestion: '',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'launch_agent',
+          passed: false,
+          detail: 'Linux autostart check failed: $e',
+          suggestion:
+              'Check write access to ~/.config/autostart and retry from a normal desktop session.',
+        );
+      }
+    }
+
     if (!Platform.isMacOS) {
       return const PermissionCheckItem(
         id: 'launch_agent',
@@ -222,6 +341,56 @@ class PermissionGuideService {
   }
 
   static Future<PermissionCheckItem> _checkNetworkQueryCapability() async {
+    if (Platform.isWindows) {
+      try {
+        final verifyResult = await NativeBridge.verifySocks5Proxy();
+        final passed = verifyResult.startsWith('success:');
+        return PermissionCheckItem(
+          id: 'network_query',
+          passed: passed,
+          detail: passed
+              ? 'Local desktop proxy endpoint is reachable.'
+              : verifyResult,
+          suggestion: passed
+              ? ''
+              : 'Start acceleration once, then retry this check to confirm the local proxy endpoint is listening.',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'network_query',
+          passed: false,
+          detail: 'Desktop proxy reachability check failed: $e',
+          suggestion:
+              'Verify the local proxy/tunnel runtime is running and retry.',
+        );
+      }
+    }
+
+    if (Platform.isLinux) {
+      try {
+        final status = await NativeBridge.getLinuxDesktopIntegrationStatus();
+        final supported =
+            status.desktopEnvironment == 'gnome' ||
+            status.desktopEnvironment == 'kde';
+        return PermissionCheckItem(
+          id: 'network_query',
+          passed: supported,
+          detail: 'Linux desktop environment: ${status.desktopEnvironment}.',
+          suggestion: supported
+              ? ''
+              : 'GNOME or KDE desktop integration is required for system proxy management.',
+        );
+      } catch (e) {
+        return PermissionCheckItem(
+          id: 'network_query',
+          passed: false,
+          detail: 'Linux desktop integration status failed: $e',
+          suggestion:
+              'Run the app inside a GNOME or KDE desktop session and retry.',
+        );
+      }
+    }
+
     if (!Platform.isMacOS) {
       return const PermissionCheckItem(
         id: 'network_query',
@@ -241,8 +410,9 @@ class PermissionGuideService {
         detail: ok
             ? 'System network query commands are available.'
             : 'Network query failed: scutil=${a.exitCode}, networksetup=${b.exitCode}',
-        suggestion:
-            ok ? '' : 'Check terminal/system permission policy, then retry.',
+        suggestion: ok
+            ? ''
+            : 'Check terminal/system permission policy, then retry.',
       );
     } catch (e) {
       return PermissionCheckItem(

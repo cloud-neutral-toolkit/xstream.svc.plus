@@ -46,7 +46,9 @@ case "$platform" in
       exit 1
     fi
 
-    yes | "$sdkmanager" --licenses >/dev/null
+    if ! yes | "$sdkmanager" --licenses >/dev/null 2>&1; then
+      echo "sdkmanager --licenses returned a non-zero status; continuing and letting package installation validate the Android SDK state." >&2
+    fi
     "$sdkmanager" "ndk;27.1.12297006"
 
     flutter_bin="$(command -v flutter)"

@@ -37,7 +37,7 @@
    - `MS_STORE_CLIENT_ID`：注册应用的 Client ID。
    - `MS_STORE_CLIENT_SECRET`：创建的 Client Secret。
 
-完成凭证配置后，请确保构建流程生成 `.msix` 包（见 `windows-build.md` 第 5 步），
+完成凭证配置后，如需发布到 Microsoft Store，请确保构建流程额外生成 `.msix` 包（见 `windows-build.md` 第 6 步），
 工作流会自动上传该文件到 Microsoft Store。
 
 配置完成后，publish-stores 工作即会使用这些凭证自动上传构建产物，并在部署后输出对应的测试链接。

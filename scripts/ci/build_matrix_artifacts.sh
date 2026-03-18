@@ -22,7 +22,7 @@ case "$platform" in
     ./build_scripts/build_windows.sh
     flutter build windows --release
     pwsh -File ./build_scripts/package_windows_bundle.ps1
-    pwsh -File ./build_scripts/package_windows_msix.ps1
+    pwsh -File ./build_scripts/package_windows_msi.ps1
     ;;
   macos)
     make "build-macos-${arch}"

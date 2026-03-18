@@ -71,6 +71,7 @@ endif()
 
 set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")
 set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
+set(GO_BRIDGE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../bindings/libgo_native_bridge.dll")
 
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
@@ -80,6 +81,14 @@ install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}
 
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
+
+if(EXISTS "${GO_BRIDGE_PATH}")
+  install(FILES "${GO_BRIDGE_PATH}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+else()
+  message(FATAL_ERROR
+    "Missing Windows Go bridge: ${GO_BRIDGE_PATH}. Run build_scripts/build_windows.sh before flutter build windows.")
+endif()
 
 if(PLUGIN_BUNDLED_LIBRARIES)
   install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"

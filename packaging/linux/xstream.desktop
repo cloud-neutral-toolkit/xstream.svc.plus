@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Xstream
+Comment=Xstream secure network desktop client
+Exec=/opt/xstream/xstream
+Icon=xstream
+Terminal=false
+Categories=Network;Utility;
+StartupNotify=true

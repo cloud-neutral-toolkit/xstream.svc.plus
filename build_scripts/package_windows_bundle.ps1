@@ -1,39 +1,23 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-# 确保目标目录存在
-$releaseDir = "build/windows/x64/runner/Release"
-$zipPath = Join-Path $releaseDir "xstream-windows.zip"
+. (Join-Path $PSScriptRoot "windows_bundle_utils.ps1")
+
+$releaseDir = Get-XstreamWindowsReleaseDir
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-# 查找并复制 dll
-$source = Get-ChildItem -Recurse -Filter "libgo_native_bridge.dll" | Select-Object -First 1
-if ($source) {
-    Copy-Item $source.FullName -Destination $releaseDir -Force
-    Write-Host "Found and copied: $($source.FullName)"
-} else {
-    Write-Error "Error: libgo_native_bridge.dll not found!"
-    exit 1
-}
+Copy-XstreamBridgeDll -ReleaseDir $releaseDir
+Copy-XstreamVcRuntime -ReleaseDir $releaseDir
+Copy-XstreamWintunDll -ReleaseDir $releaseDir
 
-if (!(Test-Path (Join-Path $releaseDir "xstream.exe"))) {
-    Write-Error "Error: Windows release executable not found!"
-    exit 1
-}
-
-if (!(Test-Path (Join-Path $releaseDir "data"))) {
-    Write-Error "Error: Flutter data directory not found in release bundle!"
-    exit 1
-}
-
-# 打包
+# Package the release bundle.
+$zipPath = Join-Path $releaseDir "xstream-windows.zip"
 if (Test-Path $zipPath) {
-    Remove-Item $zipPath -Force
+    Remove-Item -Force $zipPath
 }
-$archiveItems = Get-ChildItem -Path $releaseDir | Where-Object { $_.Name -ne "xstream-windows.zip" }
-Compress-Archive -Path $archiveItems.FullName -DestinationPath $zipPath -Force
+Compress-Archive -Path "$releaseDir/*" -DestinationPath $zipPath -Force
 
-# 简单验证打包结果
+# Verify the package was created.
 if (!(Test-Path $zipPath)) {
     Write-Error "Error: Zip package not created!"
     exit 1
