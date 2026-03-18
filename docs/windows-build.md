@@ -70,12 +70,20 @@ flutter build windows
 
 > 说明：基于当前 Flutter Windows 发布形态，真正“无任何运行时文件、直接把 Flutter engine 和资源全部静态并入同一个原生 PE”的方式并不现实。这里提供的是可落地的单文件分发方案。
 
-## 6. 打包 MSIX 以便上架 Microsoft Store
+## 6. 打包 MSI 安装包
 
-项目已经支持通过 [msix](https://pub.dev/packages/msix) 插件生成可上架 Microsoft Store 的安装包。在 Windows 环境执行：
+CI 发布的 Windows 安装包现在默认是 MSI。在 Windows 环境执行：
+
+```powershell
+./build_scripts/package_windows_msi.ps1
+```
+
+脚本会基于 `build/windows/x64/runner/Release/` 下的 Flutter Release 产物生成 `xstream-windows.msi`，并自动补齐 `libgo_native_bridge.dll`、VC Runtime 与 `wintun.dll`。
+
+如果你还需要 Microsoft Store 分发包，项目仍然保留 MSIX 打包脚本：
 
 ```powershell
 ./build_scripts/package_windows_msix.ps1
 ```
 
-脚本会根据根目录下的 `msix_config.yaml` 创建 `.msix` 文件，生成的安装包位于 `build/windows/x64/runner/Release/` 目录下。
+该脚本会根据根目录下的 `msix_config.yaml` 创建 `.msix` 文件。

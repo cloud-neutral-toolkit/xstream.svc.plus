@@ -65,7 +65,7 @@ def build_table(repo: str, tag: str, assets: dict[str, str]) -> str:
     linux_deb = find_first(assets, lambda name: name.endswith(".deb"))
     linux_rpm = find_first(assets, lambda name: name.endswith(".rpm"))
     windows_zip = find_first(assets, lambda name: name == "xstream-windows.zip")
-    windows_msix = find_first(assets, lambda name: name.endswith(".msix"))
+    windows_msi = find_first(assets, lambda name: name.endswith(".msi"))
     android_apk = find_first(assets, lambda name: name == "app-release.apk")
     ios_ipa = find_first(assets, lambda name: name.endswith(".ipa"))
 
@@ -76,7 +76,7 @@ def build_table(repo: str, tag: str, assets: dict[str, str]) -> str:
         "| macOS | x64 | ⚠️ 未测试 | — |",
         f"| Linux | x64 | ⚠️ 未测试 | {format_links(assets, [('ZIP', linux_zip), ('AppImage', linux_appimage), ('DEB', linux_deb), ('RPM', linux_rpm)])} |",
         "| Linux | arm64 | ⚠️ 未测试 | — |",
-        f"| Windows | x64 | ✅ 已测试 | {format_links(assets, [('ZIP', windows_zip), ('MSIX', windows_msix)])} |",
+        f"| Windows | x64 | ✅ 已测试 | {format_links(assets, [('ZIP', windows_zip), ('MSI', windows_msi)])} |",
         f"| Android | arm64 | ⚠️ 未测试 | {format_links(assets, [('APK', android_apk)])} |",
         f"| iOS | arm64 | ✅ 已测试 | {format_links(assets, [('IPA', ios_ipa)])} |",
         "",

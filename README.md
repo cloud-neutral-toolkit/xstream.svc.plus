@@ -16,7 +16,7 @@
 - 内置 Logs / Help / About / Settings 的全局面包屑导航，桌面端与 iPhone 端页面结构更清晰
 - 实时日志输出与诊断视图已针对长日志、桌面布局和 iPhone 可读性做过优化
 - 支持多节点导入与切换，并已接入 `vless://` URI 导入与出站配置生成
-- Windows/Linux 桌面端支持最小化到系统托盘；Windows 额外支持计划任务后台运行与 MSIX 打包
+- Windows/Linux 桌面端支持最小化到系统托盘；Windows 额外支持计划任务后台运行与 MSI 安装包分发
 
 ---
 

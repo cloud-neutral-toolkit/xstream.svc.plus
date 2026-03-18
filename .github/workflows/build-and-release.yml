@@ -33,6 +33,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: build-and-release-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   XSTREAM_APPLE_TEAM_ID: N3G9T67W78
   XSTREAM_APP_GROUP_ID: group.plus.svc.xstream
@@ -47,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Clean old daily tags
         shell: bash
         run: bash ./scripts/clean_old_tags.sh
@@ -59,14 +63,56 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.24.3"
-          cache: true
+      - name: Install Flutter SDK on Linux/macOS
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          case "${RUNNER_OS}" in
+            Linux)
+              archive="stable/linux/flutter_linux_3.24.3-stable.tar.xz"
+              ;;
+            macOS)
+              archive="stable/macos/flutter_macos_arm64_3.24.3-stable.zip"
+              ;;
+            *)
+              echo "Unsupported runner OS: ${RUNNER_OS}" >&2
+              exit 1
+              ;;
+          esac
+
+          install_root="${RUNNER_TEMP}/flutter-sdk"
+          rm -rf "$install_root"
+          mkdir -p "$install_root"
+
+          curl -fsSL "https://storage.googleapis.com/flutter_infra_release/releases/${archive}" -o "$install_root/flutter-sdk.archive"
+          if [[ "$archive" == *.tar.xz ]]; then
+            tar -xJf "$install_root/flutter-sdk.archive" -C "$install_root"
+          else
+            ditto -x -k "$install_root/flutter-sdk.archive" "$install_root"
+          fi
+
+          echo "$install_root/flutter/bin" >> "$GITHUB_PATH"
+          "$install_root/flutter/bin/flutter" --version
+
+      - name: Install Flutter SDK on Windows
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $installRoot = Join-Path $env:RUNNER_TEMP "flutter-sdk"
+          if (Test-Path $installRoot) {
+            Remove-Item -Recurse -Force $installRoot
+          }
+          New-Item -ItemType Directory -Path $installRoot | Out-Null
+
+          $archive = Join-Path $installRoot "flutter-sdk.zip"
+          Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath $installRoot -Force
+
+          "$installRoot\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$installRoot\flutter\bin\flutter.bat" --version
       - name: Install analysis dependencies
         shell: bash
         run: bash ./scripts/ci/setup_platform_deps.sh linux
@@ -74,37 +120,61 @@ jobs:
         shell: bash
         run: bash ./scripts/ci/run_code_analysis.sh
 
+  prepare-release:
+    if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
+    runs-on: ubuntu-latest
+    outputs:
+      release_tag: ${{ steps.meta.outputs.release_tag }}
+      release_title: ${{ steps.meta.outputs.release_title }}
+      release_notes: ${{ steps.meta.outputs.release_notes }}
+    steps:
+      - name: Compute release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            release_tag="${GITHUB_REF_NAME}"
+            release_title="Release ${GITHUB_REF_NAME}"
+            release_notes="Automated release for ${GITHUB_REF_NAME}"
+          elif [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            release_tag="manual-${GITHUB_RUN_NUMBER}"
+            release_title="Manual Build ${GITHUB_RUN_NUMBER}"
+            release_notes="Automated manual build from ${GITHUB_SHA}"
+          else
+            release_tag="nightly-${GITHUB_RUN_NUMBER}"
+            release_title="Nightly Build ${GITHUB_RUN_NUMBER}"
+            release_notes="Automated nightly build from ${GITHUB_SHA}"
+          fi
+
+          {
+            echo "release_tag=${release_tag}"
+            echo "release_title=${release_title}"
+            echo "release_notes=${release_notes}"
+          } >> "$GITHUB_OUTPUT"
+
   build:
     if: ${{ github.event_name != 'schedule' }}
     strategy:
       fail-fast: false
       matrix:
-        platform: [linux, windows, macos, android, ios]
-        arch: [x64, arm64]
-        exclude:
-          - platform: linux
-            arch: arm64
-          - platform: windows
-            arch: arm64
-          - platform: macos
-            arch: x64
-          - platform: ios
-            arch: x64
-          - platform: android
-            arch: x64
         include:
-          - platform: macos
-            arch: arm64
           - platform: linux
             arch: x64
+            runs_on: ubuntu-22.04
           - platform: windows
             arch: x64
+            runs_on: windows-2022
+          - platform: macos
+            arch: arm64
+            runs_on: macos-14
           - platform: ios
             arch: arm64
+            runs_on: macos-14
           - platform: android
             arch: arm64
+            runs_on: ubuntu-22.04
 
-    runs-on: ${{ fromJson('{"windows":"windows-latest","linux":"ubuntu-22.04","android":"ubuntu-latest","macos":"macos-latest","ios":"macos-latest"}')[matrix.platform] }}
+    runs-on: ${{ matrix.runs_on }}
 
     env:
       PLATFORM: ${{ matrix.platform }}
@@ -112,30 +182,70 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           submodules: recursive
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.24.3"
-          cache: true
+      - name: Install Flutter SDK on Linux/macOS
+        if: ${{ runner.os != 'Windows' }}
+        shell: bash
+        run: |
+          case "${RUNNER_OS}" in
+            Linux)
+              archive="stable/linux/flutter_linux_3.24.3-stable.tar.xz"
+              ;;
+            macOS)
+              archive="stable/macos/flutter_macos_arm64_3.24.3-stable.zip"
+              ;;
+            *)
+              echo "Unsupported runner OS: ${RUNNER_OS}" >&2
+              exit 1
+              ;;
+          esac
+
+          install_root="${RUNNER_TEMP}/flutter-sdk"
+          rm -rf "$install_root"
+          mkdir -p "$install_root"
+
+          curl -fsSL "https://storage.googleapis.com/flutter_infra_release/releases/${archive}" -o "$install_root/flutter-sdk.archive"
+          if [[ "$archive" == *.tar.xz ]]; then
+            tar -xJf "$install_root/flutter-sdk.archive" -C "$install_root"
+          else
+            ditto -x -k "$install_root/flutter-sdk.archive" "$install_root"
+          fi
+
+          echo "$install_root/flutter/bin" >> "$GITHUB_PATH"
+          "$install_root/flutter/bin/flutter" --version
+
+      - name: Install Flutter SDK on Windows
+        if: ${{ runner.os == 'Windows' }}
+        shell: pwsh
+        run: |
+          $installRoot = Join-Path $env:RUNNER_TEMP "flutter-sdk"
+          if (Test-Path $installRoot) {
+            Remove-Item -Recurse -Force $installRoot
+          }
+          New-Item -ItemType Directory -Path $installRoot | Out-Null
+
+          $archive = Join-Path $installRoot "flutter-sdk.zip"
+          Invoke-WebRequest -Uri "https://storage.googleapis.com/flutter_infra_release/releases/stable/windows/flutter_windows_3.24.3-stable.zip" -OutFile $archive
+          Expand-Archive -Path $archive -DestinationPath $installRoot -Force
+
+          "$installRoot\flutter\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$installRoot\flutter\bin\flutter.bat" --version
 
       - name: Set up Go
         if: ${{ matrix.platform != 'macos' }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
         with:
           go-version: "1.23"
 
-      - name: Set up MSYS2 toolchain
+      - name: Install MinGW-w64
         if: ${{ matrix.platform == 'windows' }}
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-gcc
+        shell: pwsh
+        run: |
+          choco install mingw --no-progress -y
+          "C:\ProgramData\mingw64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Install platform dependencies
         shell: bash
@@ -146,7 +256,7 @@ jobs:
         run: bash ./scripts/ci/build_matrix_artifacts.sh "$PLATFORM" "$ARCH"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: build-${{ matrix.platform }}-${{ matrix.arch }}
           path: |
@@ -156,7 +266,7 @@ jobs:
             build/linux/x64/release/packages/*.deb
             build/linux/x64/release/packages/*.rpm
             build/windows/x64/runner/Release/xstream-windows.zip
-            build/windows/x64/runner/Release/*.msix
+            build/windows/x64/runner/Release/*.msi
             build/app/outputs/flutter-apk/app-release.apk
             build/ios/iphoneos/XStream.app.zip
             build/ios/ipa/*.ipa
@@ -164,57 +274,43 @@ jobs:
   release:
     if: ${{ github.event_name != 'pull_request' && github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
-    needs: build
-    strategy:
-      matrix:
-        platform:
-          - { name: macos, file_pattern: "*.dmg", remote_path: "xstream/macos/latest/xstream-macos-latest.dmg" }
-          - { name: linux, file_pattern: "xstream-linux.zip", remote_path: "xstream/linux/latest/xstream-linux-latest.zip" }
-          - { name: windows, file_pattern: "xstream-windows.zip", remote_path: "xstream/windows/latest/xstream-windows-latest.zip" }
-          - { name: ios, file_pattern: "*.ipa", remote_path: "xstream/ios/latest/xstream-ios-latest.ipa" }
-          - { name: android, file_pattern: "app-release.apk", remote_path: "xstream/android/latest/xstream-android-latest.apk" }
-          - { name: github, file_pattern: "**/*", remote_path: "" }
-
+    needs:
+      - prepare-release
+      - build
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           path: release-artifacts
 
       - name: Upload assets to GitHub Release
-        if: ${{ matrix.platform.name == 'github' }}
         shell: bash
         run: bash ./scripts/ci/github_release_upload.sh release-artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: daily-${{ github.run_number }}
-          RELEASE_TITLE: Daily Build ${{ github.run_number }}
-
-      - name: Sync assets to remote update server
-        if: ${{ matrix.platform.name != 'github' }}
-        shell: bash
-        run: bash ./scripts/ci/remote_release_sync.sh "${{ matrix.platform.name }}" "${{ matrix.platform.file_pattern }}" "${{ matrix.platform.remote_path }}"
-        env:
-          ARTIFACT_DIR: release-artifacts
-          RSYNC_SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
+          RELEASE_TAG: ${{ needs.prepare-release.outputs.release_tag }}
+          RELEASE_TITLE: ${{ needs.prepare-release.outputs.release_title }}
+          RELEASE_NOTES: ${{ needs.prepare-release.outputs.release_notes }}
 
   update-readme:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) }}
     runs-on: ubuntu-latest
-    needs: release
+    needs:
+      - prepare-release
+      - release
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Refresh README download links
         shell: bash
         run: bash ./scripts/ci/update_readme_from_release.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: daily-${{ github.run_number }}
+          RELEASE_TAG: ${{ needs.prepare-release.outputs.release_tag }}
