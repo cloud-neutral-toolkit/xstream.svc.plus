@@ -38,7 +38,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FLUTTER_VERSION: 3.41.4
+  FLUTTER_VERSION: 3.27.4
   XSTREAM_APPLE_TEAM_ID: N3G9T67W78
   XSTREAM_APP_GROUP_ID: group.plus.svc.xstream
   XSTREAM_IOS_BUNDLE_ID: plus.svc.xstream
